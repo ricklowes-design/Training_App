@@ -1,0 +1,304 @@
+// Shapes of content/programme.json. The validator in validate.ts checks a parsed
+// file against these and reports readable errors.
+
+export type AreaId = string;
+
+export interface Layout {
+  name: string;
+  setup: string;
+  derivedFrom?: string[];
+}
+
+export interface Stage {
+  id: string;
+  order: number;
+  name: string;
+  sessions: number[];
+}
+
+export interface Warmup {
+  minutes20: number;
+  minutes30: number;
+  minutes45: number;
+  minutes60: number;
+  steps: string[];
+  basis: string;
+}
+
+export interface DemoRef {
+  type: 'none' | 'youtube' | 'own';
+  ref: string;
+  ownDemoPlanned: boolean;
+  outsideSearchPhrase: string | null;
+  outsideMustShow: string | null;
+  status: string;
+}
+
+export interface Drill {
+  id: string;
+  areaId: AreaId;
+  name: string;
+  layoutId: string;
+  purpose: string;
+  setupText: string;
+  prescription: string;
+  cues: string[];
+  commonErrors: string[];
+  demo: DemoRef;
+  safety: string;
+  variants: { solo: boolean; partner: null | { required: boolean } };
+  mode: 'timed' | 'reps';
+  cueDrillId?: string;
+  /** false: an optional diagnostic, never offered as routine training (part 15 D8). */
+  routine?: boolean;
+  /** Scanning modes this drill supports (part 15 D9). */
+  scanModes?: string[];
+  /** The 3D defender configuration used when this drill is a scored reactive block (part 15 D3). */
+  defenderDrillId?: string;
+}
+
+export interface DefenderDrill {
+  id: string;
+  name: string;
+  rule: string;
+  reps: number;
+  repPeriodS: number;
+  approachMinS: number;
+  approachMaxS: number;
+  approachAngleMaxDeg: number;
+  archetypes: string[];
+  difficulty: number;
+  /** Reaction modes allowed in this drill; absent = follow the player's progression. */
+  allowedModes?: string[];
+  note?: string;
+}
+
+/** Part 16 §6: one or two focus measures per drill; experimental diagnostics never drive progression. */
+export interface FocusMetricConfig {
+  primary: string[];
+  supporting: string[];
+  experimental: string[];
+  progressionEligible: string[];
+  qualityGuardrails?: string[];
+}
+
+export interface DefenderArchetypeInfo {
+  id: string;
+  label: string;
+  notes?: string;
+}
+
+export interface ScanMode {
+  id: string;
+  label: string;
+  note: string;
+  /** A room property the mode needs (e.g. wallUsable), or null. */
+  requires: string | null;
+}
+
+export interface Area {
+  id: AreaId;
+  name: string;
+  priorityTags: string[];
+  benchmarkId: string;
+}
+
+export type ContentBlock =
+  | { type: 'warmup' | 'rest' | 'log' | 'transition' | 'cooldown' | 'mobility' | 'break'; minutes: number }
+  | { type: 'work'; minutes: number; drillId: string; params: string }
+  | {
+      type: 'benchmark';
+      minutes: number;
+      benchmarkId: string;
+      cueLevel: string;
+      alsoCueAccuracy?: boolean;
+      coachTransferRequested?: boolean;
+    };
+
+export interface ContentSession {
+  id: string;
+  areaId: AreaId;
+  number: number;
+  stageId: string;
+  durationMinutes: number;
+  blocks: ContentBlock[];
+}
+
+export interface RubricItem {
+  item: string;
+  [score: string]: string;
+}
+
+export interface Benchmark {
+  id: string;
+  areaId: AreaId | null;
+  name: string;
+  metrics: string[];
+  cueLevels: string[];
+  protocol: string;
+  rubric?: RubricItem[];
+}
+
+export type CatchType = 'noCue' | 'blockedShaping' | 'lateCue';
+
+export interface CueDrill {
+  id: string;
+  name: string;
+  cueTypes: string[];
+  values?: string[];
+  rule: string;
+  intervalMinS?: number;
+  intervalMaxS?: number;
+  delayAfterStartMinS?: number;
+  delayAfterStartMaxS?: number;
+  displayS?: number;
+  durationS: number;
+  soccerMeaning: string;
+  /** 'rep': a start tone begins each rep and the cue follows (after the tripwire when the camera is set up).
+   *  'interval': a new cue every intervalMinS–intervalMaxS seconds. */
+  trigger?: 'rep' | 'interval';
+  reps?: number;
+  repPeriodS?: number;
+  startToCueMinS?: number;
+  startToCueMaxS?: number;
+  tripwireDelayMinMs?: number;
+  tripwireDelayMaxMs?: number;
+  catchFraction?: number;
+  catchTypes?: CatchType[];
+  numbers?: boolean;
+  secondCue?: { onValue: string; fraction: number; delayMinMs: number; delayMaxMs: number; values: string[] };
+}
+
+export interface Anchor {
+  id: string;
+  name: string;
+  layoutId: string;
+  drillId: string;
+  conditions: Record<string, unknown>;
+  minutes: number;
+  metrics: string[];
+}
+
+export interface AnchorCheck {
+  everyDays: number;
+  blocks: ({ type: 'warmup'; minutes: number } | { type: 'anchor'; id: string; minutes: number })[];
+  recordType: 'anchor';
+  unlocks: false;
+  countsTowardWeek: false;
+}
+
+export interface LayoutGeometry {
+  defaults: { roomLengthM: number; roomWidthM: number; floor: string; wallUsable: boolean; cones: number };
+  slalom: { cones: number; startFromWallM: number; stopZoneM: number; marginM: number; maxSpacingM: number; minSpacingM: number };
+  feintLane: { startFromWallM: number; maxFeintConeM: number; gatePastConeM: number; gateWidthM: number; stopZoneM: number };
+  receiveBox: { maxSideM: number; sideClearanceM: number; gateWidthM: number; cueScreenBehindM: number };
+  masterySquare: { sideM: number };
+}
+
+export interface Baseline {
+  areaId: AreaId;
+  blocks: ContentBlock[];
+  questions: string[];
+  defaultStartSession: number;
+}
+
+export type BuilderSlot =
+  | { type: 'warmup' | 'rest' | 'log' | 'transition' | 'cooldown' | 'mobility' | 'break'; minutes: number }
+  | { type: 'work'; area: number; from: 'A' | 'B' | 'C'; minutes: number }
+  | { type: 'benchmark'; area: number; minutes: number }
+  | { type: 'quiz'; minutes: number; drillId: string };
+
+export interface BuilderTemplate {
+  id: string;
+  minutes: number;
+  areas: number;
+  light?: boolean;
+  slots: BuilderSlot[];
+}
+
+export interface Builder {
+  note?: string;
+  durations: number[];
+  templates: BuilderTemplate[];
+  noBall: { minutes: number; slots: BuilderSlot[] };
+  restBetweenBlocksS: number;
+  countdownS: number;
+}
+
+export interface Quiz {
+  items: number;
+  answerS: number;
+  drillId: string;
+  options: string[];
+  note?: string;
+}
+
+export interface Check {
+  metric: string;
+  op: '>=' | '<=';
+  value: number;
+}
+
+export interface AdvancementRule {
+  areaId: AreaId;
+  from: string;
+  to: string; // a stage id or 'exit'
+  benchmarkId?: string;
+  cueLevels?: string[];
+  drillIds?: string[];
+  consecutive: number;
+  checks: Check[];
+  parentChecks?: string[];
+  requiresTransfer?: boolean;
+}
+
+export interface Programme {
+  version: string;
+  generated: string;
+  note: string;
+  layouts: Record<string, Layout>;
+  stages: Stage[];
+  warmup: Warmup;
+  drills: Drill[];
+  areas: Area[];
+  sessions: ContentSession[];
+  benchmarks: Benchmark[];
+  advancement: Record<string, Record<string, string>>;
+  cueDrills: CueDrill[];
+  feedbackTemplates: Record<string, string>;
+  anchors: Anchor[];
+  anchorCheck: AnchorCheck;
+  layoutGeometry: LayoutGeometry;
+  baselines: Baseline[];
+  placementRule: { note?: string; byYesCount: Record<string, number> };
+  builder: Builder;
+  quiz: Quiz;
+  advancementRules: AdvancementRule[];
+  regression: Record<string, string>;
+  priorities: string[];
+  coreMoveDrills: string[];
+  benchmarkCueDrills?: Record<string, string>;
+  benchmarkLayouts?: Record<string, string>;
+  focusMetricConfig: Record<string, FocusMetricConfig>;
+  reactionModesProgression: string[];
+  defenderArchetypes: DefenderArchetypeInfo[];
+  scanModes: ScanMode[];
+  defenderDrills: DefenderDrill[];
+  capstone: Capstone;
+}
+
+export interface CapstoneComponent {
+  id: string;
+  label: string;
+  minReps: number;
+  minAgreement: number;
+  procedure: string;
+}
+
+export interface Capstone {
+  id: string;
+  name: string;
+  chain: string[];
+  note: string;
+  components: CapstoneComponent[];
+}

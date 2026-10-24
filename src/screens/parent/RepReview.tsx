@@ -1,0 +1,55 @@
+import { useState } from 'react';
+import { logHistory } from '../../app/data';
+import type { RepAnalysis } from '../../analysis/types';
+import { db } from '../../db/db';
+import type { Clip, FeintRep } from '../../db/types';
+import { acceptExample } from '../../learning/service';
+import { Seg } from '../../ui/widgets';
+
+/** Parent/coach review of a flagged rep (part 16 §4, part 18 §labels): a 0–2 rubric and the exit seen on the replay.
+ *  The answers verify the rep and become labelled examples for learning; nothing else ever does. */
+export function RepReview({ clip, rep, feint }: { clip: Clip; rep: RepAnalysis; feint?: FeintRep }) {
+  const [fake, setFake] = useState<number | null>(feint?.techniqueRubric?.fake ?? null);
+  const [exit, setExit] = useState<number | null>(feint?.techniqueRubric?.exit ?? null);
+  const [eyes, setEyes] = useState<number | null>(feint?.techniqueRubric?.eyes ?? null);
+  const [side, setSide] = useState<'left' | 'right' | 'none' | null>(null);
+  const [saved, setSaved] = useState(!!feint?.techniqueRubric);
+  const opts = [0, 1, 2].map((n) => ({ value: n, label: String(n) }));
+  const ready = fake !== null && exit !== null && eyes !== null && side !== null;
+  async function save() {
+    if (!ready) return;
+    const now = new Date().toISOString();
+    if (feint) await db.feintReps.update(feint.repId, { techniqueRubric: { fake: fake!, exit: exit!, eyes: eyes! }, techniqueStatus: 'coachVerified' });
+    const base = { createdAt: now, verified: true, labelSource: 'flaggedRepReview' as const, sessionRecordId: clip.sessionRecordId, context: { layoutVersion: undefined }, inValidationSet: false };
+    const examples = [];
+    if (rep.fakeShiftHipWidths !== undefined) {
+      examples.push(acceptExample({ ...base, id: `${clip.id}:${rep.repIndex}:fake`, component: 'feintExecution', features: { fakeShift: rep.fakeShiftHipWidths, exitShift: rep.exitShiftHipWidths ?? 0, confidence: rep.confidence }, label: fake! >= 1 ? 'yes' : 'no' }));
+    }
+    if (rep.exitDir) {
+      examples.push(acceptExample({ ...base, id: `${clip.id}:${rep.repIndex}:exit`, component: 'feintExecution', features: { exitAgrees: rep.exitDir === side ? 1 : 0, confidence: rep.confidence }, label: rep.exitDir === side ? 'yes' : 'no' }));
+    }
+    if (examples.length) await db.learningExamples.bulkPut(examples);
+    await logHistory('parent', 'rep review', `${clip.blockLabel} rep ${rep.repIndex + 1}: fake ${fake}, exit ${exit}, eyes ${eyes}; exit seen ${side}`);
+    setSaved(true);
+  }
+  return (
+    <div className="card tight stack">
+      <strong>Review rep {rep.repIndex + 1}</strong>
+      <div className="row">
+        <span className="muted">Fake (0–2)</span>
+        <Seg value={fake ?? -1} onChange={setFake} options={opts} />
+        <span className="muted">Exit (0–2)</span>
+        <Seg value={exit ?? -1} onChange={setExit} options={opts} />
+        <span className="muted">Eyes (0–2)</span>
+        <Seg value={eyes ?? -1} onChange={setEyes} options={opts} />
+      </div>
+      <div className="row">
+        <span className="muted">Exit seen on the replay</span>
+        <Seg value={side ?? 'x'} onChange={(v) => setSide(v as 'left' | 'right' | 'none')} options={[{ value: 'left', label: 'Her left' }, { value: 'right', label: 'Her right' }, { value: 'none', label: 'No exit' }]} />
+        <button className="btn small primary" disabled={!ready || saved} onClick={save}>
+          {saved ? 'Reviewed' : 'Save review'}
+        </button>
+      </div>
+    </div>
+  );
+}

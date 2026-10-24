@@ -1,0 +1,5317 @@
+{
+  "version": "0.4.0",
+  "generated": "2026-10-13",
+  "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8).",
+  "layouts": {
+    "L1": {
+      "name": "Slalom",
+      "setup": "5 cones in a line 1.0 m apart starting 0.8 m from the end wall; 1.0 m stop zone at the far end",
+      "derivedFrom": [
+        "roomLength"
+      ]
+    },
+    "L2": {
+      "name": "Feint lane",
+      "setup": "Start cone 0.5 m from the end wall; feint cone at 3.0 m; two 0.8 m gates 1.2 m past the feint cone, left and right; 0.8 m stop zone"
+    },
+    "L3": {
+      "name": "Receive box",
+      "setup": "1.5 m square mid-room; 1 m gate on each side; cue screen 1.5 m behind the box"
+    },
+    "L4": {
+      "name": "Mastery square",
+      "setup": "1 m square at one end"
+    }
+  },
+  "stages": [
+    {
+      "id": "st1",
+      "order": 1,
+      "name": "CONTROL",
+      "sessions": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "st2",
+      "order": 2,
+      "name": "PACE",
+      "sessions": [
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "id": "st3",
+      "order": 3,
+      "name": "REACT",
+      "sessions": [
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "id": "st4",
+      "order": 4,
+      "name": "TRANSFER",
+      "sessions": [
+        13,
+        14,
+        15,
+        16
+      ]
+    }
+  ],
+  "warmup": {
+    "minutes20": 3,
+    "minutes30": 4,
+    "minutes45": 5,
+    "minutes60": 6,
+    "steps": [
+      "Jog on the spot, ankle circles",
+      "Walking lunges forward and lateral",
+      "Hip openers and leg swings",
+      "Skips and 3 short accelerations into the stop zone",
+      "Sole rolls both feet"
+    ],
+    "basis": "Shortened dynamic warm-up in the FIFA 11+ structure; VERIFY reference link"
+  },
+  "drills": [
+    {
+      "id": "S1",
+      "areaId": "scanning",
+      "name": "Roll-and-look",
+      "layoutId": "L4",
+      "purpose": "Build the look-then-touch habit",
+      "setupText": "Phone cue screen 2 m behind, colour every 2-3 s",
+      "prescription": "Sole rolls; every second roll turn the head to read the colour and say it aloud. 3 x 45 s, rest 20 s",
+      "cues": [
+        "Look, then touch",
+        "Say what you saw"
+      ],
+      "commonErrors": [
+        "Looking without reading",
+        "Stopping the ball to look"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "timed",
+      "cueDrillId": "cue-colour"
+    },
+    {
+      "id": "S2",
+      "areaId": "scanning",
+      "name": "Cue-behind self-receive",
+      "layoutId": "L3",
+      "purpose": "Scan during the roll, first touch to the free side",
+      "setupText": "Cue screen behind the box shows LEFT FREE / RIGHT FREE / BOTH BLOCKED; stationary-ball receiving simulation, labelled as such; rebound version when the room profile permits",
+      "prescription": "Push the ball 2 m into the box, follow it, look over the shoulder while it rolls, first touch to the free side through that gate; BOTH BLOCKED = turn back. 10 reps, alternate feet",
+      "cues": [
+        "Look while the ball is rolling",
+        "Touch away from the X"
+      ],
+      "commonErrors": [
+        "Looking after the touch",
+        "Same-side touch every time",
+        "Push too far"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-scan",
+      "scanModes": [
+        "stationarySimulation",
+        "rebound"
+      ]
+    },
+    {
+      "id": "S3",
+      "areaId": "scanning",
+      "name": "Two-item cue (optional diagnostic)",
+      "layoutId": "L3",
+      "purpose": "Optional diagnostic: tell visual acquisition from interpretation; not part of normal training",
+      "setupText": "Cue shows a direction and a number",
+      "prescription": "Go the right way and call (or tap) the number. 10 reps. Used occasionally, not as routine training",
+      "cues": [
+        "Direction with the feet"
+      ],
+      "commonErrors": [
+        "Guessing the number"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-scan-number",
+      "routine": false
+    },
+    {
+      "id": "S4",
+      "areaId": "scanning",
+      "name": "Partner picture",
+      "layoutId": "L3",
+      "purpose": "Scan during a real pass",
+      "setupText": "Parent passes from 3 m; cue screen behind",
+      "prescription": "Scan during the pass, first touch away from the blocked side, play back with the second touch. 2 x 8",
+      "cues": [
+        "Look, touch, play",
+        "Picture before the ball"
+      ],
+      "commonErrors": [
+        "Head down as the ball arrives",
+        "Touch into the blocked side"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": {
+          "required": true
+        }
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-scan"
+    },
+    {
+      "id": "S5",
+      "areaId": "scanning",
+      "name": "Scan-dribble-pass",
+      "layoutId": "L3",
+      "purpose": "Link the scan to an action with the exit foot",
+      "setupText": "L3 plus a target gate at the far end",
+      "prescription": "Scan, touch to the free side, two dribble touches, short pass into the target (no shooting indoors) with the exit foot. 10 reps, 5 each side",
+      "cues": [
+        "Free side, then the target"
+      ],
+      "commonErrors": [
+        "Slowing before the finish",
+        "Always right foot"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-scan"
+    },
+    {
+      "id": "S6",
+      "areaId": "scanning",
+      "name": "No-ball picture quiz",
+      "layoutId": "L4",
+      "purpose": "Recognition on rest days",
+      "setupText": "Screen only",
+      "prescription": "20 pictures; tap the correct first-touch direction within 2 s",
+      "cues": [],
+      "commonErrors": [],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "timed"
+    },
+    {
+      "id": "F1",
+      "areaId": "feinting",
+      "name": "Body feint, static sell",
+      "layoutId": "L4",
+      "purpose": "Commit shoulder and hip, push with the far foot",
+      "setupText": "Walking pace",
+      "prescription": "Drop the shoulder and hip to one side, plant wide, push with the outside of the far foot. 2 x 10 each side",
+      "cues": [
+        "Plant wide",
+        "Push, don't tap",
+        "Sell with the hips"
+      ],
+      "commonErrors": [
+        "Shoulder only, hips square",
+        "Exit touch too short"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "F2",
+      "areaId": "feinting",
+      "name": "Body feint at pace",
+      "layoutId": "L2",
+      "purpose": "Feint and exit at pace with the head up",
+      "setupText": "Feint lane",
+      "prescription": "Approach at pace, feint at the cone, exit through the gate, max 2 touches to the stop zone. 6 L / 6 R exits x 2",
+      "cues": [
+        "Eyes on the gate",
+        "First touch past the cone"
+      ],
+      "commonErrors": [
+        "Slowing before the cone",
+        "Looking at the ball at exit"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "F3",
+      "areaId": "feinting",
+      "name": "Scissors to outside exit",
+      "layoutId": "L2",
+      "purpose": "Single scissors, exit with the outside of the other foot",
+      "setupText": "Feint lane",
+      "prescription": "6 each side x 2",
+      "cues": [
+        "Small circle, big push",
+        "Exit through the gate"
+      ],
+      "commonErrors": [
+        "Scissors too big or slow",
+        "Inside-foot exit that kills pace"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": "scissors move tutorial outside foot exit both sides",
+        "outsideMustShow": "Single scissors at pace with the exit touch, both sides",
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "F4",
+      "areaId": "feinting",
+      "name": "Second feint on cue",
+      "layoutId": "L2",
+      "purpose": "Add a second feint only when needed",
+      "setupText": "Cue at the feint cone: GO or HELD",
+      "prescription": "Scissors; GO = exit at once; HELD = body feint the other way, then exit. 10 reps",
+      "cues": [
+        "Read, then decide"
+      ],
+      "commonErrors": [
+        "Always double-feinting",
+        "Stopping dead"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-second-feint",
+      "defenderDrillId": "def-second"
+    },
+    {
+      "id": "F5",
+      "areaId": "feinting",
+      "name": "Cue exit",
+      "layoutId": "L2",
+      "purpose": "Exit on a random side",
+      "setupText": "Arrow shown 1 m before the cone",
+      "prescription": "Feint opposite to the arrow, exit on the arrow side. 2 x 8 random",
+      "cues": [
+        "Feint away, go to the arrow"
+      ],
+      "commonErrors": [
+        "Pre-deciding",
+        "Slowing to read"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-exit",
+      "defenderDrillId": "def-read"
+    },
+    {
+      "id": "F6",
+      "areaId": "feinting",
+      "name": "Defender response",
+      "layoutId": "L2",
+      "purpose": "React to what the defender did",
+      "setupText": "After the feint: BIT / HELD / BLOCKED",
+      "prescription": "BIT = go. HELD = push-and-go or second feint. BLOCKED = protect and release (shield turn, pass to target) or drag-back. 2 x 8 random",
+      "cues": [
+        "Bit? Go.",
+        "Held? Change.",
+        "Blocked? Protect."
+      ],
+      "commonErrors": [
+        "Treating HELD as always double feint"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-defender",
+      "defenderDrillId": "def-read"
+    },
+    {
+      "id": "F7",
+      "areaId": "feinting",
+      "name": "Feint and pass",
+      "layoutId": "L2",
+      "purpose": "End the move with a short pass to a target (full finishing outdoors)",
+      "setupText": "Feint lane plus target",
+      "prescription": "Exit then short pass into the target (no shooting indoors) with the exit foot inside 2 touches. 10 reps, 5 each side",
+      "cues": [
+        "Exit foot finishes"
+      ],
+      "commonErrors": [
+        "Extra touch to switch feet"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "F8",
+      "areaId": "feinting",
+      "name": "Live 1v1",
+      "layoutId": "L2",
+      "purpose": "Transfer to a person",
+      "setupText": "Parent or sibling as defender",
+      "prescription": "Passive (shuffle only) then semi-active. 8 reps",
+      "cues": [],
+      "commonErrors": [],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": {
+          "required": true
+        }
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "D1",
+      "areaId": "dribbling",
+      "name": "Slalom close control",
+      "layoutId": "L1",
+      "purpose": "Small touches at the cone, big between",
+      "setupText": "5-cone slalom",
+      "prescription": "Down and back: inside-outside same foot down, other foot back. 4 runs each pattern",
+      "cues": [
+        "Ball within one step",
+        "Small touches at the cone, big between"
+      ],
+      "commonErrors": [
+        "Ball runs away",
+        "Touching cones"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": "cone slalom dribbling inside outside both feet drill",
+        "outsideMustShow": "Slalom with inside and outside of the same foot, both feet",
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "D2",
+      "areaId": "dribbling",
+      "name": "Push-and-go",
+      "layoutId": "L2",
+      "purpose": "Change of pace",
+      "setupText": "Feint lane",
+      "prescription": "Slow dribble to the cone, one big push past it, chase into the stop zone. 10 reps, alternate push foot",
+      "cues": [
+        "Slow, slow, GO",
+        "One big touch, chase it"
+      ],
+      "commonErrors": [
+        "Push too short",
+        "No change of pace"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "D3",
+      "areaId": "dribbling",
+      "name": "Gate on cue",
+      "layoutId": "L2",
+      "purpose": "Change direction on information",
+      "setupText": "Cue 1 m before the cone: left, right, or stop",
+      "prescription": "Read the cue, cut through that gate or stop the ball dead. 2 x 8",
+      "cues": [
+        "Read early, cut late"
+      ],
+      "commonErrors": [
+        "Pre-deciding",
+        "Wide slow cut"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-gate"
+    },
+    {
+      "id": "D4",
+      "areaId": "dribbling",
+      "name": "Head-up numbers",
+      "layoutId": "L1",
+      "purpose": "Dribble with the head up",
+      "setupText": "Digit flashes on the far screen every 1.5 s",
+      "prescription": "Slalom while calling each digit aloud. 4 runs",
+      "cues": [
+        "Ball in the bottom of the eyes"
+      ],
+      "commonErrors": [
+        "Missing numbers",
+        "Stopping to look"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "D5",
+      "areaId": "dribbling",
+      "name": "Dribble-to-action",
+      "layoutId": "L1",
+      "purpose": "Link the dribble to a short pass to a target (full finishing outdoors)",
+      "setupText": "Slalom plus target",
+      "prescription": "Slalom then short pass into the target (no shooting indoors) on the final touch, alternate feet",
+      "cues": [
+        "Last cone, pick the target"
+      ],
+      "commonErrors": [
+        "Extra touch to set the right foot"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "D6",
+      "areaId": "dribbling",
+      "name": "Escape turns",
+      "layoutId": "L2",
+      "purpose": "Drag-back and outside hook at pace",
+      "setupText": "Cue BLOCKED = turn",
+      "prescription": "2 x 8",
+      "cues": [
+        "Turn into space, not into the cone"
+      ],
+      "commonErrors": [
+        "Slow turn",
+        "Ball exposed"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": "drag back turn Cruyff turn tutorial",
+        "outsideMustShow": "Drag-back and outside-foot hook at pace, both feet",
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-escape"
+    },
+    {
+      "id": "C1",
+      "areaId": "control",
+      "name": "Mastery set",
+      "layoutId": "L4",
+      "purpose": "Touch speed and quality, both feet",
+      "setupText": "1 m square",
+      "prescription": "V-pulls 30 s, sole rolls 30 s, inside-outside taps 30 s, outside-only taps 30 s; 2 rounds",
+      "cues": [
+        "Soft knees",
+        "Ball never stops"
+      ],
+      "commonErrors": [
+        "Standing tall",
+        "Looking down throughout"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": "ball mastery V pull sole roll inside outside tutorial",
+        "outsideMustShow": "Each move slowly then at speed",
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "timed"
+    },
+    {
+      "id": "C2",
+      "areaId": "control",
+      "name": "Outside-foot touch to gate",
+      "layoutId": "L3",
+      "purpose": "First touch away with the outside of the foot",
+      "setupText": "Receive box",
+      "prescription": "Self-pass 2 m, first touch with the outside of the foot into the side gate, second touch stop. 5 L / 5 R x 2",
+      "cues": [
+        "Touch away, then look up",
+        "Outside foot, open the hips"
+      ],
+      "commonErrors": [
+        "Inside-foot default",
+        "Touch too heavy"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "C3",
+      "areaId": "control",
+      "name": "Drag-back on cue",
+      "layoutId": "L3",
+      "purpose": "Choose forward or turn from information",
+      "setupText": "Cue behind: BEHIND BLOCKED or FRONT BLOCKED",
+      "prescription": "Receive the self-pass; BEHIND BLOCKED = touch forward; FRONT BLOCKED = drag back and turn. 2 x 8",
+      "cues": [
+        "Read before the ball arrives"
+      ],
+      "commonErrors": [
+        "Turning into the blocked side"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps",
+      "cueDrillId": "cue-dragback"
+    },
+    {
+      "id": "C4",
+      "areaId": "control",
+      "name": "Partner service, pressure side",
+      "layoutId": "L3",
+      "purpose": "First touch away from pressure with the far foot",
+      "setupText": "Parent passes and shows the pressure side",
+      "prescription": "First touch away with the far foot, play back. 2 x 8",
+      "cues": [
+        "Far foot, open body"
+      ],
+      "commonErrors": [
+        "Near-foot touch",
+        "Body closed"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": {
+          "required": true
+        }
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "C5",
+      "areaId": "control",
+      "name": "Receive-turn-release",
+      "layoutId": "L3",
+      "purpose": "Three touches then gone",
+      "setupText": "Receive box plus target",
+      "prescription": "Touch, turn, short pass into the target (no shooting indoors) in at most 3 touches, alternate feet",
+      "cues": [
+        "Three touches, then it's gone"
+      ],
+      "commonErrors": [
+        "Fourth touch",
+        "Always right foot"
+      ],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Clear 0.5 m around gates and stop zones",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "reps"
+    },
+    {
+      "id": "C6",
+      "areaId": "control",
+      "name": "Wall variant",
+      "layoutId": "L3",
+      "purpose": "Solo passing when a wall is allowed",
+      "setupText": "Bare wall",
+      "prescription": "One- and two-touch wall passes, left-foot bias",
+      "cues": [],
+      "commonErrors": [],
+      "demo": {
+        "type": "none",
+        "ref": "",
+        "ownDemoPlanned": true,
+        "outsideSearchPhrase": null,
+        "outsideMustShow": null,
+        "status": "demonstration unverified"
+      },
+      "safety": "Off by default; enable only with a bare wall and household agreement",
+      "variants": {
+        "solo": true,
+        "partner": null
+      },
+      "mode": "timed"
+    }
+  ],
+  "areas": [
+    {
+      "id": "scanning",
+      "name": "Scanning and decision-making",
+      "priorityTags": [
+        "scan off the ball",
+        "final look before receiving"
+      ],
+      "benchmarkId": "SB"
+    },
+    {
+      "id": "feinting",
+      "name": "Feinting and 1v1",
+      "priorityTags": [
+        "link to pass/shot",
+        "left exit"
+      ],
+      "benchmarkId": "FB"
+    },
+    {
+      "id": "dribbling",
+      "name": "Dribbling and change of direction",
+      "priorityTags": [
+        "head up",
+        "link to pass/shot"
+      ],
+      "benchmarkId": "DB"
+    },
+    {
+      "id": "control",
+      "name": "Ball control and receiving",
+      "priorityTags": [
+        "left foot",
+        "first touch away"
+      ],
+      "benchmarkId": "CB"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "scanning-1",
+      "areaId": "scanning",
+      "number": 1,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "cue 3 s slow"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-2",
+      "areaId": "scanning",
+      "number": 2,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "left only"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-3",
+      "areaId": "scanning",
+      "number": 3,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "receiving simulation, cue 3 s"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "3"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-4",
+      "areaId": "scanning",
+      "number": 4,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "random feet"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "receiving simulation"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "3"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-5",
+      "areaId": "scanning",
+      "number": 5,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "pace cue 2 s"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "receiving simulation"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S2",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-6",
+      "areaId": "scanning",
+      "number": 6,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "receiving simulation"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S4",
+          "params": "or S2"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S2",
+          "params": "receiving simulation, short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-7",
+      "areaId": "scanning",
+      "number": 7,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": "slow"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "2"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-8",
+      "areaId": "scanning",
+      "number": 8,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "receiving simulation"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "2"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-9",
+      "areaId": "scanning",
+      "number": 9,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "cue 1-1.5 s random"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "second information change"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S2",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-10",
+      "areaId": "scanning",
+      "number": 10,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "second information change"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": "random"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S2",
+          "params": "second information change, short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-11",
+      "areaId": "scanning",
+      "number": 11,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S4",
+          "params": "or S2"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "1.5"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-12",
+      "areaId": "scanning",
+      "number": 12,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S2",
+          "params": "second information change"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "1.5"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-13",
+      "areaId": "scanning",
+      "number": 13,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S4",
+          "params": "live pressure"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S4",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-14",
+      "areaId": "scanning",
+      "number": 14,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": "two-item"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S4",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S5",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-15",
+      "areaId": "scanning",
+      "number": 15,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S4",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "1",
+          "coachTransferRequested": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "scanning-16",
+      "areaId": "scanning",
+      "number": 16,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "choice",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "S6",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "1"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-1",
+      "areaId": "feinting",
+      "number": 1,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": "slow"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-2",
+      "areaId": "feinting",
+      "number": 2,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-3",
+      "areaId": "feinting",
+      "number": 3,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F2",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "walk"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-4",
+      "areaId": "feinting",
+      "number": 4,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F2",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": "left"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "walk"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-5",
+      "areaId": "feinting",
+      "number": 5,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F2",
+          "params": "pace"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": "pace"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F2",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-6",
+      "areaId": "feinting",
+      "number": 6,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F7",
+          "params": "slow"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F3",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-7",
+      "areaId": "feinting",
+      "number": 7,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F2",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F7",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "pace"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-8",
+      "areaId": "feinting",
+      "number": 8,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": "left"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F7",
+          "params": "left"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "pace"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-9",
+      "areaId": "feinting",
+      "number": 9,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F5",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F3",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F5",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-10",
+      "areaId": "feinting",
+      "number": 10,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F5",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F4",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F5",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-11",
+      "areaId": "feinting",
+      "number": 11,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F6",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F7",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "pace",
+          "alsoCueAccuracy": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-12",
+      "areaId": "feinting",
+      "number": 12,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F5",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F6",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "pace",
+          "alsoCueAccuracy": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-13",
+      "areaId": "feinting",
+      "number": 13,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F6",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F7",
+          "params": "random"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F6",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-14",
+      "areaId": "feinting",
+      "number": 14,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F8",
+          "params": "passive"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F7",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F8",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-15",
+      "areaId": "feinting",
+      "number": 15,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F8",
+          "params": "active"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F6",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "pace",
+          "coachTransferRequested": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "feinting-16",
+      "areaId": "feinting",
+      "number": 16,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "choice",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "F8",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "pace"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-1",
+      "areaId": "dribbling",
+      "number": 1,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D1",
+          "params": "left"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-2",
+      "areaId": "dribbling",
+      "number": 2,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D2",
+          "params": "slow"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-3",
+      "areaId": "dribbling",
+      "number": 3,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D6",
+          "params": "slow"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-4",
+      "areaId": "dribbling",
+      "number": 4,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D1",
+          "params": "random"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D2",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-5",
+      "areaId": "dribbling",
+      "number": 5,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D1",
+          "params": "pace"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D2",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-6",
+      "areaId": "dribbling",
+      "number": 6,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D4",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D2",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D4",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-7",
+      "areaId": "dribbling",
+      "number": 7,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D4",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "headup"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-8",
+      "areaId": "dribbling",
+      "number": 8,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": "left"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D6",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "headup"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-9",
+      "areaId": "dribbling",
+      "number": 9,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D4",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D3",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-10",
+      "areaId": "dribbling",
+      "number": 10,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D6",
+          "params": "cue"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D3",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-11",
+      "areaId": "dribbling",
+      "number": 11,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "headup",
+          "alsoCueAccuracy": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-12",
+      "areaId": "dribbling",
+      "number": 12,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D6",
+          "params": "cue"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "headup",
+          "alsoCueAccuracy": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-13",
+      "areaId": "dribbling",
+      "number": 13,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": "cue last cone"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D3",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D5",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-14",
+      "areaId": "dribbling",
+      "number": 14,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D3",
+          "params": "partner shadow"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D3",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-15",
+      "areaId": "dribbling",
+      "number": 15,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D5",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "D6",
+          "params": "partner"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "headup",
+          "coachTransferRequested": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "dribbling-16",
+      "areaId": "dribbling",
+      "number": 16,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "choice",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "choice",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "headup"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-1",
+      "areaId": "control",
+      "number": 1,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": "slow"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-2",
+      "areaId": "control",
+      "number": 2,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": "left"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-3",
+      "areaId": "control",
+      "number": 3,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-4",
+      "areaId": "control",
+      "number": 4,
+      "stageId": "st1",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C3",
+          "params": "slow"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-5",
+      "areaId": "control",
+      "number": 5,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C1",
+          "params": "pace"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": "pace"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C1",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-6",
+      "areaId": "control",
+      "number": 6,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": "slow"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C2",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-7",
+      "areaId": "control",
+      "number": 7,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C1",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-8",
+      "areaId": "control",
+      "number": 8,
+      "stageId": "st2",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": "left"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": "left"
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-9",
+      "areaId": "control",
+      "number": 9,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C3",
+          "params": "random"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C2",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C3",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-10",
+      "areaId": "control",
+      "number": 10,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": "random"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C3",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-11",
+      "areaId": "control",
+      "number": 11,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C4",
+          "params": "or C3"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std",
+          "alsoCueAccuracy": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-12",
+      "areaId": "control",
+      "number": 12,
+      "stageId": "st3",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C3",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std",
+          "alsoCueAccuracy": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-13",
+      "areaId": "control",
+      "number": 13,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C4",
+          "params": "live"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C4",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-14",
+      "areaId": "control",
+      "number": 14,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": "two-item"
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C4",
+          "params": ""
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C5",
+          "params": "short repeat"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-15",
+      "areaId": "control",
+      "number": 15,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C4",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "C5",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std",
+          "coachTransferRequested": true
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    },
+    {
+      "id": "control-16",
+      "areaId": "control",
+      "number": 16,
+      "stageId": "st4",
+      "durationMinutes": 20,
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "choice",
+          "params": ""
+        },
+        {
+          "type": "rest",
+          "minutes": 1
+        },
+        {
+          "type": "work",
+          "minutes": 6,
+          "drillId": "choice",
+          "params": ""
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "log",
+          "minutes": 1
+        }
+      ]
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "SB",
+      "areaId": "scanning",
+      "name": "Cue-behind decision test",
+      "metrics": [
+        "M8",
+        "M9"
+      ],
+      "cueLevels": [
+        "3",
+        "2",
+        "1.5",
+        "1"
+      ],
+      "protocol": "10 reps of S2 at the stated cue duration; score correct decisions /10; scans counted on replay when recorded"
+    },
+    {
+      "id": "FB",
+      "areaId": "feinting",
+      "name": "Feint rubric",
+      "metrics": [
+        "M6"
+      ],
+      "cueLevels": [
+        "walk",
+        "pace"
+      ],
+      "protocol": "10 reps, 5 L and 5 R exits; 0/1/2 on sell, exit, eyes; totals per side",
+      "rubric": [
+        {
+          "item": "sell",
+          "0": "none",
+          "1": "shoulder only",
+          "2": "shoulder and hip"
+        },
+        {
+          "item": "exit",
+          "0": "late or slow",
+          "1": "one of the two",
+          "2": "past the cone in one stride at pace"
+        },
+        {
+          "item": "eyes",
+          "0": "down",
+          "1": "up late",
+          "2": "up through the exit"
+        }
+      ]
+    },
+    {
+      "id": "DB",
+      "areaId": "dribbling",
+      "name": "Slalom time and control",
+      "metrics": [
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "cueLevels": [
+        "std",
+        "headup"
+      ],
+      "protocol": "L1 down and back, both patterns; start on tone, finish by tapping the finish target; errors counted; head-up version adds digits /8"
+    },
+    {
+      "id": "CB",
+      "areaId": "control",
+      "name": "V-pulls and outside-touch gate",
+      "metrics": [
+        "M4",
+        "M5"
+      ],
+      "cueLevels": [
+        "std"
+      ],
+      "protocol": "CB-1: 30 s V-pulls per foot, correct count. CB-2: 10 reps of C2, 5 per foot, pass when the first touch settles in the gate and the second stops it"
+    },
+    {
+      "id": "CA",
+      "areaId": null,
+      "name": "Cue accuracy",
+      "metrics": [
+        "M7"
+      ],
+      "cueLevels": [
+        "manual-switchedon",
+        "engine"
+      ],
+      "protocol": "Correct exits or decisions out of 16 in a cue block; scored honestly by the player or the parent"
+    }
+  ],
+  "advancement": {
+    "scanning": {
+      "st1->st2": "SB >= 8/10 at 3 s, two consecutive, both feet",
+      "st2->st3": "SB >= 8/10 at 2 s twice; parent rubric looked during roll >= 8 reps",
+      "st3->st4": "SB >= 8/10 at 1.5 s twice, random timing",
+      "st4->exit": "SB >= 8/10 at 1 s and coach transfer observation"
+    },
+    "feinting": {
+      "st1->st2": "FB >= 40/60 twice; left >= 70% of right",
+      "st2->st3": "FB >= 44/60 at pace twice; left >= 80% of right",
+      "st3->st4": "F5 cue accuracy >= 14/16 and F6 rubric >= 44/60 twice",
+      "st4->exit": "coach transfer observation: move linked to pass/shot"
+    },
+    "dribbling": {
+      "st1->st2": "DB errors <= 2 twice, both patterns",
+      "st2->st3": "DB-head-up digits >= 7/8 with errors <= 2 twice; left within 10% of right",
+      "st3->st4": "D3 cue accuracy >= 14/16 and DB-head-up maintained",
+      "st4->exit": "coach transfer observation: head-up dribble linked to pass/shot"
+    },
+    "control": {
+      "st1->st2": "CB-2 >= 7/10 with left >= 3/5 twice",
+      "st2->st3": "CB-2 >= 8/10 at pace with left >= 4/5; CB-1 left >= 80% of right",
+      "st3->st4": "C3 cue accuracy >= 14/16 and CB-2 maintained",
+      "st4->exit": "coach transfer observation: first touch away with either foot"
+    }
+  },
+  "cueDrills": [
+    {
+      "id": "cue-exit",
+      "name": "Arrow exit",
+      "cueTypes": [
+        "arrow"
+      ],
+      "rule": "exit on the arrow side",
+      "intervalMinS": 4,
+      "intervalMaxS": 8,
+      "durationS": 120,
+      "soccerMeaning": "defender's weak side",
+      "trigger": "rep",
+      "values": [
+        "LEFT",
+        "RIGHT"
+      ],
+      "reps": 16,
+      "repPeriodS": 10,
+      "startToCueMinS": 1.5,
+      "startToCueMaxS": 2.5,
+      "tripwireDelayMinMs": 0,
+      "tripwireDelayMaxMs": 400,
+      "catchFraction": 0,
+      "catchTypes": [
+        "noCue",
+        "blockedShaping",
+        "lateCue"
+      ],
+      "displayS": 1.5
+    },
+    {
+      "id": "cue-defender",
+      "name": "Defender response",
+      "cueTypes": [
+        "word"
+      ],
+      "values": [
+        "BIT",
+        "HELD",
+        "BLOCKED"
+      ],
+      "rule": "BIT go; HELD change; BLOCKED protect",
+      "delayAfterStartMinS": 1.0,
+      "delayAfterStartMaxS": 2.0,
+      "durationS": 120,
+      "soccerMeaning": "what the defender did",
+      "trigger": "rep",
+      "reps": 16,
+      "repPeriodS": 10,
+      "startToCueMinS": 1.0,
+      "startToCueMaxS": 2.0,
+      "tripwireDelayMinMs": 0,
+      "tripwireDelayMaxMs": 400,
+      "catchFraction": 0,
+      "catchTypes": [
+        "noCue",
+        "blockedShaping",
+        "lateCue"
+      ],
+      "displayS": 1.5,
+      "secondCue": {
+        "onValue": "HELD",
+        "fraction": 0,
+        "delayMinMs": 300,
+        "delayMaxMs": 600,
+        "values": [
+          "BIT",
+          "BLOCKED"
+        ]
+      }
+    },
+    {
+      "id": "cue-scan",
+      "name": "Space behind",
+      "cueTypes": [
+        "word",
+        "number"
+      ],
+      "values": [
+        "LEFT FREE",
+        "RIGHT FREE",
+        "BOTH BLOCKED"
+      ],
+      "rule": "touch to the free side; both blocked = turn back",
+      "displayS": 3,
+      "durationS": 120,
+      "soccerMeaning": "picture behind before receiving",
+      "trigger": "rep",
+      "reps": 10,
+      "repPeriodS": 9,
+      "startToCueMinS": 0.4,
+      "startToCueMaxS": 1.6,
+      "catchFraction": 0,
+      "catchTypes": [],
+      "numbers": false,
+      "secondCue": {
+        "onValue": "*",
+        "fraction": 0,
+        "delayMinMs": 500,
+        "delayMaxMs": 900,
+        "values": [
+          "LEFT FREE",
+          "RIGHT FREE",
+          "BOTH BLOCKED"
+        ]
+      }
+    },
+    {
+      "id": "cue-odd-even",
+      "name": "Odd means opposite",
+      "cueTypes": [
+        "number",
+        "arrow"
+      ],
+      "rule": "even: go with the arrow; odd: go opposite",
+      "intervalMinS": 4,
+      "intervalMaxS": 8,
+      "durationS": 90,
+      "soccerMeaning": "abstract: general reaction, not a game decision",
+      "trigger": "interval",
+      "values": [
+        "LEFT",
+        "RIGHT"
+      ],
+      "numbers": true,
+      "displayS": 2
+    },
+    {
+      "id": "cue-scan-number",
+      "name": "Space behind + number",
+      "cueTypes": [
+        "word",
+        "number"
+      ],
+      "values": [
+        "LEFT FREE",
+        "RIGHT FREE",
+        "BOTH BLOCKED"
+      ],
+      "rule": "touch to the free side; call the number before the touch",
+      "displayS": 3,
+      "durationS": 120,
+      "soccerMeaning": "picture behind before receiving, with proof of the read",
+      "trigger": "rep",
+      "reps": 10,
+      "repPeriodS": 9,
+      "startToCueMinS": 0.4,
+      "startToCueMaxS": 1.6,
+      "catchFraction": 0,
+      "catchTypes": [],
+      "numbers": true,
+      "secondCue": {
+        "onValue": "*",
+        "fraction": 0,
+        "delayMinMs": 500,
+        "delayMaxMs": 900,
+        "values": [
+          "LEFT FREE",
+          "RIGHT FREE",
+          "BOTH BLOCKED"
+        ]
+      }
+    },
+    {
+      "id": "cue-colour",
+      "name": "Colour behind",
+      "cueTypes": [
+        "colour"
+      ],
+      "values": [
+        "RED",
+        "BLUE",
+        "YELLOW",
+        "GREEN"
+      ],
+      "rule": "look on every second roll and say the colour",
+      "intervalMinS": 2,
+      "intervalMaxS": 3,
+      "durationS": 120,
+      "soccerMeaning": "look-then-touch habit",
+      "trigger": "interval",
+      "catchFraction": 0,
+      "catchTypes": []
+    },
+    {
+      "id": "cue-second-feint",
+      "name": "Second feint on cue",
+      "cueTypes": [
+        "word"
+      ],
+      "values": [
+        "GO",
+        "HELD"
+      ],
+      "rule": "GO: exit at once; HELD: body feint the other way, then exit",
+      "durationS": 120,
+      "soccerMeaning": "defender held after the first feint",
+      "trigger": "rep",
+      "reps": 10,
+      "repPeriodS": 10,
+      "startToCueMinS": 1.2,
+      "startToCueMaxS": 2.2,
+      "tripwireDelayMinMs": 0,
+      "tripwireDelayMaxMs": 400,
+      "catchFraction": 0,
+      "catchTypes": [],
+      "displayS": 1.5
+    },
+    {
+      "id": "cue-gate",
+      "name": "Gate on cue",
+      "cueTypes": [
+        "arrow"
+      ],
+      "values": [
+        "LEFT",
+        "RIGHT",
+        "UP"
+      ],
+      "rule": "cut through the arrow gate; up = stop the ball dead",
+      "durationS": 120,
+      "soccerMeaning": "space opening left, right, or none",
+      "trigger": "rep",
+      "reps": 16,
+      "repPeriodS": 10,
+      "startToCueMinS": 1.2,
+      "startToCueMaxS": 2.2,
+      "tripwireDelayMinMs": 0,
+      "tripwireDelayMaxMs": 400,
+      "catchFraction": 0,
+      "catchTypes": [],
+      "displayS": 1.5
+    },
+    {
+      "id": "cue-escape",
+      "name": "Escape on cue",
+      "cueTypes": [
+        "word"
+      ],
+      "values": [
+        "GO",
+        "BLOCKED"
+      ],
+      "rule": "GO: keep going; BLOCKED: drag-back or hook turn into space",
+      "durationS": 120,
+      "soccerMeaning": "path blocked by a defender",
+      "trigger": "rep",
+      "reps": 16,
+      "repPeriodS": 9,
+      "startToCueMinS": 1.0,
+      "startToCueMaxS": 2.0,
+      "tripwireDelayMinMs": 0,
+      "tripwireDelayMaxMs": 400,
+      "catchFraction": 0,
+      "catchTypes": [],
+      "displayS": 1.5
+    },
+    {
+      "id": "cue-dragback",
+      "name": "Drag-back on cue",
+      "cueTypes": [
+        "word"
+      ],
+      "values": [
+        "BEHIND BLOCKED",
+        "FRONT BLOCKED"
+      ],
+      "rule": "behind blocked: touch forward; front blocked: drag back and turn",
+      "durationS": 120,
+      "soccerMeaning": "where the pressure is when receiving",
+      "trigger": "rep",
+      "reps": 16,
+      "repPeriodS": 8,
+      "startToCueMinS": 0.5,
+      "startToCueMaxS": 1.2,
+      "catchFraction": 0,
+      "catchTypes": [],
+      "displayS": 2
+    }
+  ],
+  "feedbackTemplates": {
+    "completed": "{area} Session {n} complete: all {blocks} blocks, {minutes} minutes.",
+    "completedBenchmarkSkipped": "Session complete with the benchmark skipped. Session {next} is unlocked.",
+    "partial": "Partial session saved. Session {n} stays as your next session.",
+    "stopped": "Stopped. If anything hurts, talk to a parent or a qualified professional before training again.",
+    "improvement": "{metric}: {now}, up from {before} at the same conditions.",
+    "fasterMoreErrors": "{metric}: {time} with {errors} errors, previously {ptime} with {perrors}: faster, {diff} more error(s).",
+    "advancementReady": "Criteria met: {criteria}. Stage {to} unlocks after a parent confirms.",
+    "return": "First session in {days} days: complete. Session {next} is unlocked.",
+    "plateau": "{count} tests at {value}. Still needed: {criteria}. Suggested: {regression}.",
+    "noSessionsThisWeek": "No completed sessions this week.",
+    "result": "{metric}: {now}. Last time at the same conditions: {before}.",
+    "firstResult": "{metric}: {now}. No earlier result at the same conditions.",
+    "unlocked": "{area} Session {next} is unlocked.",
+    "reason": "Reason: {reason}.",
+    "extraSaved": "{title} saved as an extra. Extras do not unlock sessions or count toward the week.",
+    "anchorSaved": "Anchor check saved. It does not unlock sessions or count toward the week.",
+    "trialSaved": "Trial saved. Nothing from it counts until Keep this is pressed.",
+    "baselineSaved": "Baseline saved. A parent answers {count} questions to place {area}.",
+    "comparisonRefused": "Not compared: {reason}.",
+    "stillNeeded": "Still needed for Stage {to}: {criteria}.",
+    "allBlocksCompleted": "All planned blocks completed.",
+    "weekTargetMet": "{done} of {target} planned sessions done this week.",
+    "blockDone": "{drill}: {done} of {planned}.",
+    "blockLast": "Last time ({date}): {value}.",
+    "milestoneFirstArea": "First completed {area} session ({date}).",
+    "milestoneStage": "{area}: Stage {to} confirmed ({date}).",
+    "milestoneParity": "First left-foot result at parity: {metric}, left {pct}% of right ({date}).",
+    "milestoneTen": "10 completed sessions ({date}).",
+    "milestoneTransfer": "Coach transfer note recorded for {area} ({date}).",
+    "homeToday": "Today: {goals}",
+    "homeImprovement": "Last credible improvement: {metric} {before} → {now} ({date})",
+    "homeNoImprovement": "No comparable improvement recorded yet.",
+    "gameDay": "Game day: a light session is suggested.",
+    "chanceLine": "{correct}/{n} right. Guessing among {k} would reach {correct} or more in {pct}% of blocks: a group-level clue, not proof of scanning on any rep.",
+    "scanMode": "{mode}: {note}.",
+    "recommendWhy": "Why this session: {reasons}."
+  },
+  "anchors": [
+    {
+      "id": "A1",
+      "name": "Slalom down and back",
+      "layoutId": "L1",
+      "drillId": "D1",
+      "conditions": {
+        "spacingM": 1.0,
+        "patterns": [
+          "R",
+          "L"
+        ]
+      },
+      "minutes": 2,
+      "metrics": [
+        "M1",
+        "M2"
+      ]
+    },
+    {
+      "id": "A2",
+      "name": "Outside-touch gate test",
+      "layoutId": "L3",
+      "drillId": "C2",
+      "conditions": {
+        "reps": 10,
+        "perFoot": 5,
+        "selfPassM": 2
+      },
+      "minutes": 2,
+      "metrics": [
+        "M5"
+      ]
+    },
+    {
+      "id": "A3",
+      "name": "Arrow-exit lane",
+      "layoutId": "L2",
+      "drillId": "F5",
+      "conditions": {
+        "reps": 16,
+        "cueDelayMs": 200,
+        "catchTrials": 0
+      },
+      "minutes": 3,
+      "metrics": [
+        "M7",
+        "M11",
+        "M13"
+      ]
+    },
+    {
+      "id": "A4",
+      "name": "Cue-behind decision test",
+      "layoutId": "L3",
+      "drillId": "S2",
+      "conditions": {
+        "reps": 10,
+        "cueS": 2
+      },
+      "minutes": 2,
+      "metrics": [
+        "M8",
+        "M9"
+      ]
+    }
+  ],
+  "anchorCheck": {
+    "everyDays": 14,
+    "blocks": [
+      {
+        "type": "warmup",
+        "minutes": 3
+      },
+      {
+        "type": "anchor",
+        "id": "A1",
+        "minutes": 2
+      },
+      {
+        "type": "anchor",
+        "id": "A2",
+        "minutes": 2
+      },
+      {
+        "type": "anchor",
+        "id": "A3",
+        "minutes": 3
+      },
+      {
+        "type": "anchor",
+        "id": "A4",
+        "minutes": 2
+      }
+    ],
+    "recordType": "anchor",
+    "unlocks": false,
+    "countsTowardWeek": false
+  },
+  "layoutGeometry": {
+    "defaults": {
+      "roomLengthM": 6.1,
+      "roomWidthM": 3.0,
+      "floor": "hard",
+      "wallUsable": false,
+      "cones": 12
+    },
+    "slalom": {
+      "cones": 5,
+      "startFromWallM": 0.8,
+      "stopZoneM": 1.0,
+      "marginM": 0.3,
+      "maxSpacingM": 1.0,
+      "minSpacingM": 0.6
+    },
+    "feintLane": {
+      "startFromWallM": 0.5,
+      "maxFeintConeM": 3.0,
+      "gatePastConeM": 1.2,
+      "gateWidthM": 0.8,
+      "stopZoneM": 0.8
+    },
+    "receiveBox": {
+      "maxSideM": 1.5,
+      "sideClearanceM": 0.75,
+      "gateWidthM": 1.0,
+      "cueScreenBehindM": 1.5
+    },
+    "masterySquare": {
+      "sideM": 1.0
+    }
+  },
+  "baselines": [
+    {
+      "areaId": "scanning",
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "SB",
+          "cueLevel": "3"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S1",
+          "params": "placement"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "S2",
+          "params": "placement, cue 2 s"
+        }
+      ],
+      "questions": [
+        "Did she read and say the colour on most looks in the roll-and-look drill?",
+        "Did she look during the roll before the touch on at least 8 of 10 benchmark reps?",
+        "Was the S2 placement drill clean at cue 2 s with the head up?"
+      ],
+      "defaultStartSession": 1
+    },
+    {
+      "areaId": "feinting",
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "FB",
+          "cueLevel": "walk"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F1",
+          "params": "placement"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "F2",
+          "params": "placement, pace"
+        }
+      ],
+      "questions": [
+        "Was the static body feint clean on both sides?",
+        "Did the left-exit total reach at least 70% of the right-exit total?",
+        "Was the F2 placement drill clean at pace with the head up?"
+      ],
+      "defaultStartSession": 5
+    },
+    {
+      "areaId": "dribbling",
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "DB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D1",
+          "params": "placement"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "D1",
+          "params": "placement, pace"
+        }
+      ],
+      "questions": [
+        "Were the benchmark control errors 2 or fewer on both patterns?",
+        "Was the slalom clean at controlled speed on both feet?",
+        "Was the slalom clean at pace with the head up?"
+      ],
+      "defaultStartSession": 5
+    },
+    {
+      "areaId": "control",
+      "blocks": [
+        {
+          "type": "warmup",
+          "minutes": 3
+        },
+        {
+          "type": "benchmark",
+          "minutes": 3,
+          "benchmarkId": "CB",
+          "cueLevel": "std"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C1",
+          "params": "placement"
+        },
+        {
+          "type": "work",
+          "minutes": 3,
+          "drillId": "C2",
+          "params": "placement, pace"
+        }
+      ],
+      "questions": [
+        "Was the mastery set clean on both feet?",
+        "Did the left foot pass at least 3 of 5 gate reps?",
+        "Was the C2 placement drill clean at pace with the head up?"
+      ],
+      "defaultStartSession": 3
+    }
+  ],
+  "placementRule": {
+    "note": "Proposal from the parent's three yes/no answers. The parent confirms or overrides; overrides are logged.",
+    "byYesCount": {
+      "0": 1,
+      "1": 1,
+      "2": 3,
+      "3": 5
+    }
+  },
+  "builder": {
+    "note": "Slots: A, B, C are the session's 1st, 2nd and 3rd work blocks (C falls back to A). A benchmark slot uses the session's benchmark; without one it repeats A. Light drops benchmark slots (they become rest).",
+    "durations": [
+      20,
+      30,
+      45,
+      60
+    ],
+    "templates": [
+      {
+        "id": "t30",
+        "minutes": 30,
+        "areas": 1,
+        "slots": [
+          {
+            "type": "warmup",
+            "minutes": 4
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "A",
+            "minutes": 7
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "B",
+            "minutes": 7
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "C",
+            "minutes": 5
+          },
+          {
+            "type": "benchmark",
+            "area": 0,
+            "minutes": 4
+          },
+          {
+            "type": "log",
+            "minutes": 1
+          }
+        ]
+      },
+      {
+        "id": "t45",
+        "minutes": 45,
+        "areas": 2,
+        "slots": [
+          {
+            "type": "warmup",
+            "minutes": 5
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "A",
+            "minutes": 6
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "B",
+            "minutes": 6
+          },
+          {
+            "type": "benchmark",
+            "area": 0,
+            "minutes": 3
+          },
+          {
+            "type": "transition",
+            "minutes": 2
+          },
+          {
+            "type": "work",
+            "area": 1,
+            "from": "A",
+            "minutes": 6
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 1,
+            "from": "B",
+            "minutes": 6
+          },
+          {
+            "type": "benchmark",
+            "area": 1,
+            "minutes": 3
+          },
+          {
+            "type": "rest",
+            "minutes": 2
+          },
+          {
+            "type": "cooldown",
+            "minutes": 3
+          },
+          {
+            "type": "log",
+            "minutes": 1
+          }
+        ]
+      },
+      {
+        "id": "t60",
+        "minutes": 60,
+        "areas": 3,
+        "slots": [
+          {
+            "type": "warmup",
+            "minutes": 6
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "A",
+            "minutes": 6
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "B",
+            "minutes": 5
+          },
+          {
+            "type": "benchmark",
+            "area": 0,
+            "minutes": 2
+          },
+          {
+            "type": "transition",
+            "minutes": 2
+          },
+          {
+            "type": "work",
+            "area": 1,
+            "from": "A",
+            "minutes": 6
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 1,
+            "from": "B",
+            "minutes": 5
+          },
+          {
+            "type": "benchmark",
+            "area": 1,
+            "minutes": 2
+          },
+          {
+            "type": "transition",
+            "minutes": 2
+          },
+          {
+            "type": "break",
+            "minutes": 3
+          },
+          {
+            "type": "work",
+            "area": 2,
+            "from": "A",
+            "minutes": 6
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 2,
+            "from": "B",
+            "minutes": 5
+          },
+          {
+            "type": "benchmark",
+            "area": 2,
+            "minutes": 2
+          },
+          {
+            "type": "cooldown",
+            "minutes": 4
+          },
+          {
+            "type": "log",
+            "minutes": 1
+          }
+        ]
+      },
+      {
+        "id": "t20light",
+        "minutes": 20,
+        "areas": 1,
+        "light": true,
+        "slots": [
+          {
+            "type": "warmup",
+            "minutes": 3
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "A",
+            "minutes": 6
+          },
+          {
+            "type": "rest",
+            "minutes": 1
+          },
+          {
+            "type": "work",
+            "area": 0,
+            "from": "B",
+            "minutes": 6
+          },
+          {
+            "type": "mobility",
+            "minutes": 3
+          },
+          {
+            "type": "log",
+            "minutes": 1
+          }
+        ]
+      }
+    ],
+    "noBall": {
+      "minutes": 10,
+      "slots": [
+        {
+          "type": "quiz",
+          "minutes": 5,
+          "drillId": "S6"
+        },
+        {
+          "type": "mobility",
+          "minutes": 5
+        }
+      ]
+    },
+    "restBetweenBlocksS": 20,
+    "countdownS": 10
+  },
+  "quiz": {
+    "items": 20,
+    "answerS": 2,
+    "drillId": "S6",
+    "options": [
+      "LEFT",
+      "RIGHT",
+      "BACK"
+    ],
+    "note": "Diagrams of a receiving situation; the correct first touch goes away from the pressure, or back when both sides are blocked."
+  },
+  "advancementRules": [
+    {
+      "areaId": "scanning",
+      "from": "st1",
+      "to": "st2",
+      "benchmarkId": "SB",
+      "cueLevels": [
+        "3"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "parentChecks": [
+        "Both feet were used in the tests"
+      ]
+    },
+    {
+      "areaId": "scanning",
+      "from": "st2",
+      "to": "st3",
+      "benchmarkId": "SB",
+      "cueLevels": [
+        "2"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "parentChecks": [
+        "She looked during the roll on at least 8 reps"
+      ]
+    },
+    {
+      "areaId": "scanning",
+      "from": "st3",
+      "to": "st4",
+      "benchmarkId": "SB",
+      "cueLevels": [
+        "1.5"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "parentChecks": [
+        "Cue timing was random"
+      ]
+    },
+    {
+      "areaId": "scanning",
+      "from": "st4",
+      "to": "exit",
+      "benchmarkId": "SB",
+      "cueLevels": [
+        "1"
+      ],
+      "consecutive": 1,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 8
+        }
+      ],
+      "requiresTransfer": true
+    },
+    {
+      "areaId": "feinting",
+      "from": "st1",
+      "to": "st2",
+      "benchmarkId": "FB",
+      "cueLevels": [
+        "walk",
+        "pace"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "total",
+          "op": ">=",
+          "value": 40
+        },
+        {
+          "metric": "leftPctOfRight",
+          "op": ">=",
+          "value": 70
+        }
+      ]
+    },
+    {
+      "areaId": "feinting",
+      "from": "st2",
+      "to": "st3",
+      "benchmarkId": "FB",
+      "cueLevels": [
+        "pace"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "total",
+          "op": ">=",
+          "value": 44
+        },
+        {
+          "metric": "leftPctOfRight",
+          "op": ">=",
+          "value": 80
+        }
+      ],
+      "parentChecks": [
+        "No slowing before the cone"
+      ]
+    },
+    {
+      "areaId": "feinting",
+      "from": "st3",
+      "to": "st4",
+      "benchmarkId": "CA",
+      "drillIds": [
+        "F5"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 14
+        }
+      ],
+      "parentChecks": [
+        "F6 execution rubric at least 44/60 twice"
+      ]
+    },
+    {
+      "areaId": "feinting",
+      "from": "st4",
+      "to": "exit",
+      "requiresTransfer": true,
+      "consecutive": 0,
+      "checks": []
+    },
+    {
+      "areaId": "dribbling",
+      "from": "st1",
+      "to": "st2",
+      "benchmarkId": "DB",
+      "cueLevels": [
+        "std",
+        "headup"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "maxErrors",
+          "op": "<=",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "areaId": "dribbling",
+      "from": "st2",
+      "to": "st3",
+      "benchmarkId": "DB",
+      "cueLevels": [
+        "headup"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "minDigits",
+          "op": ">=",
+          "value": 7
+        },
+        {
+          "metric": "maxErrors",
+          "op": "<=",
+          "value": 2
+        },
+        {
+          "metric": "leftTimeOverRightPct",
+          "op": "<=",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "areaId": "dribbling",
+      "from": "st3",
+      "to": "st4",
+      "benchmarkId": "CA",
+      "drillIds": [
+        "D3"
+      ],
+      "consecutive": 1,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 14
+        }
+      ],
+      "parentChecks": [
+        "DB-head-up maintained"
+      ]
+    },
+    {
+      "areaId": "dribbling",
+      "from": "st4",
+      "to": "exit",
+      "requiresTransfer": true,
+      "consecutive": 0,
+      "checks": []
+    },
+    {
+      "areaId": "control",
+      "from": "st1",
+      "to": "st2",
+      "benchmarkId": "CB",
+      "cueLevels": [
+        "std"
+      ],
+      "consecutive": 2,
+      "checks": [
+        {
+          "metric": "cb2Total",
+          "op": ">=",
+          "value": 7
+        },
+        {
+          "metric": "cb2Left",
+          "op": ">=",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "areaId": "control",
+      "from": "st2",
+      "to": "st3",
+      "benchmarkId": "CB",
+      "cueLevels": [
+        "std"
+      ],
+      "consecutive": 1,
+      "checks": [
+        {
+          "metric": "cb2Total",
+          "op": ">=",
+          "value": 8
+        },
+        {
+          "metric": "cb2Left",
+          "op": ">=",
+          "value": 4
+        },
+        {
+          "metric": "cb1LeftPctOfRight",
+          "op": ">=",
+          "value": 80
+        }
+      ],
+      "parentChecks": [
+        "The gate test was at pace"
+      ]
+    },
+    {
+      "areaId": "control",
+      "from": "st3",
+      "to": "st4",
+      "benchmarkId": "CA",
+      "drillIds": [
+        "C3"
+      ],
+      "consecutive": 1,
+      "checks": [
+        {
+          "metric": "correct",
+          "op": ">=",
+          "value": 14
+        }
+      ],
+      "parentChecks": [
+        "CB-2 maintained"
+      ]
+    },
+    {
+      "areaId": "control",
+      "from": "st4",
+      "to": "exit",
+      "requiresTransfer": true,
+      "consecutive": 0,
+      "checks": []
+    }
+  ],
+  "regression": {
+    "scanning": "Drop one cue duration step and repeat the previous session",
+    "feinting": "Back to blocked reps (F2/F3) for one session",
+    "dribbling": "Repeat the previous session at controlled speed",
+    "control": "Repeat the previous session with the left-foot focus"
+  },
+  "priorities": [
+    "scan off the ball",
+    "final look before receiving",
+    "head up",
+    "link to pass/shot",
+    "left foot"
+  ],
+  "coreMoveDrills": [
+    "F1",
+    "F3",
+    "F4"
+  ],
+  "benchmarkCueDrills": {
+    "SB": "cue-scan"
+  },
+  "cueLevelPattern": {
+    "note": "Cue display seconds are read from a block's params (\"cue 3 s\", \"cue 1-1.5 s\") or a benchmark's numeric cue level."
+  },
+  "benchmarkLayouts": {
+    "SB": "L3",
+    "FB": "L2",
+    "DB": "L1",
+    "CB": "L3"
+  },
+  "reactionModesProgression": [
+    "commitsToFeint",
+    "holds",
+    "delays",
+    "commitsOpposite",
+    "commitsThenRecovers",
+    "noSecondCue",
+    "mixedCatchTrials"
+  ],
+  "defenderArchetypes": [
+    {
+      "id": "earlyCommit",
+      "label": "Aggressive, commits early",
+      "notes": "Game-design parameters; probabilities are illustrative and tunable, not empirical"
+    },
+    {
+      "id": "holding",
+      "label": "Disciplined, holds"
+    },
+    {
+      "id": "reactive",
+      "label": "Reactive, commits then recovers"
+    }
+  ],
+  "scanModes": [
+    {
+      "id": "stationarySimulation",
+      "label": "Receiving simulation (stationary ball)",
+      "note": "Not a true received pass; labelled as such",
+      "requires": null
+    },
+    {
+      "id": "rebound",
+      "label": "Wall/rebound self-pass",
+      "note": "Cue shows while the ball is returning",
+      "requires": "wallUsable"
+    },
+    {
+      "id": "secondChange",
+      "label": "Second change of information",
+      "note": "Advanced: the open side can change once after the first cue",
+      "requires": null
+    }
+  ],
+  "focusMetricConfig": {
+    "C1": {
+      "primary": [
+        "M4"
+      ],
+      "supporting": [
+        "controlErrors"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M4"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "C2": {
+      "primary": [
+        "M5"
+      ],
+      "supporting": [],
+      "experimental": [],
+      "progressionEligible": [
+        "M5"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "C3": {
+      "primary": [
+        "M7"
+      ],
+      "supporting": [
+        "controlErrors"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M7"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "C4": {
+      "primary": [
+        "firstTouchControlled"
+      ],
+      "supporting": [
+        "M5"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "firstTouchControlled"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "C5": {
+      "primary": [
+        "firstTouchControlled",
+        "targetHit"
+      ],
+      "supporting": [],
+      "experimental": [],
+      "progressionEligible": [
+        "firstTouchControlled",
+        "targetHit"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "C6": {
+      "primary": [
+        "M4"
+      ],
+      "supporting": [
+        "controlErrors"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M4"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "D1": {
+      "primary": [
+        "M1+M2"
+      ],
+      "supporting": [
+        "M3"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M1+M2"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "D2": {
+      "primary": [
+        "M1+M2"
+      ],
+      "supporting": [
+        "controlledExit"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M1+M2"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "D3": {
+      "primary": [
+        "M7"
+      ],
+      "supporting": [
+        "controlErrors"
+      ],
+      "experimental": [
+        "possibleEarlyRouteCommitment"
+      ],
+      "progressionEligible": [
+        "M7"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "D4": {
+      "primary": [
+        "M3"
+      ],
+      "supporting": [
+        "M1+M2"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M3"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "D5": {
+      "primary": [
+        "controlledExit",
+        "targetHit"
+      ],
+      "supporting": [
+        "M7"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "controlledExit",
+        "targetHit"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "D6": {
+      "primary": [
+        "M7"
+      ],
+      "supporting": [
+        "controlErrors"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M7"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F1": {
+      "primary": [
+        "M6"
+      ],
+      "supporting": [
+        "controlledExit"
+      ],
+      "experimental": [
+        "estimatedTechnique"
+      ],
+      "progressionEligible": [
+        "M6"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F2": {
+      "primary": [
+        "M6"
+      ],
+      "supporting": [
+        "controlledExit"
+      ],
+      "experimental": [
+        "estimatedTechnique"
+      ],
+      "progressionEligible": [
+        "M6"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F3": {
+      "primary": [
+        "M6"
+      ],
+      "supporting": [
+        "controlledExit"
+      ],
+      "experimental": [
+        "estimatedTechnique"
+      ],
+      "progressionEligible": [
+        "M6"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F4": {
+      "primary": [
+        "correctResponseByDefenderAction"
+      ],
+      "supporting": [
+        "controlledExit",
+        "timeToAppropriateExitMs"
+      ],
+      "experimental": [
+        "possibleEarlyRouteCommitment"
+      ],
+      "progressionEligible": [
+        "correctResponseByDefenderAction"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F5": {
+      "primary": [
+        "correctResponseByDefenderAction",
+        "controlledExit"
+      ],
+      "supporting": [
+        "timeToAppropriateExitMs",
+        "controlErrors",
+        "M7"
+      ],
+      "experimental": [
+        "possibleEarlyRouteCommitment",
+        "reactivitySlope",
+        "deceptionRatio"
+      ],
+      "progressionEligible": [
+        "correctResponseByDefenderAction",
+        "controlledExit",
+        "M7"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F6": {
+      "primary": [
+        "correctResponseByDefenderAction",
+        "changeOfMindSuccess"
+      ],
+      "supporting": [
+        "controlledExit",
+        "timeToAppropriateExitMs"
+      ],
+      "experimental": [
+        "possibleEarlyRouteCommitment",
+        "deceptionRatio"
+      ],
+      "progressionEligible": [
+        "correctResponseByDefenderAction",
+        "changeOfMindSuccess",
+        "controlledExit"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F7": {
+      "primary": [
+        "correctResponseByDefenderAction",
+        "targetHit"
+      ],
+      "supporting": [
+        "controlledExit"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "correctResponseByDefenderAction",
+        "targetHit"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "F8": {
+      "primary": [
+        "transferObservation"
+      ],
+      "supporting": [],
+      "experimental": [],
+      "progressionEligible": [
+        "transferObservation"
+      ],
+      "qualityGuardrails": []
+    },
+    "S1": {
+      "primary": [
+        "lookCount"
+      ],
+      "supporting": [
+        "controlErrors"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "lookCount"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "S2": {
+      "primary": [
+        "M8"
+      ],
+      "supporting": [
+        "M9",
+        "firstTouchControlled"
+      ],
+      "experimental": [
+        "lastLookToTouchMs"
+      ],
+      "progressionEligible": [
+        "M8",
+        "firstTouchControlled"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "S3": {
+      "primary": [
+        "M8"
+      ],
+      "supporting": [
+        "digitCorrect"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M8"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "S4": {
+      "primary": [
+        "M8"
+      ],
+      "supporting": [
+        "firstTouchControlled"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M8"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "S5": {
+      "primary": [
+        "M8",
+        "controlledExit"
+      ],
+      "supporting": [
+        "targetHit"
+      ],
+      "experimental": [],
+      "progressionEligible": [
+        "M8",
+        "controlledExit"
+      ],
+      "qualityGuardrails": [
+        "controlErrors"
+      ]
+    },
+    "S6": {
+      "primary": [
+        "quizCorrect"
+      ],
+      "supporting": [],
+      "experimental": [],
+      "progressionEligible": [
+        "quizCorrect"
+      ],
+      "qualityGuardrails": []
+    }
+  },
+  "defenderDrills": [
+    {
+      "id": "def-read",
+      "name": "Read the defender",
+      "rule": "exit away from a commitment; second move or protect when the defender holds or recovers",
+      "reps": 16,
+      "repPeriodS": 10,
+      "approachMinS": 1.5,
+      "approachMaxS": 2.6,
+      "approachAngleMaxDeg": 25,
+      "archetypes": [
+        "earlyCommit",
+        "holding",
+        "reactive"
+      ],
+      "difficulty": 2,
+      "note": "Scored reactive drills use the 3D defender (part 15 D3); arrows and words stay for instruction blocks, anchor A3 and the fallback."
+    },
+    {
+      "id": "def-second",
+      "name": "Defender recovers",
+      "rule": "go when the defender stays committed; second move when it recovers",
+      "reps": 10,
+      "repPeriodS": 10,
+      "approachMinS": 1.5,
+      "approachMaxS": 2.4,
+      "approachAngleMaxDeg": 20,
+      "archetypes": [
+        "reactive"
+      ],
+      "difficulty": 2,
+      "allowedModes": [
+        "commitsToFeint",
+        "commitsThenRecovers"
+      ]
+    }
+  ],
+  "capstone": {
+    "id": "linked",
+    "name": "Linked challenge",
+    "chain": [
+      "Scan",
+      "First touch",
+      "Feint",
+      "Read the defender",
+      "Adapt",
+      "Controlled exit"
+    ],
+    "note": "Unlocks only when each component's camera measure has passed its parent validation (part 16 §8, plan/10).",
+    "components": [
+      {
+        "id": "scanProxy",
+        "label": "Scan proxy (head turn before the touch)",
+        "minReps": 20,
+        "minAgreement": 0.85,
+        "procedure": "20 recorded scanning reps: mark head turned before the touch from the replay, blind to the app; compare."
+      },
+      {
+        "id": "firstTouch",
+        "label": "First touch direction and gate",
+        "minReps": 20,
+        "minAgreement": 0.9,
+        "procedure": "20 receiving reps: mark the gate of the first touch from the replay; compare."
+      },
+      {
+        "id": "onsetDetector",
+        "label": "Feint onset and direction (live)",
+        "minReps": 20,
+        "minAgreement": 0.85,
+        "procedure": "20 feints plus 10 control movements: timestamp and direction by hand from the clip; count agreements within 100 ms and false triggers."
+      },
+      {
+        "id": "exitDecision",
+        "label": "Exit side after the defender",
+        "minReps": 20,
+        "minAgreement": 0.9,
+        "procedure": "20 defender reps: mark the exit side from the replay; compare with the app."
+      },
+      {
+        "id": "controlledExit",
+        "label": "Controlled exit (ball tracking)",
+        "minReps": 20,
+        "minAgreement": 0.85,
+        "procedure": "20 reps: mark whether the ball stayed under control through the gate; compare with ball tracking (part 17)."
+      }
+    ]
+  }
+}
