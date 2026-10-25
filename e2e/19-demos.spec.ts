@@ -29,19 +29,19 @@ test('demonstrations: suggested videos, a part of a video on a loop, alternative
   await boot(page, { clock: false });
   await setup(page);
   await openParent(page, /^Demonstrations/);
-  const f3 = page.getByTestId('demo-F3');
-  await expect(f3).toContainText('“How To Do The Single Scissor Soccer Football Move” · whole video');
+  const f3 = page.getByTestId('demo-C2');
+  await expect(f3).toContainText('“First Touch Soccer Drill: Outside Trap and Play” · whole video');
   await expect(f3).toContainText('demonstration unverified');
   await button(f3, 'Preview').click();
   const last = () => page.evaluate(() => (window as unknown as { __yt: Opts[] }).__yt.at(-1)!);
-  await expect.poll(async () => (await last())?.videoId).toBe('ox7EDXk7AX4');
+  await expect.poll(async () => (await last())?.videoId).toBe('VhHjC7KbK20');
   expect((await last()).playerVars.loop).toBe(1);
 
   // Show only 0:12–0:40, on a loop.
-  await f3.getByLabel('F3 start').fill('0:12');
-  await f3.getByLabel('F3 end').fill('0:40');
+  await f3.getByLabel('C2 start').fill('0:12');
+  await f3.getByLabel('C2 end').fill('0:40');
   await button(f3, 'Save part').click();
-  await expect(page.getByText('F3: only that part will play, on a loop.')).toBeVisible();
+  await expect(page.getByText('C2: only that part will play, on a loop.')).toBeVisible();
   await expect(f3).toContainText('· 0:12–0:40 ·');
   await button(f3, 'Close preview').click();
   await button(f3, 'Preview').click();
@@ -52,12 +52,12 @@ test('demonstrations: suggested videos, a part of a video on a loop, alternative
   // When the part ends it starts again.
   await page.evaluate(() => (window as unknown as { __yt: Opts[] }).__yt.at(-1)!.events.onStateChange({ data: 0 }));
   expect(await page.evaluate(() => (window as unknown as { __seeks: number[] }).__seeks)).toEqual([12]);
-  await f3.getByLabel('F3 end').fill('0:05');
+  await f3.getByLabel('C2 end').fill('0:05');
   await expect(button(f3, 'Save part')).toBeDisabled(); // the end must be after the start
 
   // An alternative.
-  await button(f3, 'Use “Learn how to do the Scissors Move - Football Soccer 1v1 Tutorial”').click();
-  await expect(f3).toContainText('“Learn how to do the Scissors Move - Football Soccer 1v1 Tutorial” · whole video');
+  await button(f3, 'Use “Soccer Drills for Kids - First Touch Outside the Foot”').click();
+  await expect(f3).toContainText('“Soccer Drills for Kids - First Touch Outside the Foot” · whole video');
 
   // A pasted link with a time sets the start.
   const d6 = page.getByTestId('demo-D6');

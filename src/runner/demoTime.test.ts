@@ -27,7 +27,7 @@ describe('demo video parts', () => {
     expect(linked.length).toBeGreaterThanOrEqual(15);
     for (const d of linked) {
       expect(youtubeId(d.demo.ref), d.id).toMatch(/^[\w-]{11}$/);
-      expect(d.demo.status).toMatch(/unverified/);
+      expect(d.demo.status).toMatch(/unverified|checked by a parent|usable, not great/);
       expect(d.demo.title).toBeTruthy();
       expect(d.demo.alternatives?.[0].ref).toBe(d.demo.ref);
       for (const a of d.demo.alternatives ?? []) expect(youtubeId(a.ref)).toMatch(/^[\w-]{11}$/);
