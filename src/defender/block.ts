@@ -23,6 +23,8 @@ export interface DefenderBlockConfig {
   modeLevel?: number;
   trigger: TriggerMode;
   view: 'player3d' | 'fallback2d';
+  /** How the 3D body moves: recorded human motion, or the generated poses (the default). */
+  motion?: 'recorded' | 'procedural';
   seed: number;
   rendererVersion: string;
 }

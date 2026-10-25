@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { DefenderPose } from './stateMachine';
+import { J } from './mocap';
 
 // The 3D defender (task 2.2): a simply rigged figure built from primitives (no third-party
 // asset, so no licence question), seen from the player's eye height. Only the state
@@ -121,7 +122,118 @@ export function createDefenderScene(canvas: HTMLCanvasElement): DefenderScene {
 
   const fwd = new THREE.Vector3(0, 0, 1); // the defender faces the player (+z in its own frame)
 
+  // The recorded-motion figure: the same kit, posed directly from 19 joint positions (mocap.ts).
+  const body = new THREE.Group();
+  body.visible = false;
+  scene.add(body);
+  const seg = (r: number, m: THREE.Material, r2 = r * 0.85) => {
+    const g = new THREE.CylinderGeometry(r, r2, 1, 12);
+    g.translate(0, 0.5, 0);
+    const mesh = new THREE.Mesh(g, m);
+    body.add(mesh);
+    return mesh;
+  };
+  const joint = (r: number, m: THREE.Material) => {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), m);
+    body.add(mesh);
+    return mesh;
+  };
+  const mc = {
+    thighL: seg(0.085, shorts), thighR: seg(0.085, shorts), shinL: seg(0.058, socks, 0.045), shinR: seg(0.058, socks, 0.045),
+    footL: seg(0.055, boots, 0.045), footR: seg(0.055, boots, 0.045),
+    armL: seg(0.052, kit, 0.045), armR: seg(0.052, kit, 0.045), foreL: seg(0.043, skin, 0.035), foreR: seg(0.043, skin, 0.035),
+    kneeL: joint(0.06, socks), kneeR: joint(0.06, socks), elbowL: joint(0.045, kit), elbowR: joint(0.045, kit), handL: joint(0.045, skin), handR: joint(0.045, skin),
+    neck: seg(0.05, skin),
+  };
+  const mChest = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.3, 6, 14), kit);
+  const mPelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.12, 4, 12), shorts);
+  const mHead = new THREE.Group();
+  body.add(mChest, mPelvis, mHead);
+  mHead.add(new THREE.Mesh(new THREE.SphereGeometry(0.105, 18, 14), skin));
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.112, 18, 14, 0, Math.PI * 2, 0, Math.PI * 0.55), new THREE.MeshLambertMaterial({ color: 0x2a2018 }));
+  hair.rotation.x = -0.5;
+  mHead.add(hair);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a });
+  for (const x of [-0.035, 0.035]) {
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), eyeMat);
+    e.position.set(x, 0.015, 0.095);
+    mHead.add(e);
+  }
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), skin);
+  nose.position.set(0, -0.01, 0.105);
+  mHead.add(nose);
+  const mShadow = shadow.clone();
+  body.add(mShadow);
+  const V = (f: Float32Array, j: number) => new THREE.Vector3(f[j * 3], f[j * 3 + 1], f[j * 3 + 2]);
+  const basis = (m: THREE.Object3D, up: THREE.Vector3, across: THREE.Vector3) => {
+    const y = up.clone().normalize();
+    const z = new THREE.Vector3().crossVectors(across, y).normalize();
+    const x = new THREE.Vector3().crossVectors(y, z);
+    m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+  };
+  function renderJoints(p: DefenderPose, f: Float32Array) {
+    body.position.set(p.x, 0, -p.z);
+    body.rotation.y = p.yaw;
+    const [sL, sR, hL, hR] = [V(f, J.leftShoulder), V(f, J.rightShoulder), V(f, J.leftHip), V(f, J.rightHip)];
+    for (const [k, hip, other, kn, an, he, to] of [
+      ['L', hL, hR, J.leftKnee, J.leftAnkle, J.leftHeel, J.leftToe],
+      ['R', hR, hL, J.rightKnee, J.rightAnkle, J.rightHeel, J.rightToe],
+    ] as const) {
+      const knee = V(f, kn);
+      const ankle = V(f, an);
+      place(mc[`thigh${k}`], hip.clone().lerp(other, 0.05), knee);
+      place(mc[`shin${k}`], knee, ankle);
+      mc[`knee${k}`].position.copy(knee);
+      // Boot along the heel-to-toe direction, flat on the floor when planted.
+      const dir = V(f, to).sub(V(f, he));
+      dir.y = 0;
+      if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
+      dir.normalize();
+      const f0 = ankle.clone().add(dir.clone().multiplyScalar(-0.06));
+      f0.y = Math.max(0.03, Math.min(f0.y, V(f, he).y + 0.03));
+      const f1 = f0.clone().add(dir.multiplyScalar(0.26));
+      f1.y = Math.max(0.03, V(f, to).y);
+      place(mc[`foot${k}`], f0, f1);
+    }
+    for (const [k, sh, el, wr] of [
+      ['L', sL, J.leftElbow, J.leftWrist],
+      ['R', sR, J.rightElbow, J.rightWrist],
+    ] as const) {
+      const elbow = V(f, el);
+      const wrist = V(f, wr);
+      place(mc[`arm${k}`], sh, elbow);
+      place(mc[`fore${k}`], elbow, wrist);
+      mc[`elbow${k}`].position.copy(elbow);
+      mc[`hand${k}`].position.copy(wrist);
+    }
+    const hipMid = hL.clone().add(hR).multiplyScalar(0.5);
+    const shMid = sL.clone().add(sR).multiplyScalar(0.5);
+    const spine = shMid.clone().sub(hipMid);
+    basis(mChest, spine, sL.clone().sub(sR));
+    mChest.position.copy(hipMid.clone().lerp(shMid, 0.55));
+    mChest.scale.set(1.25, 1, 0.7);
+    basis(mPelvis, spine, hL.clone().sub(hR));
+    mPelvis.rotateZ(Math.PI / 2);
+    mPelvis.position.copy(hipMid).add(new THREE.Vector3(0, 0.03, 0));
+    mPelvis.scale.set(1.35, 1, 0.8);
+    const ears = V(f, J.leftEar).add(V(f, J.rightEar)).multiplyScalar(0.5);
+    const up = spine.clone().normalize();
+    const head = ears.clone().add(up.clone().multiplyScalar(0.02));
+    mHead.position.copy(head);
+    const face = V(f, J.nose).sub(ears);
+    face.y *= 0.3;
+    const zf = face.sub(up.clone().multiplyScalar(face.dot(up))).normalize();
+    const xf = new THREE.Vector3().crossVectors(up, zf);
+    mHead.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xf, up, zf));
+    place(mc.neck, shMid.clone().add(up.clone().multiplyScalar(-0.02)), head);
+    mShadow.position.set(hipMid.x, 0.003, hipMid.z);
+    renderer.render(scene, camera);
+  }
+
   function render(p: DefenderPose) {
+    body.visible = !!p.joints;
+    root.visible = !p.joints;
+    if (p.joints) return renderJoints(p, p.joints);
     root.position.set(p.x, 0, -p.z);
     root.rotation.y = p.yaw;
     const hipY = 0.92 - 0.32 * p.crouch;

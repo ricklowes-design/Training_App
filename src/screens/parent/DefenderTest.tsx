@@ -5,7 +5,9 @@ import type { DefenderReaction, Side } from '../../db/types';
 import { ARCHETYPE_TABLE, type ArchetypeId } from '../../defender/engine';
 import { Defender3D } from '../../defender/DefenderView';
 import { TopDown } from '../../defender/Replay';
+import { mocapPose } from '../../defender/mocap';
 import { plannedTriggerMs, poseAt, repEndMs, type DefenderMotion } from '../../defender/stateMachine';
+import { useMocap } from '../../defender/useMocap';
 import { Seg } from '../../ui/widgets';
 
 const CASES: { label: string; reaction: DefenderReaction; dir?: Side }[] = [
@@ -26,11 +28,18 @@ export function DefenderTestSection() {
   // Freeze at a moment of the rep (seconds), for a close look; empty = play on a loop.
   const [freeze, setFreeze] = useState<number | null>(null);
   const started = useRef(performance.now());
+  const [recorded, setRecorded] = useState(!!settings.flags.realisticDefender);
+  const lib = useMocap(recorded);
   const c = CASES[i];
   const m: DefenderMotion = { approachMs: 1800, approachAngleDeg: angle, initialSide: 'centre', reaction: c.reaction, commitDirection: c.dir, strength: 0.8, reactionDelayMs: 250, recovery: c.reaction === 'commitThenRecover' };
   const trig = plannedTriggerMs(m);
-  const loop = repEndMs(m, trig) + 600;
-  const getPose = () => poseAt(m, freeze !== null ? freeze * 1000 : (performance.now() - started.current) % loop, trig);
+  // Recorded recoveries take longer than the generated ones: let them finish before the loop restarts.
+  const loop = repEndMs(m, trig) + (recorded ? 2200 : 600);
+  const getPose = () => {
+    const t = freeze !== null ? freeze * 1000 : (performance.now() - started.current) % loop;
+    const pose = poseAt(m, t, trig);
+    return lib ? mocapPose(lib, m, t, trig, pose) : pose;
+  };
   const best = fps.length ? Math.min(...fps.slice(-5)) : undefined;
   async function saveFps() {
     if (best === undefined) return;
@@ -44,6 +53,7 @@ export function DefenderTestSection() {
           points to the right exit. The frame rate is measured while it runs.
         </p>
         <Seg value={i} onChange={(v) => ((started.current = performance.now()), setI(v))} options={CASES.map((x, k) => ({ value: k, label: x.label }))} />
+        <Seg value={recorded ? 'recorded' : 'generated'} onChange={(v) => ((started.current = performance.now()), setRecorded(v === 'recorded'))} options={[{ value: 'generated', label: 'Generated movement' }, { value: 'recorded', label: 'Recorded movement (experimental)' }]} />
         <Seg value={angle} onChange={setAngle} options={[-20, 0, 10, 25].map((a) => ({ value: a, label: `approach ${a}°` }))} />
         <label className="row">
           <input type="checkbox" checked={freeze !== null} onChange={(e) => setFreeze(e.target.checked ? 2.2 : null)} aria-label="Freeze at a moment" />

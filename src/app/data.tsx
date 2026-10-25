@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   camera: { enabled: false, retentionDays: 30, pose: 'off', analysisFps: 15 },
   // Part 16 feature flags. The 3D defender is the default for scored reactive drills (D3);
   // the live onset detector waits for its validation (D5); the others are opt-in.
-  flags: { defender3d: true, liveOnsetDetector: false, speechDiagnostic: false, notifications: false, ballTracking: false, learning: false, coneDetection: false, neuralBallDetector: false },
+  flags: { defender3d: true, realisticDefender: false, liveOnsetDetector: false, speechDiagnostic: false, notifications: false, ballTracking: false, learning: false, coneDetection: false, neuralBallDetector: false },
   gameDays: [],
 };
 

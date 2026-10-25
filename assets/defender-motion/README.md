@@ -5,9 +5,14 @@ made by the family for this app, with permission to use the movement in it. Only
 positions are kept: no video, images or face detail (the nose and ears are kept only to
 orient the head). The source videos are not in this repository and must never be added.
 
-Not yet used by the app. It is the source for the realistic defender's animation clips
-(cut into moves, mirrored for left/right, foot-locked, blended) to be built behind a
-feature flag, with the current defender kept as the fallback.
+The realistic defender uses take 2: `scripts/motion/clips.py` cuts it into a guard loop and
+13 loaded lunges (each a commit and its recovery, with the lateral travel found by keeping the
+planted foot still) and writes `src/defender/mocap/clips.json`; the app mirrors every move for
+the other side (`src/defender/mocap.ts`). Moves whose travel disagrees with the loaded side
+(depth noise from one camera) or that end without a clear load are left out.
+
+A future recording would help most with: a lower guard held between moves, an approach run
+toward the camera, and turns to chase filmed side-on as well as from the front.
 
 | File | Length | Recording | Moves |
 |---|---|---|---|

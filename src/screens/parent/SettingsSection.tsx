@@ -158,6 +158,7 @@ export function SettingsSection() {
 
 const FLAG_TEXT: { key: keyof Settings['flags']; label: string; detail: string }[] = [
   { key: 'defender3d', label: '3D defender', detail: 'Scored reactive drills show the player-perspective defender. Off, or no WebGL: word/arrow cues, recorded as the fallback.' },
+  { key: 'realisticDefender', label: 'Realistic defender movement', detail: 'Experimental. The 3D defender moves with recorded movement of a real person defending (load, lunge, push back) instead of generated poses. Its reactions and scoring are unchanged. Compare both in Parent → 3D defender test first.' },
   { key: 'liveOnsetDetector', label: 'Live feint onset detector', detail: 'The camera starts the defender when the feint begins. Experimental until validated (part 16 §12 "Feint"); otherwise planned timing, labelled.' },
   { key: 'speechDiagnostic', label: 'Digit diagnostic (speech)', detail: "Experimental. In the optional scanning diagnostic, Chrome listens for the numbers she calls (Chrome sends the audio to Google's speech service). Its count is only a starting estimate on the result card; you confirm it. Never needed to play." },
   { key: 'notifications', label: 'Notifications', detail: 'Send one small session record per finished session (plan/14). Not built yet.' },

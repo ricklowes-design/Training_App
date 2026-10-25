@@ -631,6 +631,8 @@ export interface LearningSettings {
 
 export interface FeatureFlags {
   defender3d: boolean;
+  /** The 3D defender's body moves with recorded human motion (src/defender/mocap.ts). */
+  realisticDefender?: boolean;
   liveOnsetDetector: boolean;
   speechDiagnostic: boolean;
   notifications: boolean;

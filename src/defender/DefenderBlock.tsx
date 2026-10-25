@@ -3,7 +3,9 @@ import { tone } from '../audio/audio';
 import type { DefenderScenario } from '../db/types';
 import { initDefenderBlock, tickDefenderBlock, type DefenderBlockConfig, type DefenderBlockState, type DefenderInput } from './block';
 import { Defender2D, Defender3D } from './DefenderView';
+import { mocapPose } from './mocap';
 import { poseAt, type DefenderPose } from './stateMachine';
+import { useMocap } from './useMocap';
 
 const IDLE: DefenderPose = { state: 'approach', x: 0, z: 6, yaw: 0, crouch: 0.15, stanceWidth: 0.3, lean: 0, hipShift: 0, stepPhase: 0, stepAmp: 0, armSpread: 0.2, weightSide: 0 };
 
@@ -24,6 +26,7 @@ export function DefenderBlock(props: {
   const [view, setView] = useState(config.view);
   const [fallbackReason, setFallbackReason] = useState<string | undefined>(config.view === 'fallback2d' ? 'WebGL not available or 3D turned off' : undefined);
   const state = useRef<DefenderBlockState>(initDefenderBlock(config));
+  const lib = useMocap(config.motion === 'recorded');
   const [, force] = useState(0);
   const finished = useRef(false);
   const tap = useRef<number | undefined>(undefined);
@@ -63,7 +66,9 @@ export function DefenderBlock(props: {
     if (s.repStartMs === null || !rep) return IDLE;
     const rel = cb.current.activeMs() - s.repStartMs;
     const m = s.motion ?? { approachMs: rep.approachMs, approachAngleDeg: rep.approachAngleDeg, initialSide: rep.initialSide, reaction: 'hold' as const, strength: 0, reactionDelayMs: 0, recovery: false };
-    return poseAt(m, rel, s.motion ? s.triggerRel : null);
+    const trig = s.motion ? s.triggerRel : null;
+    const pose = poseAt(m, rel, trig);
+    return lib ? mocapPose(lib, m, rel, trig, pose) : pose;
   };
 
   const s = state.current;

@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import type { DefenderScenario } from '../db/types';
 import { Defender2D, Defender3D } from './DefenderView';
 import { poseAt, type DefenderMotion } from './stateMachine';
+import { mocapPose } from './mocap';
+import { useMocap } from './useMocap';
 
 export const motionOf = (s: DefenderScenario): DefenderMotion => ({
   approachMs: s.approachMs,
@@ -62,9 +64,12 @@ export function DefenderReplay({ scenario, clipUrl, startActiveMs, onClose }: { 
   const repStart = scenario.cueEvents.find((e) => e.state === 'repStart')?.atMs ?? 0;
   const trigger = scenario.cueEvents.find((e) => e.state === 'trigger')?.atMs ?? repStart;
   const m = motionOf(scenario);
+  // Replays show the body the rep was played with.
+  const lib = useMocap(scenario.rendererVersion.includes('recorded-motion'));
   const getPose = () => {
     const t = (video.current?.currentTime ?? 0) * 1000 + startActiveMs - repStart;
-    return poseAt(m, Math.max(0, t), trigger - repStart);
+    const pose = poseAt(m, Math.max(0, t), trigger - repStart);
+    return lib ? mocapPose(lib, m, Math.max(0, t), trigger - repStart, pose) : pose;
   };
   return (
     <div className="stack">

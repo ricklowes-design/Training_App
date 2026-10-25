@@ -50,3 +50,35 @@ test('defender positions', async ({ page }) => {
   await at('Commit then recover', 'approach 0°', 3.2, '10-commit-then-recover-coming-back');
   await at('Commit then recover', 'approach 0°', 3.7, '11-commit-then-recover-recovered');
 });
+
+/** The same moments with the recorded (realistic) movement. */
+test('defender positions, recorded movement', async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await boot(page, { clock: false });
+  await setup(page, { name: 'Sam' });
+  await openParent(page, /^3D defender test/);
+  await button(page, 'Recorded movement (experimental)').click();
+  const view = page.getByTestId('defender-3d');
+  await view.waitFor();
+  await page.waitForTimeout(2500); // the 3D module and the clips load
+  await page.getByLabel('Freeze at a moment').check();
+  const at = async (caseName: string, angle: string, sec: number, file: string) => {
+    await button(page, angle).click();
+    await button(page, caseName).click();
+    await page.getByLabel('Moment in the rep (s)').fill(String(sec));
+    await page.waitForTimeout(400);
+    await view.screenshot({ path: `docs/screens/defender-recorded/${file}.png` });
+  };
+  // Reaction from 2.45 s; a recorded commit is full by about 3.3 s; a recovery is back by about 5 s.
+  await at('Hold', 'approach -20°', 0.4, '01-approach-from-left');
+  await at('Hold', 'approach 0°', 2.3, '03-stance-reading');
+  await at('Commit left', 'approach 0°', 3.3, '04-commit-left');
+  await at('Commit right', 'approach 0°', 3.3, '05-commit-right');
+  await at('Hold', 'approach 0°', 3.0, '06-hold');
+  await at('Late reaction', 'approach 0°', 2.75, '07-late-reaction-waiting');
+  await at('Late reaction', 'approach 0°', 3.8, '08-late-reaction-committed');
+  await at('Commit then recover', 'approach 0°', 3.3, '09-commit-then-recover-committed');
+  await at('Commit then recover', 'approach 0°', 4.1, '10-commit-then-recover-coming-back');
+  await at('Commit then recover', 'approach 0°', 5.2, '11-commit-then-recover-recovered');
+});

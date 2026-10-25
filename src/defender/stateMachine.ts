@@ -33,15 +33,17 @@ export interface DefenderPose {
   stepAmp: number; // 0..1 how much the legs swing
   armSpread: number; // 0..1
   weightSide: number; // -1 on the player's-left leg .. 1 on the right leg
+  /** Recorded-motion renderer only: 19 joint positions (see mocap.ts), in the defender's own frame. */
+  joints?: Float32Array;
 }
 
 export const START_Z = 7.5;
 export const ENGAGE_Z = 3.0;
 export const SETTLE_MS = 400;
 const COMMIT_MS = 320;
-const RECOVER_HOLD_MS = 220;
+export const RECOVER_HOLD_MS = 220;
 const RECOVER_MS = 480;
-const DELAY_EXTRA_MS = 420;
+export const DELAY_EXTRA_MS = 420;
 const END_AFTER_MS = 1700;
 const COMMIT_DIST = 0.75; // metres at strength 1
 
