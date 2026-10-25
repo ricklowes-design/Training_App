@@ -135,3 +135,64 @@ export function vPullWindows(windows: Window[], square: Pt[] | undefined, track:
     return { ...base, reversals: reversals(seen, square), lostBall: lost, coverage, status: 'estimate' as const };
   });
 }
+
+export interface TapWindow {
+  label: string;
+  startMs: number;
+  endMs: number;
+  /** Best estimate and the range between the two counting methods. */
+  contacts?: number;
+  range?: [number, number];
+  /** Share of the window in which the ball was seen. */
+  coverage: number;
+  status: 'experimental' | 'unobservable';
+  reason?: string;
+}
+
+export const TAPS = { minCoverage: 0.6, minStep: 0.003, dedupMs: 80, smoothMs: 500, hysteresis: 0.002 };
+
+/**
+ * Rapid repeated contacts (plan/09 task 6.7, experimental; plan/17: no reliability claim under rapid foot
+ * occlusion). Two counts from the seen ball inside the square: direction reversals across the picture
+ * (short de-duplication), and the side-to-side rhythm (crossings of the ball's path about its own
+ * moving average), which bridges short occlusions. The estimate is their mean, shown with both.
+ */
+export function tapWindows(windows: Window[], square: Pt[] | undefined, track: TrackSample[] | undefined, fps: number): TapWindow[] {
+  return windows.map((w) => {
+    const endMs = w.endMs ?? w.startMs + 30_000;
+    const base = { label: w.label, startMs: w.startMs, endMs };
+    if (!track) return { ...base, coverage: 0, status: 'unobservable' as const, reason: 'needs ball tracking' };
+    if (!square) return { ...base, coverage: 0, status: 'unobservable' as const, reason: 'no square marked in the camera set-up' };
+    const seen = seenIn(track, w.startMs, endMs).filter((s) => pointInPolygon({ x: s.x, y: s.y }, square));
+    const coverage = Math.min(1, seen.length / Math.max(1, ((endMs - w.startMs) / 1000) * fps));
+    if (coverage < TAPS.minCoverage) return { ...base, coverage, status: 'unobservable' as const, reason: `ball seen in ${Math.round(coverage * 100)}% of the window (feet hide it)` };
+    // 1. Reversals of the ball's sideways movement.
+    let direct = 0;
+    let lastDir = 0;
+    let lastAt = -Infinity;
+    for (let i = 1; i < seen.length; i++) {
+      const dx = seen[i].x - seen[i - 1].x;
+      if (Math.abs(dx) < TAPS.minStep) continue;
+      const dir = Math.sign(dx);
+      if (lastDir && dir !== lastDir && seen[i - 1].tMs - lastAt >= TAPS.dedupMs) {
+        direct++;
+        lastAt = seen[i - 1].tMs;
+      }
+      lastDir = dir;
+    }
+    // 2. Rhythm: crossings of the path about its moving average, with hysteresis.
+    let rhythm = 0;
+    let side = 0;
+    for (let i = 0; i < seen.length; i++) {
+      const near = seen.filter((s) => Math.abs(s.tMs - seen[i].tMs) <= TAPS.smoothMs / 2);
+      const mean = near.reduce((a, s) => a + s.x, 0) / near.length;
+      const d = seen[i].x - mean;
+      const now = d > TAPS.hysteresis ? 1 : d < -TAPS.hysteresis ? -1 : 0;
+      if (now && side && now !== side) rhythm++;
+      if (now) side = now;
+    }
+    const lo = Math.min(direct, rhythm);
+    const hi = Math.max(direct, rhythm);
+    return { ...base, contacts: Math.round((direct + rhythm) / 2), range: [lo, hi] as [number, number], coverage, status: 'experimental' as const };
+  });
+}

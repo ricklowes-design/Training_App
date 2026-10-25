@@ -105,6 +105,11 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   const setsFor = useCallback((b: RunBlock) => (b.drillId ? p.drills.find((d) => d.id === b.drillId)?.sets : undefined), [p]);
   const labels: E.Labels = useMemo(() => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor }), [blockName, p, setsFor]);
   const setWindows = (b: RunBlock, label: string) => setWindowsFor(setsFor(b), b.minutes, label);
+  // Mastery-set windows the camera can measure: V-pull sets, and the tap sets for rapid-touch estimates.
+  const controlWindows = (b: RunBlock) => {
+    const w = ['V-pulls', 'Inside-outside taps', 'Outside-only taps'].flatMap((l) => setWindows(b, l) ?? []);
+    return w.length ? w : undefined;
+  };
 
   const benchmarksLogged = useMemo(() => new Set(saved.map((r) => r.blockIndex)), [saved]);
   const activeMs = useCallback(() => E.activeElapsedMs(sRef.current, Date.now()), []);
@@ -122,7 +127,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     onClip: (clip, b, setup) => {
       const key = `${clip.blockIndex}:${clip.attempt}`;
       const def = extras.current.get(key)?.defender;
-      if (!def) return void analyseClip(p, clip, b, setup, extras.current.get(key)?.cueLog, undefined, extras.current.get(key)?.windows ?? setWindows(b, 'V-pulls'));
+      if (!def) return void analyseClip(p, clip, b, setup, extras.current.get(key)?.cueLog, undefined, extras.current.get(key)?.windows ?? controlWindows(b));
       void db.defenderScenarios
         .where('sessionRecordId')
         .equals(clip.sessionRecordId)

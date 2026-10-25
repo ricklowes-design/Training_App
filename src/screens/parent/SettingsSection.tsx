@@ -167,6 +167,7 @@ const FLAG_TEXT: { key: keyof Settings['flags']; label: string; detail: string }
   { key: 'ballTracking', label: 'Ball tracking', detail: 'Use the registered ball profile in after-block analysis (part 17). Experimental until validated.' },
   { key: 'coneDetection', label: 'Cone detection', detail: 'Experimental. In Room profiles, finds orange cones in the room photo and moves the suggested markers onto them; you check and confirm every position.' },
   { key: 'neuralBallDetector', label: 'Ball detector model', detail: "Experimental. Adds MediaPipe's object detector (EfficientDet-Lite0, Apache-2.0, downloaded from Google once) to ball tracking. Run Parent → Balls → detector speed test first; results stay estimates until validated." },
+  { key: 'rapidTouches', label: 'Rapid touch counting', detail: 'Experimental, needs ball tracking. Estimates the quick taps in the mastery set (inside-outside and outside-only taps) from the ball\'s side-to-side movement, with a range. Never used for progression; nothing is shown when the feet hide the ball too much.' },
   { key: 'learning', label: 'Personalisation', detail: 'Collect verified examples and propose personalised models that must beat the frozen validation set (part 18).' },
 ];
 

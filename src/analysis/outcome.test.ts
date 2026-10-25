@@ -62,3 +62,33 @@ describe('V-pulls outcome', () => {
     expect(vPullWindows([{ label: 'Right foot', startMs: 0, endMs: 30_000 }], square, sparse, 15)[0].status).toBe('unableToAssess');
   });
 });
+
+describe('rapid contacts (experimental, task 6.7)', () => {
+  const square = [
+    { x: 0.3, y: 0.3 },
+    { x: 0.7, y: 0.3 },
+    { x: 0.7, y: 0.7 },
+    { x: 0.3, y: 0.7 },
+  ];
+  it('counts quick side-to-side taps, with a range between the two methods', async () => {
+    const { tapWindows } = await import('./outcome');
+    const track: TrackSample[] = [];
+    // A tap every 0.3 s for 10 s (about 33 touches), seen at 30 fps.
+    for (let t = 0; t <= 10_000; t += 33) {
+      const k = Math.floor(t / 300);
+      const within = (t % 300) / 300;
+      track.push({ tMs: t, x: 0.5 + 0.03 * (k % 2 ? 1 - within : within) - 0.015, y: 0.5, confidence: 0.9, predicted: false });
+    }
+    const [w] = tapWindows([{ label: 'Inside-outside taps', startMs: 0, endMs: 10_000 }], square, track, 30);
+    expect(w.status).toBe('experimental');
+    expect(w.contacts).toBeGreaterThanOrEqual(28);
+    expect(w.contacts).toBeLessThanOrEqual(36);
+    expect(w.range![0]).toBeLessThanOrEqual(w.contacts!);
+  });
+  it('is unobservable when the feet hide the ball too much', async () => {
+    const { tapWindows } = await import('./outcome');
+    const track: TrackSample[] = [];
+    for (let t = 0; t <= 10_000; t += 33) track.push({ tMs: t, x: 0.5, y: 0.5, confidence: 0.9, predicted: t % 1000 > 400 });
+    expect(tapWindows([{ label: 'Outside-only taps', startMs: 0, endMs: 10_000 }], square, track, 30)[0].status).toBe('unobservable');
+  });
+});

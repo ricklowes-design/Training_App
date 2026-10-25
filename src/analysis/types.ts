@@ -63,6 +63,8 @@ export interface BlockAnalysis {
   slalom?: import('./outcome').SlalomRun[];
   /** V-pull windows: ball direction reversals in the square and balls lost from it. Estimates. */
   vPulls?: import('./outcome').VPullWindow[];
+  /** Experimental rapid-touch estimates (task 6.7), never progression-eligible. */
+  taps?: import('./outcome').TapWindow[];
   /** Ball tracking summary (part 17), an estimate until validated; never progression-eligible before then. */
   ball?: import('../ball/summary').BallSummary;
   enoughReps: boolean; // ≥ 8 valid reps

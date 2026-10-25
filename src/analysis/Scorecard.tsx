@@ -39,7 +39,7 @@ export function takeaway(a: BlockAnalysis): string | null {
 /** Block scorecard (task 3.5): Basic by default, Advanced on toggle. Below the confidence threshold a rep is unable to assess, never scored. */
 /** Slalom runs and V-pull windows (plan/12 §12.3): camera estimates, with what saw them. */
 export function OutcomeLines({ a }: { a: BlockAnalysis }) {
-  if (!a.slalom?.length && !a.vPulls?.length) return null;
+  if (!a.slalom?.length && !a.vPulls?.length && !a.taps?.length) return null;
   return (
     <ul className="clean" data-testid="outcome-lines">
       {a.slalom?.map((r) => (
@@ -54,6 +54,12 @@ export function OutcomeLines({ a }: { a: BlockAnalysis }) {
         <li key={w.label}>
           <strong>{w.label}:</strong>{' '}
           {w.status === 'estimate' ? `${w.reversals} ball direction changes in the square · ball left the square ${w.lostBall} ${w.lostBall === 1 ? 'time' : 'times'}` : `unable to assess (${w.reason})`}
+        </li>
+      ))}
+      {a.taps?.map((w) => (
+        <li key={w.label}>
+          <strong>{w.label}:</strong>{' '}
+          {w.status === 'experimental' ? `about ${w.contacts} touches (${w.range![0]}–${w.range![1]}), experimental: not validated, never used for progression` : `unobservable (${w.reason})`}
         </li>
       ))}
     </ul>

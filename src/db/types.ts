@@ -641,6 +641,8 @@ export interface FeatureFlags {
   defender3d: boolean;
   /** The 3D defender's body moves with recorded human motion (src/defender/mocap.ts). */
   realisticDefender?: boolean;
+  /** Experimental rapid-touch counting from ball tracking (plan/09 task 6.7). */
+  rapidTouches?: boolean;
   liveOnsetDetector: boolean;
   speechDiagnostic: boolean;
   notifications: boolean;

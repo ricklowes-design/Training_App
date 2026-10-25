@@ -136,6 +136,7 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
       ctx: { kind, mirror: setup.mirror, homography: setup.homography, blockEndMs: clip.durationS * 1000 + clip.startActiveMs, fps, alignmentErrorMs: settings?.timingBudget?.alignmentErrorMs },
       gateZones,
       windows,
+      rapid: !!settings?.flags?.ballTracking && !!settings.flags.rapidTouches,
     });
     const { reps, block: b0, ball } = await result;
     const block = ball ? { ...b0, ball } : b0;
