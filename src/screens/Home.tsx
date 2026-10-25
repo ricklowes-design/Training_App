@@ -1,3 +1,4 @@
+import { dayKind } from '../domain/sequencing';
 import { useMemo, useState } from 'react';
 import { unlockAudio } from '../audio/audio';
 import { useData } from '../app/data';
@@ -112,9 +113,10 @@ export function Home() {
   const others = progress
     .map((pr) => nextForArea(p, pr))
     .filter((s): s is Suggestion => !!s && !(suggestion && s.areaId === suggestion.areaId));
-  const gameDay = settings.gameDays.includes(new Date().getDay());
+  const kindToday = dayKind(settings, new Date());
+  const lightDay = kindToday !== 'normal';
   const [light, setLight] = useState<boolean | null>(null);
-  const isLight = light ?? gameDay;
+  const isLight = light ?? lightDay;
   const guided = useMemo(() => guidedPlan(d, suggestion, others, minutes, isLight), [d, suggestion, others, minutes, isLight]); // eslint-disable-line react-hooks/exhaustive-deps
   const mainPlan = guided.plan;
   const goals = suggestion ? todayGoals(p, (mainPlan ?? planForSuggestion(d, suggestion))?.blocks.map((b) => b.drillId).filter((x): x is string => !!x) ?? [], suggestion.areaId, settings.priorities) : [];
@@ -122,7 +124,7 @@ export function Home() {
   const why = useMemo(
     () =>
       suggestion
-        ? reasonsFor({ programme: p, placements: d.placements, records, results: d.results, advancements: d.advancements, transfers: d.transfers, extraCriteria: d.extraCriteria, observations: observations ?? [], now: new Date() }, suggestion.areaId)
+        ? reasonsFor({ programme: p, placements: d.placements, records, results: d.results, advancements: d.advancements, transfers: d.transfers, extraCriteria: d.extraCriteria, observations: observations ?? [], now: new Date(), allocation: settings.allocation, weekStart: ws }, suggestion.areaId)
         : [],
     [p, d, records, observations, suggestion],
   );
@@ -170,14 +172,14 @@ export function Home() {
             <div className="row" style={{ fontSize: '1.2rem' }}>
               <span className="muted">Session length</span>
               <Seg value={minutes} onChange={setMinutes} options={DURATIONS.map((m) => ({ value: m, label: `${m} min` }))} />
-              {gameDay || light ? (
+              {lightDay || light ? (
                 <label className="check">
                   <input type="checkbox" checked={isLight} onChange={(e) => setLight(e.target.checked)} />
                   Light
                 </label>
               ) : null}
             </div>
-            {gameDay ? <div className="muted">{tryFill(p.feedbackTemplates, 'gameDay', {})}</div> : null}
+            {lightDay ? <div className="muted">{tryFill(p.feedbackTemplates, kindToday === 'game' ? 'gameDay' : kindToday === 'rest' ? 'restDay' : 'lightDay', {})}</div> : null}
             {mainPlan ? (
               <StartCard
                 key={`main-${suggestion.areaId}-${minutes}-${isLight}`}

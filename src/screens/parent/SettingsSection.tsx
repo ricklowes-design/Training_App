@@ -10,7 +10,7 @@ import { UnitsChoice } from './RoomProfiles';
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function SettingsSection() {
-  const { settings } = useData();
+  const { settings, programme } = useData();
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [pin, setPin] = useState('');
   const [pinMsg, setPinMsg] = useState('');
@@ -112,6 +112,53 @@ export function SettingsSection() {
           <input type="checkbox" checked={settings.partnerAvailable} onChange={(e) => save({ partnerAvailable: e.target.checked })} />
           A partner is usually available
         </label>
+      </div>
+
+      <div className="card stack">
+        <h2>Weekly allocation</h2>
+        <p className="muted">How the suggested session shares the week between areas. Equal is the plan's default; the next suggestion is the area furthest below its share, then the one practised least recently.</p>
+        {programme.areas.map((ar) => (
+          <div key={ar.id} className="row">
+            <span style={{ minWidth: 220 }}>{ar.name}</span>
+            <Seg
+              value={settings.allocation?.[ar.id] ?? 1}
+              onChange={(w) => save({ allocation: { ...(settings.allocation ?? {}), [ar.id]: w } })}
+              options={[0.5, 1, 2, 3].map((w) => ({ value: w, label: w === 1 ? 'Equal' : w === 0.5 ? 'Half' : `${w}×` }))}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="card stack">
+        <h2>Calendar (next three weeks)</h2>
+        <p className="muted">Mark days with a game, a light day or a rest day (for example a tournament, a busy day or a holiday). Light and game days suggest a light session; a rest day plans none. Weekly game days above still apply when a day is left as usual.</p>
+        <div className="calendar-grid">
+          {Array.from({ length: 21 }, (_, k) => {
+            const d = new Date();
+            d.setDate(d.getDate() + k);
+            const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const cur = settings.availability?.find((x) => x.date === iso)?.kind ?? '';
+            return (
+              <label key={iso} className="field">
+                <span>{d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                <select
+                  aria-label={`Day ${iso}`}
+                  value={cur}
+                  onChange={(e) => {
+                    const rest = (settings.availability ?? []).filter((x) => x.date !== iso && x.date >= new Date().toISOString().slice(0, 10));
+                    const kind = e.target.value as '' | 'rest' | 'light' | 'game';
+                    save({ availability: kind ? [...rest, { date: iso, kind }].sort((a, b) => a.date.localeCompare(b.date)) : rest });
+                  }}
+                >
+                  <option value="">As usual</option>
+                  <option value="light">Light</option>
+                  <option value="game">Game</option>
+                  <option value="rest">Rest</option>
+                </select>
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       <div className="card stack">

@@ -108,6 +108,8 @@ export interface SuggestInput {
   now: Date;
   weekStartDay: number;
   priorities: string[];
+  /** Relative weekly share per area (task 5.3); absent or 1 = equal. */
+  allocation?: Record<string, number>;
 }
 
 /** The last completed session in the current stage that has a benchmark, for repeating while criteria are pending. */
@@ -129,10 +131,11 @@ export function nextForArea(p: Programme, prog: AreaProgress): Suggestion | null
   return { kind: 'session', areaId: prog.areaId, sessionNumber: prog.next };
 }
 
-/** "Next session" (plan/02 §2.3): the area with the fewest completed sessions this week,
- *  then the one practised least recently; coach priorities break ties, then content order. */
+/** "Next session" (plan/02 §2.3, task 5.3): the area furthest below its weekly share (with equal shares,
+ *  the fewest completed sessions this week), then the one practised least recently; coach priorities
+ *  break ties, then content order. */
 export function suggestNext(input: SuggestInput): Suggestion | null {
-  const { programme: p, placements, records, advancements, now, weekStartDay, priorities } = input;
+  const { programme: p, placements, records, advancements, now, weekStartDay, priorities, allocation } = input;
   const ws = weekStart(now, weekStartDay).getTime();
   const rows = p.areas
     .map((a, order) => {
@@ -142,10 +145,12 @@ export function suggestNext(input: SuggestInput): Suggestion | null {
       const thisWeek = counted.filter((r) => new Date(r.date).getTime() >= ws).length;
       const last = counted.reduce((m, r) => Math.max(m, new Date(r.date).getTime()), 0);
       const priority = a.priorityTags.some((t) => priorities.includes(t)) || priorities.includes(a.id) ? 0 : 1;
-      return { sugg, thisWeek, last, priority, order };
+      // Sessions this week relative to the area's share: with equal shares, simply the fewest.
+      const share = Math.max(0.25, allocation?.[a.id] ?? 1);
+      return { sugg, thisWeek, load: thisWeek / share, last, priority, order };
     })
     .filter((r) => r.sugg !== null);
-  rows.sort((x, y) => x.thisWeek - y.thisWeek || x.last - y.last || x.priority - y.priority || x.order - y.order);
+  rows.sort((x, y) => x.load - y.load || x.last - y.last || x.priority - y.priority || x.order - y.order);
   return rows[0]?.sugg ?? null;
 }
 
@@ -161,4 +166,12 @@ export function proposePlacement(p: Programme, areaId: string, answers: boolean[
     startSession,
     explanation: `Stage ${stage?.order ?? '?'} Session ${startSession} because ${yes} of ${answers.length} answers were yes (${answered}).`,
   };
+}
+
+/** What kind of day a date is: a calendar entry wins, then the weekly game days. */
+export function dayKind(settings: { gameDays: number[]; availability?: { date: string; kind: 'rest' | 'light' | 'game' }[] }, d: Date): 'normal' | 'rest' | 'light' | 'game' {
+  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const entry = settings.availability?.find((a) => a.date === iso);
+  if (entry) return entry.kind;
+  return settings.gameDays.includes(d.getDay()) ? 'game' : 'normal';
 }

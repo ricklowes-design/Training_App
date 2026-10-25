@@ -21,6 +21,8 @@ export interface RecInput {
   extraCriteria: ExtraCriterion[];
   observations: MetricObservation[];
   now: Date;
+  allocation?: Record<string, number>;
+  weekStart?: Date;
 }
 
 export function reasonsFor(i: RecInput, areaId: string): string[] {
@@ -59,6 +61,14 @@ export function reasonsFor(i: RecInput, areaId: string): string[] {
   // Uncertainty: nothing recent to go on is a reason to observe, never a penalty.
   const lastDate = last ? new Date(last.date) : undefined;
   if (!lastDate || (i.now.getTime() - lastDate.getTime()) / 86_400_000 > 21) out.push('no recent comparable result');
+  // Weekly allocation, when the shares are not all equal (task 5.3).
+  const shares = Object.values(i.allocation ?? {});
+  if (i.weekStart && shares.some((x) => x !== 1)) {
+    const total = p.areas.reduce((n, a) => n + Math.max(0.25, i.allocation?.[a.id] ?? 1), 0);
+    const pct = Math.round((100 * Math.max(0.25, i.allocation?.[areaId] ?? 1)) / total);
+    const done = i.records.filter((r) => r.areaId === areaId && countsForWeek(r) && new Date(r.date) >= i.weekStart!).length;
+    out.push(`set to ${pct}% of the week; ${done} session${done === 1 ? '' : 's'} so far this week`);
+  }
   // Spacing.
   const lastSession = i.records.filter((r) => r.areaId === areaId && countsForWeek(r)).sort((a, b) => b.date.localeCompare(a.date))[0];
   if (lastSession) {

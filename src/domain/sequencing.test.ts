@@ -149,3 +149,36 @@ describe('skip-ahead (part 15 D12)', () => {
     expect(sessionLock(p, after, 3).locked).toBe(false);
   });
 });
+
+describe('weekly allocation and the availability calendar (task 5.3)', () => {
+  it('equal shares keep the fewest-this-week rule; a larger share keeps an area suggested longer', async () => {
+    const { suggestNext } = await import('./sequencing');
+    const { loadProgramme } = await import('../test/fixtures');
+    const { rec } = await import('../test/factories');
+    const p = loadProgramme();
+    const now = new Date('2026-11-05T12:00:00');
+    const placements = p.areas.map((a) => ({ areaId: a.id, startSession: 1, date: '2026-11-01T00:00:00Z', explanation: '' }));
+    const [a, b, c, d] = p.areas.map((x) => x.id);
+    const done = (areaId: string, day: number, hour = 18) => rec({ areaId, sessionNumber: 1, date: `2026-11-0${day}T${hour}:00:00` });
+    const base = { programme: p, placements: placements as never[], advancements: [], now, weekStartDay: 1, priorities: [] };
+    // This week: a once, b, c and d twice each.
+    const records = [done(a, 3), done(b, 3), done(c, 3), done(d, 3), done(b, 4), done(c, 4), done(d, 4)];
+    expect(suggestNext({ ...base, records })?.areaId).toBe(a); // equal shares: the fewest
+    // a twice too: with equal shares the tie goes to the least recently practised (b, c or d);
+    // with a 3x share, two sessions are still the furthest below a's share.
+    const more = [...records, done(a, 4, 20)];
+    expect(suggestNext({ ...base, records: more })?.areaId).not.toBe(a);
+    expect(suggestNext({ ...base, records: more, allocation: { [a]: 3 } })?.areaId).toBe(a);
+    // Half a share: one session already fills it, so another area comes first.
+    expect(suggestNext({ ...base, records: [done(a, 3)], allocation: { [a]: 0.5 } })?.areaId).not.toBe(a);
+  });
+
+  it('a calendar entry decides the day; otherwise the weekly game days', async () => {
+    const { dayKind } = await import('./sequencing');
+    const d = new Date('2026-11-07T10:00:00'); // a Saturday
+    expect(dayKind({ gameDays: [] }, d)).toBe('normal');
+    expect(dayKind({ gameDays: [6] }, d)).toBe('game');
+    expect(dayKind({ gameDays: [6], availability: [{ date: '2026-11-07', kind: 'rest' }] }, d)).toBe('rest');
+    expect(dayKind({ gameDays: [], availability: [{ date: '2026-11-07', kind: 'light' }] }, d)).toBe('light');
+  });
+});

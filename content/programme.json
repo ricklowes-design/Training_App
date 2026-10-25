@@ -4176,7 +4176,9 @@
     "gameDay": "Game day: a light session is suggested.",
     "chanceLine": "{correct}/{n} right. Guessing among {k} would reach {correct} or more in {pct}% of blocks: a group-level clue, not proof of scanning on any rep.",
     "scanMode": "{mode}: {note}.",
-    "recommendWhy": "Why this session: {reasons}."
+    "recommendWhy": "Why this session: {reasons}.",
+    "lightDay": "Light day in the calendar: a light session is suggested.",
+    "restDay": "Rest day in the calendar: no session is planned. A light one is still there if wanted."
   },
   "anchors": [
     {

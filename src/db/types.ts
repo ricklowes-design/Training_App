@@ -93,6 +93,10 @@ export interface Settings {
   activeBallProfileId?: string;
   /** Weekly availability: days with a game or team practice (no heavy sessions). */
   gameDays: number[];
+  /** Weekly allocation per area (relative weight, 1 = equal share). Absent = all equal. */
+  allocation?: Record<string, number>;
+  /** Dates marked in the availability calendar (YYYY-MM-DD): a rest day, a light day or a game. */
+  availability?: { date: string; kind: 'rest' | 'light' | 'game' }[];
 }
 
 export interface CameraSettings {

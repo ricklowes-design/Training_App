@@ -20,8 +20,8 @@ export function useAreaProgress(): AreaProgress[] {
 export function useSuggestion(): Suggestion | null {
   const { programme, placements, records, advancements, settings } = useData();
   return useMemo(
-    () => suggestNext({ programme, placements, records, advancements, now: new Date(), weekStartDay: settings.weekStartDay, priorities: settings.priorities }),
-    [programme, placements, records, advancements, settings.weekStartDay, settings.priorities],
+    () => suggestNext({ programme, placements, records, advancements, now: new Date(), weekStartDay: settings.weekStartDay, priorities: settings.priorities, allocation: settings.allocation }),
+    [programme, placements, records, advancements, settings.weekStartDay, settings.priorities, settings.allocation],
   );
 }
 
