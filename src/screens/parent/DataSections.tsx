@@ -11,6 +11,8 @@ import { countedResults } from '../../domain/records';
 import { canDemote, demote, promote } from '../../domain/trial';
 import { DemoVideo, fmtTime, linkStart, parseTime, youtubeId } from '../../runner/DemoVideo';
 import type { Drill } from '../../content/types';
+import { DrillAnimation } from '../../ui/DrillAnimation';
+import { scriptFor } from '../../ui/drillScripts';
 import { downloadText, fmtDate, Modal, StatusPill } from '../../ui/widgets';
 import { ruleStatusFor, useAreaProgress } from '../helpers';
 
@@ -360,6 +362,8 @@ async function saveDemo(d: Drill, value: Partial<Drill['demo']>, what: string) {
 }
 
 function DemoCard({ d, hasClip, onMsg }: { d: Drill; hasClip: boolean; onMsg: (m: string) => void }) {
+  const { layout, settings } = useData();
+  const anim = !!layout && !!scriptFor(d.id, layout.derived, layout.roomLengthM);
   const [link, setLink] = useState('');
   const [preview, setPreview] = useState(false);
   const [start, setStart] = useState(d.demo.startS !== undefined ? fmtTime(d.demo.startS) : '');
@@ -417,6 +421,14 @@ function DemoCard({ d, hasClip, onMsg }: { d: Drill; hasClip: boolean; onMsg: (m
         <div style={{ maxWidth: 560 }}>
           <DemoVideo drill={d} hasOwnClip={hasClip} />
         </div>
+      ) : null}
+      {anim && layout ? (
+        <details>
+          <summary>Animated drill (the app's own combination: where to go and what each cue asks)</summary>
+          <div style={{ maxWidth: 420 }}>
+            <DrillAnimation drillId={d.id} d={layout.derived} lengthM={layout.roomLengthM} widthM={layout.roomWidthM} floor={layout.floor} units={settings.units} />
+          </div>
+        </details>
       ) : null}
       {isLink && !hasClip ? (
         <div className="row" style={{ flexWrap: 'wrap' }}>

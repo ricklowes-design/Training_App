@@ -23,9 +23,11 @@ interface Props {
   /** Shown over the drawing when the layout does not fit this room. */
   unavailable?: string;
   maxHeight?: number;
+  /** Animated drill (DrillAnimation): drawn over the plan, with the static player and route hidden. */
+  overlay?: (h: { X: (x: number) => number; Y: (y: number) => number; fs: number; screenY: number; W: number; H: number }) => JSX.Element;
 }
 
-export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', units = 'metric', screenBehindM = 1.5, unavailable, maxHeight = 420 }: Props) {
+export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', units = 'metric', screenBehindM = 1.5, unavailable, maxHeight = 420, overlay }: Props) {
   const L = (m: number) => fmtLen(m, units);
   const padX = 1.3;
   const pad = 0.8;
@@ -117,7 +119,7 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
       ) : null}
       {layoutId === 'L4' ? <rect x={X(-sqS)} y={Y(lengthM - 1)} width={2 * sqS} height={2 * sqS} fill="none" stroke="#e8edf3" strokeWidth={0.025} opacity={0.6} /> : null}
 
-      {route ? <path d={route} stroke="#ffd23f" strokeWidth={0.035} opacity={0.75} {...dash} /> : null}
+      {route && !overlay ? <path d={route} stroke="#ffd23f" strokeWidth={0.035} opacity={0.75} {...dash} /> : null}
 
       {/* Cones */}
       {cones.map((c, i) => tri(c.floor[0], c.floor[1], inside(c.floor) ? CONE : OUT, i))}
@@ -154,11 +156,13 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
       ) : null}
 
       {/* Player */}
-      <g>
+      <g display={overlay ? 'none' : undefined}>
         <circle cx={X(0)} cy={Y(player.y)} r={0.17} fill="#ffd23f" stroke="#111" strokeWidth={0.02} />
         <polygon points={`${X(0)},${Y(player.y + player.face * 0.36)} ${X(-0.1)},${Y(player.y + player.face * 0.2)} ${X(0.1)},${Y(player.y + player.face * 0.2)}`} fill="#ffd23f" />
         {text(X(-0.25), Y(player.y) + fs * 0.35, player.label, { anchor: 'end', size: fs * 0.85, fill: '#ffd23f', weight: 700 })}
       </g>
+
+      {overlay ? overlay({ X, Y, fs, screenY, W, H }) : null}
 
       {unavailable ? (
         <g>

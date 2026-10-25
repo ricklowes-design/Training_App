@@ -1,3 +1,5 @@
+import { DrillAnimation } from '../ui/DrillAnimation';
+import { scriptFor } from '../ui/drillScripts';
 import { scanModeFor } from '../domain/scan';
 import { tryFill } from '../domain/templates';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -142,6 +144,9 @@ export function DemoPanel(props: {
       </div>
       <div className="col">
         {shownDrill ? <DemoVideo drill={shownDrill} hasOwnClip={demoClipIds.includes(shownDrill.id)} onPlayingChange={onPlayingChange} /> : <div className="video muted">No video for this block</div>}
+        {shownDrill && layout && scriptFor(shownDrill.id, layout.derived, layout.roomLengthM) ? (
+          <DrillAnimation drillId={shownDrill.id} d={layout.derived} lengthM={layout.roomLengthM} widthM={layout.roomWidthM} floor={layout.floor} units={units} screenBehindM={p.layoutGeometry.receiveBox.cueScreenBehindM} maxHeight={300} />
+        ) : null}
         {framing ? (
           <div className="row" style={{ fontSize: '1.3rem' }}>
             <span style={{ width: 28, height: 28, borderRadius: 14, display: 'inline-block', background: framing.ok ? 'var(--go)' : 'var(--stop)' }} />

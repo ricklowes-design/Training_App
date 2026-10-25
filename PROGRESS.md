@@ -112,8 +112,11 @@ Not done in milestone 2:
 
 - 2026-10-14 Automated testing: 64 Playwright end-to-end tests over every screen (see README → Tests) plus the unit tests, run in GitHub Actions on every push. Bugs the e2e suite found and fixed: a double tap on a benchmark Save stored two results; the clip player's Keep box did not update; a week with only an anchor check or extras hid them; "First session in N days" could be one day short; restoring a backup on a fresh device needed set-up first (a restore button is now on the first set-up screen).
 
+- 2026-10-25 Animated drill demos: the app's own combinations (F2, F4, F5, F6, D3, D4, S2, S4, S5, C3) now have a top-down animation drawn on the room's own cone plan (sized from the room profile, front = Chromebook, back = start wall): player, ball, partner or target, the screen cue and a caption for each step, with one button per outcome (for example GO / HELD) and Pause. Shown under the demo video before the drill and in Parent → Demonstrations → "Animated drill". They show the drill's flow only; the technique itself still comes from the demo video or your own clip. Unit tests check every position stays inside small, medium and large rooms; an e2e test covers the Parent view.
+
 ## Manual checks pending (parent)
 Run these on the Chromebook in Chrome, from the deployed site.
+- Animated drills: Parent → Demonstrations, open "Animated drill" on F4, D3, S4 and C3. Does each match how you would explain the drill (where the player starts, where the ball goes, what each screen cue means)? Note any step that is wrong or confusing.
 
 Plan update (parts 15–18), part 16 §12:
 - Room: Parent → Room profiles → Edit → take the photo with nothing on the floor, tap 2–4 furniture anchors, tap the safe floor, check each layout's cones and drag them where you put them. No tape or measuring. Close and reopen the app, turn the camera on, start a session: the demo view shows no room warning. Move the webcam a hand's width and start again: the demo view says the camera moved and the session runs camera-unverified. Shrink the safe floor to a small patch: the start card refuses the receive-box and feint-lane sessions with a reason.
