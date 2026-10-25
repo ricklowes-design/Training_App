@@ -56,6 +56,8 @@ export interface Drill {
   variants: { solo: boolean; partner: null | { required: boolean } };
   mode: 'timed' | 'reps';
   cueDrillId?: string;
+  /** Sets inside a block: the block's time is split evenly and each set is announced (plan/02 §2.6). */
+  sets?: { count: number; labels?: string[] };
   /** false: an optional diagnostic, never offered as routine training (part 15 D8). */
   routine?: boolean;
   /** Scanning modes this drill supports (part 15 D9). */

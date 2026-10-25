@@ -131,6 +131,7 @@ test('Drills tab and drill view: practice history and the comparison picker (las
   await page.locator('li', { hasText: 'CB · V-pulls and outside-touch gate' }).getByRole('button').click();
   await expect(page.getByText(/^Now \(Feb 9\): Gate test 7\/10/)).toBeVisible();
   await expect(page.getByText(/^Then \(Dec 8\): Gate test 6\/10/)).toBeVisible();
+  await expect(page.getByTestId('personal-best')).toContainText('Gate test 7/10 (R 4/5 · L 3/5) (this result)');
   await expect(page.getByText(/V-pulls and outside-touch gate Gate test: 7\/10 \(R 4\/5 · L 3\/5\), up from 6\/10/)).toBeVisible();
   await button(page, '1 month ago').click();
   await expect(page.getByText(/^Then \(Dec 8\)/)).toBeVisible();

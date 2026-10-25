@@ -479,6 +479,65 @@ function DemoCard({ d, hasClip, onMsg }: { d: Drill; hasClip: boolean; onMsg: (m
   );
 }
 
+const UNRELIABLE_REASONS = ['start tone missed', 'timed by hand', 'interrupted', 'wrong set-up', 'counted after the fact'];
+
+/** A parent marks a benchmark result unreliable (plan/05 §5.6): it stays in the history, labelled, and joins no comparison or advancement. */
+export function ResultsSection() {
+  const { programme: p, results } = useData();
+  const [reason, setReason] = useState<Record<string, string>>({});
+  const rows = [...results].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40);
+  const name = (id?: string) => p.benchmarks.find((b) => b.id === id)?.name ?? p.anchors.find((a) => a.id === id)?.name ?? id ?? '';
+  return (
+    <div className="stack">
+      <p className="muted">The 40 most recent results. A result marked unreliable stays in the history with its reason, but it is never compared with other results and never counts toward advancement.</p>
+      {rows.length === 0 ? <p>No benchmark results yet.</p> : null}
+      {rows.map((r) => (
+        <div key={r.id} className="card tight row spread" data-testid={`result-${r.id}`} style={{ flexWrap: 'wrap' }}>
+          <span style={{ flex: 1, minWidth: 240 }}>
+            <strong>{name(r.benchmarkId)}</strong> · {fmtDate(r.date, { day: 'numeric', month: 'short' })}
+            <br />
+            <span className="mono">{resultText(r.values)}</span>
+            <br />
+            <span className="muted">
+              {r.conditions.recordedBy}
+              {r.flagged ? ` · unreliable: ${r.flagged}` : ''}
+            </span>
+          </span>
+          {r.flagged ? (
+            <button
+              className="btn small"
+              onClick={async () => {
+                await db.benchmarkResults.update(r.id, { flagged: undefined });
+                await logHistory('parent', 'result', `${name(r.benchmarkId)} ${r.date.slice(0, 10)}: unreliable flag cleared`);
+              }}
+            >
+              Clear unreliable
+            </button>
+          ) : (
+            <span className="row">
+              <select aria-label={`Reason for ${r.id}`} value={reason[r.id] ?? UNRELIABLE_REASONS[0]} onChange={(e) => setReason({ ...reason, [r.id]: e.target.value })}>
+                {UNRELIABLE_REASONS.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+              <button
+                className="btn small"
+                onClick={async () => {
+                  const why = reason[r.id] ?? UNRELIABLE_REASONS[0];
+                  await db.benchmarkResults.update(r.id, { flagged: why });
+                  await logHistory('parent', 'result', `${name(r.benchmarkId)} ${r.date.slice(0, 10)}: marked unreliable (${why})`);
+                }}
+              >
+                Mark unreliable
+              </button>
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** The coach export (plan/06 §6.3): area, stage, drill asked about, last two benchmarks with conditions, criteria and status. */
 export function ExportSection() {
   const d = useData();

@@ -209,6 +209,8 @@ export type BenchmarkValues =
   | { kind: 'QUIZ'; correct: number; outOf: number };
 
 export interface BenchmarkResult {
+  /** The confirmed numbers started from this block's camera estimate (D10). */
+  prefilledFrom?: 'camera';
   id: string;
   sessionRecordId: string;
   blockIndex: number;

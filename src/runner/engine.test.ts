@@ -99,3 +99,34 @@ describe('session runner', () => {
     expect(completion(s).status).toBe('stopped');
   });
 });
+
+describe('set announcements (plan/02 §2.6)', () => {
+  it('splits a block into its sets and announces each one with its label', () => {
+    const withSets: Labels = { ...labels, setsFor: (b) => (b.kind === 'work' ? { count: 4, labels: ['Right side', 'Left side', 'Right side', 'Left side'] } : undefined) };
+    let s = initRun(plan, 0);
+    const events: RunEvent[] = [];
+    let t = 0;
+    while (t < 20 * 60_000 && s.phase !== 'done') {
+      t += 250;
+      if (s.phase === 'demo' && t - s.phaseStartMs >= 20_000) s = startBlock(s, t);
+      else if (s.phase === 'card' && t - s.phaseStartMs >= 20_000) s = next(s, t);
+      const r = tick(s, t, withSets);
+      s = r.state;
+      events.push(...r.events);
+    }
+    const said = events.filter((e) => e.type === 'say').map((e) => (e as { text: string }).text);
+    expect(said).toContain('Set one. Right side. Go.');
+    expect(said).toContain('Set two. Left side.');
+    expect(said).toContain('Set four. Left side.');
+    expect(said.indexOf('Set two. Left side.')).toBeLessThan(said.indexOf('Set three. Right side.'));
+  });
+
+  it('setAt divides the time evenly and stays on the last set at the end', async () => {
+    const { setAt } = await import('./engine');
+    expect(setAt({ count: 2 }, 0, 300)).toEqual({ index: 1, count: 2, label: undefined });
+    expect(setAt({ count: 2 }, 150, 300)?.index).toBe(2);
+    expect(setAt({ count: 2 }, 300, 300)?.index).toBe(2);
+    expect(setAt({ count: 1 }, 10, 300)).toBeNull();
+    expect(setAt(undefined, 10, 300)).toBeNull();
+  });
+});

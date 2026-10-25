@@ -127,3 +127,46 @@ test('cue engine off: cue drills show the normal practice view (SwitchedOn fallb
   await expect(page.locator('.practice .clock')).toBeVisible();
   await expect(page.locator('.practice.cue')).toHaveCount(0);
 });
+
+test('a camera estimate from this block starts the SB card when every rep was judged (D10)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await place(page, 'Scanning', 3);
+  await start(page, 'Scanning · Stage 1 · Session 3');
+  await advance(page, 191_000);
+  await button(page, 'Skip block').click();
+  await advance(page, 61_000);
+  // (Stand-in for the after-block analysis of this block: all 10 reps judged, 6 correct. Written before the
+  // benchmark block opens because a raw database write does not wake the app's live queries.)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const r = indexedDB.open('home-training');
+        r.onsuccess = () => {
+          const t0 = r.result.transaction('sessionRecords', 'readonly');
+          const all = t0.objectStore('sessionRecords').getAll();
+          all.onsuccess = () => {
+            const rec = (all.result as { id: string; date: string }[]).sort((a, b) => b.date.localeCompare(a.date))[0];
+            const tx = r.result.transaction(['clips', 'blockAnalyses', 'repAnalyses'], 'readwrite');
+            for (let b = 0; b < 12; b++) {
+              const id = `clip-${b}`;
+              tx.objectStore('clips').put({ id, sessionRecordId: rec.id, blockIndex: b, attempt: 1, date: new Date().toISOString(), blob: new Blob(['x']), mime: 'video/webm', blockLabel: 'SB', durationS: 90, startActiveMs: 0 });
+              tx.objectStore('blockAnalyses').put({ id, clipId: id, data: { reps: 10, validReps: 10, accuracyByCue: {}, flaggedRepIndexes: [], enoughReps: true, poseUsed: false, analysedFps: 15, analysisMs: 10 } });
+              for (let i = 0; i < 10; i++) tx.objectStore('repAnalyses').put({ id: `${id}-${i}`, clipId: id, repIndex: i, data: { repIndex: i, zoneEvents: [], confidence: 0.9, flags: [], status: 'ok', decisionCorrect: i < 6 } });
+            }
+            tx.oncomplete = () => resolve();
+          };
+        };
+      }),
+  );
+  await button(page, 'Skip block').click();
+  await button(page, '▶ Start block').click();
+  await advance(page, 10_500);
+  await advance(page, 95_000, 1_000);
+  await expect(page.locator('.count', { hasText: 'Correct decisions /10' })).toBeVisible();
+  await expect(page.getByText(/Camera estimate from this block \(all 10 reps judged\)/)).toBeVisible();
+  await expect(page.locator('.count[data-blank]')).toHaveCount(0);
+  await button(page, 'Confirm').click();
+  const res = await table<{ benchmarkId: string; values: { correct: number }; prefilledFrom?: string }>(page, 'benchmarkResults');
+  expect(res.find((x) => x.benchmarkId === 'SB')).toMatchObject({ values: { correct: 6 }, prefilledFrom: 'camera' });
+});

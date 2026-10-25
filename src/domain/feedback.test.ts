@@ -77,4 +77,14 @@ describe('extended context key (part 15 D11)', () => {
     expect(comparability(r({ cameraConfidence: 'ok' }), r({ cameraConfidence: 'low' })).ok).toBe(false);
     expect(comparability(r({ roomProfileVersion: 'room-1@1' }), r({})).ok).toBe(true);
   });
+
+  it('a result marked unreliable joins no comparison, either way round', async () => {
+    const { result } = await import('../test/factories');
+    const base = { layoutVersion: 1, cueLevel: '3', floor: 'hard', recorded: false, recordedBy: 'parent' as const };
+    const ok = result({ benchmarkId: 'SB', values: { kind: 'SB', correct: 8 }, conditions: base });
+    const bad = { ...result({ benchmarkId: 'SB', values: { kind: 'SB', correct: 9 }, conditions: base }), flagged: 'start tone missed' };
+    expect(comparability(ok, bad)).toEqual({ ok: false, reason: 'marked unreliable (start tone missed)' });
+    expect(comparability(bad, ok).ok).toBe(false);
+    expect(lastComparable(ok, [bad])).toBeUndefined();
+  });
 });

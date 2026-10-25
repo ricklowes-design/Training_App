@@ -1,3 +1,4 @@
+import { personalBests } from '../domain/personalBest';
 import { useState } from 'react';
 import { useData } from '../app/data';
 import { useNav } from '../app/nav';
@@ -40,6 +41,7 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
     refusal = c && !c.ok ? (tryFill(t, 'comparisonRefused', { reason: c.reason }) ?? c.reason) : 'No earlier result at the same conditions.';
   }
 
+  const pbs = personalBests(now, all);
   return (
     <div className="stack">
       <div className="card stack">
@@ -77,6 +79,17 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
         ) : (
           <p className="muted">{refusal}</p>
         )}
+        {pbs.length ? (
+          <div data-testid="personal-best">
+            <strong>Personal best at these conditions:</strong>{' '}
+            {pbs.map((b, i) => (
+              <span key={b.key}>
+                {i ? ' · ' : ''}
+                {b.label} {b.text} ({b.isNow ? 'this result' : fmtDate(b.date)})
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
       <div className="card">
         <h3>History (same conditions; others greyed with the reason)</h3>

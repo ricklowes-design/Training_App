@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { BenchmarkValues, Conditions } from '../db/types';
 import { Seg, Stepper } from '../ui/widgets';
 
@@ -104,12 +104,32 @@ export function BenchmarkForm(props: {
   onSave: (values: BenchmarkValues, recordedBy: Conditions['recordedBy']) => void;
   onSkip?: () => void;
   saveLabel?: string;
+  /** Camera estimate from this block (A3, A4, SB): fills untouched counts when it arrives. */
+  camera?: import('../analysis/prefill').CameraPrefill | null;
+  /** Told whether the confirmed numbers started from the camera estimate. */
+  onCameraUsed?: (used: boolean) => void;
 }) {
-  const { title, conditions, initial, hasEstimate, onSave, onSkip, saveLabel } = props;
+  const { title, conditions, initial, hasEstimate, onSave, onSkip, saveLabel, camera, onCameraUsed } = props;
   const [v, setV] = useState<BenchmarkValues>(initial);
+  const touched = useRef(false);
+  const [fromCamera, setFromCamera] = useState(false);
+  const cam = camera?.values;
+  useEffect(() => {
+    if (!cam || touched.current) return;
+    setV((cur) => {
+      const merged = { ...cur } as Record<string, unknown>;
+      for (const [k, x] of Object.entries(cam)) if (x !== undefined && k in merged && Number.isNaN(merged[k] as number)) merged[k] = x;
+      if (cur.kind === 'A4' && cam.looks !== undefined && merged.looks === undefined) merged.looks = cam.looks;
+      return merged as BenchmarkValues;
+    });
+    setFromCamera(true);
+  }, [cam?.correct, cam?.early, cam?.looks]);
   const [by, setBy] = useState<Conditions['recordedBy']>(conditions.recordedBy);
   const [saving, setSaving] = useState(false);
-  const set = (next: BenchmarkValues) => setV(next);
+  const set = (next: BenchmarkValues) => {
+    touched.current = true;
+    setV(next);
+  };
   // A4 looks are optional: blank looks are dropped rather than blocking the confirm.
   const toSave: BenchmarkValues = v.kind === 'A4' && Number.isNaN(v.looks ?? Number.NaN) ? { kind: 'A4', correct: v.correct } : v;
   const ready = complete(toSave);
@@ -199,6 +219,13 @@ export function BenchmarkForm(props: {
       <p className="muted">
         {hasEstimate ? "Times are this run's own timer readings (an estimate): correct them with +/- if needed. " : ''}Tap each number, then confirm. Nothing is carried over from earlier sessions.
       </p>
+      {camera ? (
+        <p className={`pill ${camera.values ? 'info' : ''}`}>
+          {camera.values
+            ? `Camera estimate from this block (all ${camera.of} reps judged): check it against what you saw and correct any number before confirming.`
+            : `The camera judged ${camera.judged} of ${camera.of} reps, so it filled nothing in. Enter the counts yourself.`}
+        </p>
+      ) : null}
       {body}
       <div className="row">
         <span className="muted">Scored by</span>
@@ -218,6 +245,7 @@ export function BenchmarkForm(props: {
           onClick={() => {
             if (saving || !ready) return; // one result per tap, even on a double tap
             setSaving(true);
+            onCameraUsed?.(fromCamera);
             onSave(toSave, by);
           }}
         >

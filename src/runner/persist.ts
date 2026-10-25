@@ -96,6 +96,7 @@ export async function saveBenchmark(args: {
   drillId?: string;
   conditions: Conditions;
   values: BenchmarkValues;
+  prefilledFrom?: 'camera';
 }): Promise<BenchmarkResult> {
   const res: BenchmarkResult = {
     id: crypto.randomUUID(),
@@ -108,6 +109,7 @@ export async function saveBenchmark(args: {
     drillId: args.drillId,
     conditions: args.conditions,
     values: args.values,
+    ...(args.prefilledFrom ? { prefilledFrom: args.prefilledFrom } : {}),
   };
   await db.benchmarkResults.put(res);
   return res;

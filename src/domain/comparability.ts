@@ -17,6 +17,9 @@ const cueText = (c: string) => (/^\d+(\.\d+)?$/.test(c) ? `cue ${c} s` : c);
 
 export function comparability(a: BenchmarkResult, b: BenchmarkResult): Comparability {
   if (a.benchmarkId !== b.benchmarkId) return { ok: false, reason: 'different tests' };
+  // A result a parent marked unreliable (start tone missed, timed by hand...) joins no comparison.
+  if (b.flagged) return { ok: false, reason: `marked unreliable (${b.flagged})` };
+  if (a.flagged) return { ok: false, reason: `this result is marked unreliable (${a.flagged})` };
   if (a.drillId !== b.drillId && (a.drillId || b.drillId)) return { ok: false, reason: `different drills (${a.drillId ?? '—'} vs ${b.drillId ?? '—'})` };
   if (a.conditions.layoutVersion !== b.conditions.layoutVersion) {
     return { ok: false, reason: `different room layout (v${b.conditions.layoutVersion} then, v${a.conditions.layoutVersion} now)` };

@@ -232,6 +232,18 @@ export function Scorecard({ analysis: a, reps }: { analysis: BlockAnalysis; reps
 }
 
 /** Scorecard for a block of the current session, once its analysis is saved (it usually arrives during the next block). */
+/** This block's clip analysis as it becomes available (null until analysed; { clip: false } without a clip). */
+export function useBlockAnalysis(sessionRecordId: string | undefined, blockIndex: number, attempt: number) {
+  return useLiveQuery(async () => {
+    if (!sessionRecordId) return { clip: false as const };
+    const clip = await db.clips.where('sessionRecordId').equals(sessionRecordId).filter((c) => c.blockIndex === blockIndex && c.attempt === attempt).first();
+    if (!clip) return { clip: false as const };
+    const a = await db.blockAnalyses.get(clip.id);
+    const reps = a ? (await db.repAnalyses.where('clipId').equals(clip.id).sortBy('repIndex')).map((r) => r.data) : [];
+    return { clip: true as const, a: a?.data, reps };
+  }, [sessionRecordId, blockIndex, attempt]);
+}
+
 export function LiveScorecard({ sessionRecordId, blockIndex, attempt }: { sessionRecordId: string; blockIndex: number; attempt: number }) {
   const data = useLiveQuery(async () => {
     const clip = await db.clips.where('sessionRecordId').equals(sessionRecordId).filter((c) => c.blockIndex === blockIndex && c.attempt === attempt).first();

@@ -144,6 +144,7 @@ const programmeShape: Check = obj({
       cueDrillId: optional(str),
       routine: optional(bool),
       scanModes: optional(list(str)),
+      sets: optional(obj({ count: num, labels: optional(list(str)) })),
       defenderDrillId: optional(str),
     }),
   ),

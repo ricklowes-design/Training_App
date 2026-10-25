@@ -1,7 +1,7 @@
 {
   "version": "0.5.0",
   "generated": "2026-10-13",
-  "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them.",
+  "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set.",
   "layouts": {
     "L1": {
       "name": "Slalom",
@@ -121,6 +121,9 @@
         "partner": null
       },
       "mode": "timed",
+      "sets": {
+        "count": 3
+      },
       "cueDrillId": "cue-colour"
     },
     {
@@ -245,6 +248,9 @@
         }
       },
       "mode": "reps",
+      "sets": {
+        "count": 2
+      },
       "cueDrillId": "cue-scan"
     },
     {
@@ -359,7 +365,16 @@
         "solo": true,
         "partner": null
       },
-      "mode": "reps"
+      "mode": "reps",
+      "sets": {
+        "count": 4,
+        "labels": [
+          "Right side",
+          "Left side",
+          "Right side",
+          "Left side"
+        ]
+      }
     },
     {
       "id": "F2",
@@ -405,7 +420,16 @@
         "solo": true,
         "partner": null
       },
-      "mode": "reps"
+      "mode": "reps",
+      "sets": {
+        "count": 4,
+        "labels": [
+          "Left exits",
+          "Right exits",
+          "Left exits",
+          "Right exits"
+        ]
+      }
     },
     {
       "id": "F3",
@@ -451,7 +475,16 @@
         "solo": true,
         "partner": null
       },
-      "mode": "reps"
+      "mode": "reps",
+      "sets": {
+        "count": 4,
+        "labels": [
+          "Right exit",
+          "Left exit",
+          "Right exit",
+          "Left exit"
+        ]
+      }
     },
     {
       "id": "F4",
@@ -536,6 +569,9 @@
         "partner": null
       },
       "mode": "reps",
+      "sets": {
+        "count": 2
+      },
       "cueDrillId": "cue-exit",
       "defenderDrillId": "def-read"
     },
@@ -756,6 +792,9 @@
         "partner": null
       },
       "mode": "reps",
+      "sets": {
+        "count": 2
+      },
       "cueDrillId": "cue-gate"
     },
     {
@@ -861,6 +900,9 @@
         "partner": null
       },
       "mode": "reps",
+      "sets": {
+        "count": 2
+      },
       "cueDrillId": "cue-escape"
     },
     {
@@ -907,7 +949,20 @@
         "solo": true,
         "partner": null
       },
-      "mode": "timed"
+      "mode": "timed",
+      "sets": {
+        "count": 8,
+        "labels": [
+          "V-pulls",
+          "Sole rolls",
+          "Inside-outside taps",
+          "Outside-only taps",
+          "V-pulls",
+          "Sole rolls",
+          "Inside-outside taps",
+          "Outside-only taps"
+        ]
+      }
     },
     {
       "id": "C2",
@@ -953,7 +1008,16 @@
         "solo": true,
         "partner": null
       },
-      "mode": "reps"
+      "mode": "reps",
+      "sets": {
+        "count": 4,
+        "labels": [
+          "Left foot",
+          "Right foot",
+          "Left foot",
+          "Right foot"
+        ]
+      }
     },
     {
       "id": "C3",
@@ -994,6 +1058,9 @@
         "partner": null
       },
       "mode": "reps",
+      "sets": {
+        "count": 2
+      },
       "cueDrillId": "cue-dragback"
     },
     {
@@ -1037,7 +1104,10 @@
           "required": true
         }
       },
-      "mode": "reps"
+      "mode": "reps",
+      "sets": {
+        "count": 2
+      }
     },
     {
       "id": "C5",

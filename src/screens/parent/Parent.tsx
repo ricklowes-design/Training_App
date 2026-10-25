@@ -5,7 +5,7 @@ import { hashPin, validPin } from '../../app/pin';
 import { db } from '../../db/db';
 import { backupDue } from '../helpers';
 import { AdvancementSection, DrillsSection, HistorySection, NotesSection, PrioritiesSection, SessionsSection, TransferSection } from './Coach';
-import { BackupSection, ContentSection, DemosSection, ExportSection, PlacementSection, RoomSection, TrialsSection } from './DataSections';
+import { BackupSection, ContentSection, DemosSection, ResultsSection, ExportSection, PlacementSection, RoomSection, TrialsSection } from './DataSections';
 import { SettingsSection } from './SettingsSection';
 import { CueSection } from './CueSection';
 import { CameraSection } from './CameraSection';
@@ -25,6 +25,7 @@ const TILES: { section: ParentSection; title: string; detail: string }[] = [
   { section: 'priorities', title: 'Priorities', detail: 'Priority skills per area' },
   { section: 'placement', title: 'Placement', detail: 'Starting session per area' },
   { section: 'trials', title: 'Trials', detail: 'Keep, make a trial, trial period, problem reports' },
+  { section: 'results', title: 'Benchmark results', detail: 'Mark a result unreliable (start tone missed…)' },
   { section: 'demos', title: 'Demonstrations', detail: 'Own clips and video links' },
   { section: 'export', title: 'Export for the coach', detail: 'Text summary of one area' },
   { section: 'history', title: 'History', detail: 'Every change; revert overrides' },
@@ -158,6 +159,9 @@ export function Parent({ section, arg }: { section: ParentSection; arg?: string 
       break;
     case 'demos':
       body = <DemosSection />;
+      break;
+    case 'results':
+      body = <ResultsSection />;
       break;
     case 'placement':
       body = <PlacementSection />;

@@ -1,3 +1,5 @@
+import { useBlockAnalysis } from '../analysis/Scorecard';
+import { cameraPrefill, PREFILL_KINDS, type PrefillKind } from '../analysis/prefill';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { say, setSoundSettings, stopSpeech, tone, unlockAudio } from '../audio/audio';
 import { APP_VERSION, useData } from '../app/data';
@@ -92,7 +94,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     },
     [p],
   );
-  const labels: E.Labels = useMemo(() => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS }), [blockName, p]);
+  const setsFor = useCallback((b: RunBlock) => (b.drillId ? p.drills.find((d) => d.id === b.drillId)?.sets : undefined), [p]);
+  const labels: E.Labels = useMemo(() => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor }), [blockName, p, setsFor]);
 
   const benchmarksLogged = useMemo(() => new Set(saved.map((r) => r.blockIndex)), [saved]);
   const activeMs = useCallback(() => E.activeElapsedMs(sRef.current, Date.now()), []);
@@ -141,6 +144,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return defCfgs.current.get(key) ?? null;
   };
   const [tallied, setTallied] = useState<Set<string>>(new Set());
+  const cameraUsed = useRef(false);
   // Experimental digit diagnostic by voice (off by default): listens only during the diagnostic block.
   const listener = useRef<{ key: string; l: DigitListener } | null>(null);
   const [heardByKey, setHeardByKey] = useState<Record<string, { heard: Heard[]; error?: string }>>({});
@@ -271,7 +275,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return 'manual-switchedon';
   };
 
-  async function logBenchmark(b: RunBlock, benchmarkId: string, values: BenchmarkValues, recordedBy: Conditions['recordedBy'], drillId?: string) {
+  async function logBenchmark(b: RunBlock, benchmarkId: string, values: BenchmarkValues, recordedBy: Conditions['recordedBy'], drillId?: string, prefilledFrom?: 'camera') {
     if (!ids) return;
     const res = await saveBenchmark({
       recordId: recordIdForBlock(s.plan, ids, s.blockIdx),
@@ -282,6 +286,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       drillId,
       conditions: conditionsFor(b, recordedBy),
       values,
+      prefilledFrom,
     });
     setSaved((x) => [...x, res]);
     const q = await saveProgress(withExtras(sRef.current), ids, new Set([...savedRef.current.map((r) => r.blockIndex), s.blockIdx]), false);
@@ -296,6 +301,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return tryFill(p.feedbackTemplates, 'chanceLine', { correct: r.values.correct, n: 10, k, pct: chancePct(chanceTail(r.values.correct, 10, k)) }) ?? undefined;
   };
 
+  // This block's camera analysis, for the anchor card's estimate (D10).
+  const blockAnalysis = useBlockAnalysis(ids ? recordIdForBlock(s.plan, ids, s.blockIdx) : undefined, s.blockIdx, s.attempt);
   if (!ids) return <div className="practice"><div className="sub">Starting…</div></div>;
 
   const pauseBtn =
@@ -408,7 +415,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
               conditions={cond}
               initial={initialValues(kind, cueLevel, times[s.blockIdx])}
               hasEstimate={!!times[s.blockIdx] && (kind === 'DB' || kind === 'A1')}
-              onSave={(values, by) => logBenchmark(block, id, values, by, kind === 'CA' ? caDrill : block.kind === 'anchor' ? block.drillId : undefined)}
+              camera={(PREFILL_KINDS as readonly string[]).includes(kind) && blockAnalysis?.clip ? cameraPrefill(kind as PrefillKind, blockAnalysis.a, blockAnalysis.reps) : null}
+              onCameraUsed={(used) => (cameraUsed.current = used)}
+              onSave={(values, by) => logBenchmark(block, id, values, by, kind === 'CA' ? caDrill : block.kind === 'anchor' ? block.drillId : undefined, cameraUsed.current ? 'camera' : undefined)}
               onSkip={() => setSkippedBench((x) => new Set([...x, kind === 'CA' ? benchSkipKey + ':CA' : benchSkipKey]))}
             />
           </div>
@@ -602,6 +611,10 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         <div className="sub">
           {block.drillId === 'D4' ? `${fmtClock(remaining)} · ` : ''}
           {isRest && nextBlock ? `Next: ${blockName(nextBlock)}` : block.params ? block.params : block.kind === 'benchmark' ? 'Benchmark' : ''}
+          {(() => {
+            const set = !isRest && s.phase === 'active' ? E.setAt(setsFor(block), total - remaining, total) : null;
+            return set ? `${block.params ? ' · ' : ''}set ${set.index} of ${set.count}${set.label ? ` · ${set.label}` : ''}` : null;
+          })()}
         </div>
         <div className="bar" style={{ marginTop: '1.5vh' }}>
           <div style={{ width: `${Math.min(100, (100 * (total - remaining)) / total)}%` }} />

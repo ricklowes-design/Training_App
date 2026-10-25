@@ -33,7 +33,20 @@ export interface Labels {
   blockName: (b: RunBlock) => string;
   warmupSteps: string[];
   countdownS: number;
+  /** The drill's sets, when its content gives them. */
+  setsFor?: (b: RunBlock) => { count: number; labels?: string[] } | undefined;
 }
+
+const ORDINAL = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+
+/** Which set a block is in: its time split evenly into the sets (1-based index), or null without sets. */
+export function setAt(sets: { count: number; labels?: string[] } | undefined, elapsedS: number, totalS: number): { index: number; count: number; label?: string } | null {
+  if (!sets || sets.count < 2 || totalS <= 0) return null;
+  const i = Math.max(0, Math.min(sets.count - 1, Math.floor(elapsedS / (totalS / sets.count))));
+  return { index: i + 1, count: sets.count, label: sets.labels?.[i] };
+}
+
+const setSay = (x: { index: number; label?: string }) => `Set ${ORDINAL[x.index - 1] ?? x.index}.${x.label ? ` ${x.label}.` : ''}`;
 
 export function initRun(plan: RunPlan, now: number): RunState {
   const first = plan.blocks[0];
@@ -134,7 +147,8 @@ export function tick(s: RunState, now: number, labels: Labels): { state: RunStat
     for (const n of [3, 2, 1]) if (left <= n && left > n - 1) once(`c${n}`, { type: 'tone', kind: 'tick' });
     if (left <= 0) {
       s = startActive(s, now);
-      events.push({ type: 'tone', kind: 'start' }, { type: 'say', text: 'Go.' });
+      const first = setAt(labels.setsFor?.(b), 0, b.minutes * 60);
+      events.push({ type: 'tone', kind: 'start' }, { type: 'say', text: first ? `${setSay(first)} Go.` : 'Go.' });
     }
     return { state: s, events };
   }
@@ -153,7 +167,10 @@ export function tick(s: RunState, now: number, labels: Labels): { state: RunStat
     } else if (b.kind === 'cooldown' || b.kind === 'mobility' || b.kind === 'log') {
       once('intro', { type: 'say', text: labels.blockName(b) + '.' });
     }
-    if (total >= 120 && left <= total / 2 && left > 30) once('half', { type: 'say', text: 'Half way.' });
+    const set = ['warmup', 'rest', 'transition', 'break', 'cooldown', 'mobility', 'log'].includes(b.kind) ? null : setAt(labels.setsFor?.(b), elapsed, total);
+    if (set && set.index > 1) once(`set${set.index}`, [{ type: 'tone', kind: 'tick' }, { type: 'say', text: setSay(set) }]);
+    // With sets, the set announcements replace "Half way."
+    if (!set && total >= 120 && left <= total / 2 && left > 30) once('half', { type: 'say', text: 'Half way.' });
     if (total >= 90 && left <= 30 && left > 0) once('30', [{ type: 'tone', kind: 'warn' }, { type: 'say', text: 'Thirty seconds.' }]);
     if (left <= 0) {
       const r = finishBlock(s, now, 'end');
