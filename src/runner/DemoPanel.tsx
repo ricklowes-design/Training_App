@@ -6,6 +6,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useData } from '../app/data';
 import type { Drill } from '../content/types';
 import { layoutSummary } from '../domain/layout';
+import { localiseText } from '../domain/units';
+import { LayoutDiagram } from '../ui/LayoutDiagram';
+import { layoutFit } from '../domain/room';
 import type { RunBlock } from '../domain/plans';
 import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
@@ -31,7 +34,8 @@ export function DemoPanel(props: {
   roomCheck?: import('../camera/roomCheck').RoomCheck | null;
 }) {
   const { block, blockNo, blockCount, autoStartS, phaseStartMs, paused, onStart, onSkip, onStop, framing, cameraError, roomCheck } = props;
-  const { programme: p, notes, layout, demoClipIds, roomProfile } = useData();
+  const { programme: p, notes, layout, demoClipIds, roomProfile, settings } = useData();
+  const units = settings.units ?? 'metric';
   const [playing, setPlaying] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [heldMs, setHeldMs] = useState(0); // time the auto-start was held by a playing video
@@ -43,7 +47,7 @@ export function DemoPanel(props: {
   const bench = block.benchmarkId ? p.benchmarks.find((b) => b.id === block.benchmarkId) : undefined;
   const shownDrill = drill;
   const drillNotes = notes.filter((n) => !n.resolvedAt && n.target.kind === 'drill' && n.target.id === (shownDrill?.id ?? '')).sort((a, b) => b.date.localeCompare(a.date));
-  const sets = layout ? layoutSummary(layout.derived) : {};
+  const sets = layout ? layoutSummary(layout.derived, units) : {};
   const scanMode = scanModeFor(p, drill, block.params, roomProfile);
 
   const lastTick = useRef(Date.now());
@@ -79,11 +83,11 @@ export function DemoPanel(props: {
               <strong>Purpose:</strong> {drill.purpose}
             </p>
             <p>
-              <strong>Set-up:</strong> {layoutId ? `${layoutId} ${p.layouts[layoutId]?.name} — ${sets[layoutId] ?? p.layouts[layoutId]?.setup}. ` : ''}
-              {drill.setupText}
+              <strong>Set-up:</strong> {layoutId ? `${layoutId} ${p.layouts[layoutId]?.name} — ${sets[layoutId] ?? localiseText(p.layouts[layoutId]?.setup ?? '', units)}. ` : ''}
+              {localiseText(drill.setupText, units)}
             </p>
             <p>
-              <strong>Do:</strong> {drill.prescription}
+              <strong>Do:</strong> {localiseText(drill.prescription, units)}
             </p>
             {scanMode ? <p className="pill info">{tryFill(p.feedbackTemplates, 'scanMode', { mode: scanMode.label, note: scanMode.note })}</p> : null}
             <div>
@@ -96,6 +100,14 @@ export function DemoPanel(props: {
             </div>
             <p className="muted">Common errors: {drill.commonErrors.join(' · ')}</p>
             <p className="muted">Safety: {drill.safety}</p>
+            {layoutId && layout ? (
+              <details>
+                <summary>Cone layout from above</summary>
+                <div style={{ maxWidth: 360 }}>
+                  <LayoutDiagram layoutId={layoutId} d={layout.derived} lengthM={layout.roomLengthM} widthM={layout.roomWidthM} floor={layout.floor} units={units} screenBehindM={p.layoutGeometry.receiveBox.cueScreenBehindM} unavailable={layoutFit(layoutId, layout.derived, p.layoutGeometry, layout.cones).ok ? undefined : 'not available'} maxHeight={320} />
+                </div>
+              </details>
+            ) : null}
             {layoutId ? <RoomOverlay layoutId={layoutId} /> : null}
           </>
         ) : null}

@@ -67,14 +67,17 @@ export function roomInputFor(p: RoomProfile, cones: number): RoomInput {
 }
 
 /** Minimum geometry each layout needs to stay safe and meaningful (no long runs, no sprinting). */
-export function layoutFit(layoutId: string, d: DerivedLayout, g: LayoutGeometry): { ok: boolean; reason?: string } {
+export function layoutFit(layoutId: string, d: DerivedLayout, g: LayoutGeometry, cones?: number): { ok: boolean; reason?: string } {
+  const need = layoutCones(layoutId, d, 0).length;
+  if (cones !== undefined && need > cones) return { ok: false, reason: `needs ${need} cones (you have ${cones})` };
   switch (layoutId) {
     case 'L1':
       return (d.slalomCones ?? g.slalom.cones) >= 3 && d.slalomSpacingM >= g.slalom.minSpacingM - 1e-9
         ? { ok: true }
         : { ok: false, reason: 'the slalom needs about 3.5 m of clear length' };
     case 'L2':
-      return d.feintConeM >= 1.5 ? { ok: true } : { ok: false, reason: 'the feint lane needs about 4 m of clear length' };
+      if (d.feintConeM < 1.5) return { ok: false, reason: 'the feint lane needs about 4 m of clear length' };
+      return d.feintGateWidthM >= 0.5 - 1e-9 ? { ok: true } : { ok: false, reason: 'the feint gates need about 2.2 m of clear width' };
     case 'L3':
       return d.receiveBoxSideM >= 0.9 ? { ok: true } : { ok: false, reason: 'the receive box needs about 2.4 m of clear width' };
     case 'L4':
@@ -87,7 +90,8 @@ export function layoutFit(layoutId: string, d: DerivedLayout, g: LayoutGeometry)
 /** Drill geometry for a room input; in a short room the slalom uses fewer cones rather than cramped spacing. */
 export function scaledLayout(input: RoomInput, g: LayoutGeometry): DerivedLayout {
   const free = input.roomLengthM - g.slalom.startFromWallM - g.slalom.stopZoneM - g.slalom.marginM;
-  let n = g.slalom.cones;
+  // Never more slalom cones than the family has (fewer than 3 is refused by layoutFit).
+  let n = Math.max(1, Math.min(g.slalom.cones, input.cones));
   while (n > 3 && free / (n - 1) < g.slalom.minSpacingM - 1e-9) n--;
   // With fewer than the standard cones, spacing is never stretched past the maximum.
   const d = deriveLayout(input, n === g.slalom.cones ? g : { ...g, slalom: { ...g.slalom, cones: n } });
@@ -188,7 +192,7 @@ export function layoutCones(layoutId: string, d: DerivedLayout, lengthM: number)
     case 'L2': {
       const g = d.feintGateWidthM;
       return [
-        { name: 'Start cone', floor: [0, d.feintStartM ?? 0.5] },
+        ...(d.feintStartCone === false ? [] : [{ name: 'Start cone', floor: [0, d.feintStartM ?? 0.5] as [number, number] }]),
         { name: 'Feint cone', floor: [0, d.feintConeM] },
         { name: 'Left gate, inner', floor: [-0.3, d.feintGateAtM] },
         { name: 'Left gate, outer', floor: [-0.3 - g, d.feintGateAtM] },

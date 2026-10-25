@@ -25,6 +25,8 @@ export interface DerivedLayout {
   feintGateAtM: number;
   feintGateWidthM: number;
   feintStopZoneM: number;
+  /** False when there are too few cones for a start cone: the run starts from the back wall. Absent = true. */
+  feintStartCone?: boolean;
   receiveBoxSideM: number;
   receiveGateWidthM: number;
   masterySquareM: number;
@@ -67,6 +69,8 @@ export interface Settings {
   backupReminder: boolean;
   lastBackupAt?: string;
   equipment: { cones: number; sparePhone: boolean; tripod: boolean };
+  /** How lengths are shown and entered; always stored in metres. Absent = metric. */
+  units?: 'metric' | 'imperial';
   priorities: string[];
   partnerAvailable: boolean;
   trialUntil?: string; // ISO date; all sessions are trials until then

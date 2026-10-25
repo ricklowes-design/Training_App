@@ -77,3 +77,34 @@ describe('room profiles (part 15 D1)', () => {
     }
   });
 });
+
+describe('layouts follow the room inputs', () => {
+  const room = (over: Partial<ReturnType<typeof roomInputFor>> = {}) => ({ roomLengthM: 6.1, roomWidthM: 3.0, floor: 'hard' as const, wallUsable: false, cones: 12, ...over });
+  it('the standard room with 12 cones keeps the plan layouts exactly', () => {
+    const d = scaledLayout(room(), g);
+    expect(d.slalomCones).toBe(5);
+    expect(d.feintGateWidthM).toBe(0.8);
+    expect(d.feintStartCone).toBeUndefined();
+  });
+  it('with fewer cones the slalom uses what there is and the feint lane drops its start cone', () => {
+    const d5 = scaledLayout(room({ cones: 5 }), g);
+    expect(d5.slalomCones).toBe(5);
+    expect(d5.feintStartCone).toBe(false);
+    expect(layoutFit('L2', d5, g, 5).ok).toBe(true);
+    const d4 = scaledLayout(room({ cones: 4 }), g);
+    expect(d4.slalomCones).toBe(4);
+    expect(d4.slalomSpacingM).toBeLessThanOrEqual(g.slalom.maxSpacingM);
+    expect(layoutFit('L1', d4, g, 4).ok).toBe(true);
+    expect(layoutFit('L2', d4, g, 4)).toEqual({ ok: false, reason: 'needs 5 cones (you have 4)' });
+    expect(layoutFit('L3', d4, g, 4).ok).toBe(true);
+    const d3 = scaledLayout(room({ cones: 3 }), g);
+    expect(layoutFit('L3', d3, g, 3).reason).toBe('needs 4 cones (you have 3)');
+    expect(layoutFit('L1', d3, g, 3).ok).toBe(true);
+  });
+  it('in a narrow room the feint gates narrow to keep clear of the side walls, and refuse below 0.5 m', () => {
+    expect(scaledLayout(room({ roomWidthM: 2.4 }), g).feintGateWidthM).toBe(0.6);
+    const tight = scaledLayout(room({ roomWidthM: 2.0 }), g);
+    expect(tight.feintGateWidthM).toBe(0.4);
+    expect(layoutFit('L2', tight, g).reason).toMatch(/clear width/);
+  });
+});

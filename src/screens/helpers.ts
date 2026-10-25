@@ -1,3 +1,4 @@
+import { localiseText } from '../domain/units';
 import { useMemo } from 'react';
 import { APP_VERSION, useData, type AppData } from '../app/data';
 import type { Route } from '../app/nav';
@@ -83,8 +84,8 @@ export function planRoomFit(d: AppData, plan: RunPlan): string | null {
   for (const b of plan.blocks) {
     const layoutId = b.drillId ? p.drills.find((x) => x.id === b.drillId)?.layoutId : b.anchorId ? p.anchors.find((a) => a.id === b.anchorId)?.layoutId : undefined;
     if (!layoutId) continue;
-    const fit = layoutFit(layoutId, d.layout.derived, p.layoutGeometry);
-    if (!fit.ok) return `Not available in this room: ${p.layouts[layoutId]?.name ?? layoutId} — ${fit.reason}. A parent can choose another room profile.`;
+    const fit = layoutFit(layoutId, d.layout.derived, p.layoutGeometry, d.layout.cones);
+    if (!fit.ok) return `Not available in this room: ${p.layouts[layoutId]?.name ?? layoutId} — ${localiseText(fit.reason ?? '', d.settings.units)}. A parent can choose another room profile.`;
   }
   return null;
 }

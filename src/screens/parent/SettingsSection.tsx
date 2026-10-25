@@ -5,6 +5,7 @@ import { hashPin, validPin } from '../../app/pin';
 import { db } from '../../db/db';
 import type { Settings } from '../../db/types';
 import { Seg, Stepper } from '../../ui/widgets';
+import { UnitsChoice } from './RoomProfiles';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -115,6 +116,7 @@ export function SettingsSection() {
 
       <div className="card stack">
         <h2>Screens</h2>
+        <UnitsChoice />
         <Stepper label="End-of-drill card: Next after (s)" value={settings.cardAutoAdvanceS} min={5} max={120} step={5} onChange={(cardAutoAdvanceS) => save({ cardAutoAdvanceS })} />
         <Stepper label="Demo view: start block after (s)" value={settings.demoAutoStartS} min={5} max={180} step={5} onChange={(demoAutoStartS) => save({ demoAutoStartS })} />
         <label className="check">
