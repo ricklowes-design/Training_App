@@ -37,6 +37,29 @@ export function takeaway(a: BlockAnalysis): string | null {
 }
 
 /** Block scorecard (task 3.5): Basic by default, Advanced on toggle. Below the confidence threshold a rep is unable to assess, never scored. */
+/** Slalom runs and V-pull windows (plan/12 §12.3): camera estimates, with what saw them. */
+export function OutcomeLines({ a }: { a: BlockAnalysis }) {
+  if (!a.slalom?.length && !a.vPulls?.length) return null;
+  return (
+    <ul className="clean" data-testid="outcome-lines">
+      {a.slalom?.map((r) => (
+        <li key={r.label}>
+          <strong>{r.label}:</strong>{' '}
+          {r.status === 'estimate'
+            ? `${r.timeS!.toFixed(1)} s from the tone to the stop zone · ${r.laneEdgeEntries} lane-edge ${r.laneEdgeEntries === 1 ? 'entry' : 'entries'} (${r.source === 'ball' ? 'tracked ball' : 'motion in the zones'})`
+            : `unable to assess (${r.reason})`}
+        </li>
+      ))}
+      {a.vPulls?.map((w) => (
+        <li key={w.label}>
+          <strong>{w.label}:</strong>{' '}
+          {w.status === 'estimate' ? `${w.reversals} ball direction changes in the square · ball left the square ${w.lostBall} ${w.lostBall === 1 ? 'time' : 'times'}` : `unable to assess (${w.reason})`}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function Scorecard({ analysis: a, reps }: { analysis: BlockAnalysis; reps: RepAnalysis[] }) {
   const [advanced, setAdvanced] = useState(false);
   const unable = reps.filter((r) => r.status === 'unableToAssess').length;
@@ -54,8 +77,9 @@ export function Scorecard({ analysis: a, reps }: { analysis: BlockAnalysis; reps
         </button>
       </div>
       <RepStrip reps={reps} />
+      <OutcomeLines a={a} />
       <p className="muted">Camera estimates (not yet validated against a parent's frame reading); unable-to-assess reps are left out, never counted as wrong.</p>
-      {!a.enoughReps ? <p className="pill warn">Fewer than {THRESHOLDS.minValidReps} reps could be assessed: rates are shown but not used for criteria.</p> : null}
+      {!a.enoughReps && !a.slalom && !a.vPulls ? <p className="pill warn">Fewer than {THRESHOLDS.minValidReps} reps could be assessed: rates are shown but not used for criteria.</p> : null}
       <table className="data">
         <tbody>
           {decided ? (
@@ -257,6 +281,7 @@ export function LiveScorecard({ sessionRecordId, blockIndex, attempt }: { sessio
   return (
     <div className="then">
       <RepStrip reps={data.reps} />
+      <OutcomeLines a={data.a} />
     </div>
   );
 }

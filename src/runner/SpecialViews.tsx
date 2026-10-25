@@ -35,8 +35,16 @@ export function DigitFlasher({ onDigit, size = '60vh' }: { onDigit?: (d: number)
 type RunStage = { side: 'right' | 'left'; phase: 'ready' | 'running' }[];
 
 /** Slalom down and back, both patterns: start on the tone, finish by tapping anywhere on the big target. */
-export function TimedRuns(props: { headUp: boolean; onFinished: (times: { right: number; left: number }, digits: number[]) => void; readyS?: number }) {
-  const { headUp, onFinished, readyS = 8 } = props;
+export function TimedRuns(props: {
+  headUp: boolean;
+  onFinished: (times: { right: number; left: number }, digits: number[], windows: { label: string; startMs: number; endMs: number }[]) => void;
+  readyS?: number;
+  /** The block's active clock, so the camera can find each run in the clip. */
+  activeMs?: () => number;
+}) {
+  const { headUp, onFinished, readyS = 8, activeMs } = props;
+  const runWindows = useRef<{ label: string; startMs: number; endMs: number }[]>([]);
+  const runStartActive = useRef(0);
   const order: RunStage = [
     { side: 'right', phase: 'ready' },
     { side: 'left', phase: 'ready' },
@@ -67,6 +75,7 @@ export function TimedRuns(props: { headUp: boolean; onFinished: (times: { right:
     if (left <= 0) {
       tone('start');
       setStartAt(Date.now());
+      runStartActive.current = activeMs?.() ?? 0;
       setPhase('running');
     }
   }, [now, phase, side, readyS]);
@@ -75,13 +84,14 @@ export function TimedRuns(props: { headUp: boolean; onFinished: (times: { right:
     if (phase !== 'running' || !side) return;
     const t = Math.round((Date.now() - startAt) / 100) / 10;
     tone('end');
+    if (activeMs) runWindows.current.push({ label: side === 'right' ? 'Pattern R' : 'Pattern L', startMs: runStartActive.current, endMs: activeMs() });
     const nextTimes = { ...times, [side]: t };
     setTimes(nextTimes);
     if (idx + 1 < order.length) {
       setIdx(idx + 1);
       setPhase('ready');
     } else {
-      onFinished({ right: nextTimes.right ?? 0, left: nextTimes.left ?? 0 }, digits.current);
+      onFinished({ right: nextTimes.right ?? 0, left: nextTimes.left ?? 0 }, digits.current, runWindows.current);
     }
   };
 
@@ -103,6 +113,58 @@ export function TimedRuns(props: { headUp: boolean; onFinished: (times: { right:
       {headUp ? <DigitFlasher onDigit={(d) => digits.current.push(d)} size="50vh" /> : <div className="mono">{elapsed.toFixed(1)}</div>}
       <div style={{ fontSize: '8vh' }}>FINISH — tap anywhere</div>
     </button>
+  );
+}
+
+/** CB-1: 30 s of V-pulls per foot on the tone, so the camera can count each foot's window (plan/03 CB). */
+export function VPullWindows(props: { activeMs: () => number; onFinished: (windows: { label: string; startMs: number; endMs: number }[]) => void; readyS?: number; windowS?: number }) {
+  const { activeMs, onFinished, readyS = 6, windowS = 30 } = props;
+  const feet = ['Right foot', 'Left foot'];
+  const [idx, setIdx] = useState(0);
+  const [phase, setPhase] = useState<'ready' | 'running'>('ready');
+  const [now, setNow] = useState(Date.now());
+  const phaseAt = useRef(Date.now());
+  const startActive = useRef(0);
+  const windows = useRef<{ label: string; startMs: number; endMs: number }[]>([]);
+  const foot = feet[idx];
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => {
+    if (!foot) return;
+    phaseAt.current = Date.now();
+    say(`${foot}. V-pulls. Start on the tone.`);
+  }, [foot]);
+  const left = (phase === 'ready' ? readyS : windowS) - (now - phaseAt.current) / 1000;
+  useEffect(() => {
+    if (!foot || left > 0) return;
+    if (phase === 'ready') {
+      tone('start');
+      startActive.current = activeMs();
+      phaseAt.current = Date.now();
+      setPhase('running');
+    } else {
+      tone('end');
+      windows.current.push({ label: foot, startMs: startActive.current, endMs: activeMs() });
+      if (idx + 1 < feet.length) {
+        setIdx(idx + 1);
+        setPhase('ready');
+      } else {
+        say('Now the gate test.');
+        onFinished(windows.current);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [left <= 0]);
+  if (!foot) return null;
+  return (
+    <div className="practice countdown" data-testid="vpull-windows">
+      <div className="drill">V-pulls · {foot}</div>
+      <div className="clock">{Math.max(0, Math.ceil(left))}</div>
+      <div className="sub">{phase === 'ready' ? 'Go on the tone.' : 'Count your V-pulls.'}</div>
+      <div />
+    </div>
   );
 }
 

@@ -124,6 +124,8 @@ export type RunBlockKind =
   | 'quiz';
 
 export interface BlockResult {
+  /** Timed stretches inside the block on its active clock (slalom runs, V-pull windows), for the camera. */
+  windows?: { label: string; startMs: number; endMs?: number }[];
   index: number; // index in the run plan
   kind: RunBlockKind;
   attempt: number; // 1 for the first run of a block, 2 for a Repeat, …

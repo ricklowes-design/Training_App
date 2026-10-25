@@ -15,7 +15,7 @@ import { DemoPanel } from './DemoPanel';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
-import { DigitFlasher, PictureQuiz, TimedRuns } from './SpecialViews';
+import { DigitFlasher, PictureQuiz, TimedRuns, VPullWindows } from './SpecialViews';
 import { CueBlock } from './CueBlock';
 import { cueConfigFor, engineCueLevel } from '../cue/resolve';
 import type { CueConfig } from '../cue/engine';
@@ -33,6 +33,14 @@ import { progressionEligible } from '../domain/focus';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 const TIMED_RUN_KINDS = new Set(['DB', 'A1']);
+
+/** Windows of a block's sets with a given label (e.g. C1's V-pull sets), on the block's active clock. */
+function setWindowsFor(sets: { count: number; labels?: string[] } | undefined, minutes: number, label: string) {
+  if (!sets?.labels || sets.count < 2) return undefined;
+  const per = (minutes * 60_000) / sets.count;
+  const out = sets.labels.map((l, i) => ({ l, i })).filter((x) => x.l === label).map(({ i }) => ({ label: `${label} (set ${i + 1})`, startMs: Math.round(i * per), endMs: Math.round((i + 1) * per) }));
+  return out.length ? out : undefined;
+}
 
 export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   const data = useData();
@@ -96,6 +104,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   );
   const setsFor = useCallback((b: RunBlock) => (b.drillId ? p.drills.find((d) => d.id === b.drillId)?.sets : undefined), [p]);
   const labels: E.Labels = useMemo(() => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor }), [blockName, p, setsFor]);
+  const setWindows = (b: RunBlock, label: string) => setWindowsFor(setsFor(b), b.minutes, label);
 
   const benchmarksLogged = useMemo(() => new Set(saved.map((r) => r.blockIndex)), [saved]);
   const activeMs = useCallback(() => E.activeElapsedMs(sRef.current, Date.now()), []);
@@ -113,7 +122,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     onClip: (clip, b, setup) => {
       const key = `${clip.blockIndex}:${clip.attempt}`;
       const def = extras.current.get(key)?.defender;
-      if (!def) return void analyseClip(p, clip, b, setup, extras.current.get(key)?.cueLog);
+      if (!def) return void analyseClip(p, clip, b, setup, extras.current.get(key)?.cueLog, undefined, extras.current.get(key)?.windows ?? setWindows(b, 'V-pulls'));
       void db.defenderScenarios
         .where('sessionRecordId')
         .equals(clip.sessionRecordId)
@@ -145,6 +154,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   };
   const [tallied, setTallied] = useState<Set<string>>(new Set());
   const cameraUsed = useRef(false);
+  const [vPullsDone, setVPullsDone] = useState<Set<string>>(new Set());
   // Experimental digit diagnostic by voice (off by default): listens only during the diagnostic block.
   const listener = useRef<{ key: string; l: DigitListener } | null>(null);
   const [heardByKey, setHeardByKey] = useState<Record<string, { heard: Heard[]; error?: string }>>({});
@@ -489,10 +499,25 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return (
       <TimedRuns
         headUp={block.cueLevel === 'headup'}
-        onFinished={(t, digits) => {
+        activeMs={activeMs}
+        onFinished={(t, digits, windows) => {
+          setExtras(`${s.blockIdx}:${s.attempt}`, { windows });
           setTimes((x) => ({ ...x, [s.blockIdx]: t }));
           setDigitsShown((x) => ({ ...x, [s.blockIdx]: digits }));
           apply(E.done);
+        }}
+      />
+    );
+  }
+  // CB-1: timed V-pull windows per foot first, then the gate test in the rest of the block.
+  if (benchId === 'CB' && s.phase === 'active' && !vPullsDone.has(`${s.blockIdx}:${s.attempt}`) && s.pausedAtMs === null) {
+    return (
+      <VPullWindows
+        activeMs={activeMs}
+        onFinished={(windows) => {
+          const key = `${s.blockIdx}:${s.attempt}`;
+          setExtras(key, { windows });
+          setVPullsDone((x) => new Set([...x, key]));
         }}
       />
     );

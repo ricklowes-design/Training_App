@@ -59,6 +59,10 @@ export interface BlockAnalysis {
   looksBeforeTouchRate?: number;
   medianLastLookToTouchMs?: number;
   flaggedRepIndexes: number[];
+  /** Slalom runs (plan/12 §12.3): start tone → stop zone, lane-edge entries. Estimates. */
+  slalom?: import('./outcome').SlalomRun[];
+  /** V-pull windows: ball direction reversals in the square and balls lost from it. Estimates. */
+  vPulls?: import('./outcome').VPullWindow[];
   /** Ball tracking summary (part 17), an estimate until validated; never progression-eligible before then. */
   ball?: import('../ball/summary').BallSummary;
   enoughReps: boolean; // ≥ 8 valid reps

@@ -7,6 +7,7 @@ import { db } from '../db/db';
 import type { CameraSetup, Clip } from '../db/types';
 import type { RunBlock } from '../domain/plans';
 import type { DrillKind } from './compute';
+import type { Window } from './outcome';
 import type { FromWorker, ToWorker } from './worker';
 
 // After-block analysis pipeline (plan/08 §8.4). The clip plays in a hidden video
@@ -82,7 +83,7 @@ export async function playFrames(
   return sent;
 }
 
-async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLogEntry[], scenarios?: DefenderScenario[]): Promise<void> {
+async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLogEntry[], scenarios?: DefenderScenario[], windows?: Window[]): Promise<void> {
   const settings = await db.settings.get('main');
   const pose = settings?.camera.pose ?? 'off';
   const fps = settings?.camera.analysisFps ?? 15;
@@ -134,6 +135,7 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
       log,
       ctx: { kind, mirror: setup.mirror, homography: setup.homography, blockEndMs: clip.durationS * 1000 + clip.startActiveMs, fps, alignmentErrorMs: settings?.timingBudget?.alignmentErrorMs },
       gateZones,
+      windows,
     });
     const { reps, block: b0, ball } = await result;
     const block = ball ? { ...b0, ball } : b0;
@@ -211,9 +213,11 @@ async function saveScanReps(clip: Clip, log: CueLogEntry[], reps: RepAnalysis[])
 }
 
 /** Queues the analysis of a recorded cue or defender block. Other blocks are recorded for replay only. */
-export function analyseClip(p: Programme, clip: Clip, _block: RunBlock, setup: CameraSetup, log: CueLogEntry[] | undefined, scenarios?: DefenderScenario[]): Promise<unknown> {
+export function analyseClip(p: Programme, clip: Clip, _block: RunBlock, setup: CameraSetup, log: CueLogEntry[] | undefined, scenarios?: DefenderScenario[], windows?: Window[]): Promise<unknown> {
   const reps = scenarios?.length ? scenariosToLog(scenarios) : log;
-  if (!reps?.length) return Promise.resolve();
-  queue = queue.then(() => analyse(p, clip, setup, reps, scenarios)).catch((e) => console.warn('analysis failed', e));
+  // Slalom runs and V-pull windows are analysed from their timed windows; other blocks without cues are replay only.
+  const outcome = !!windows?.length && (setup.drillFamily === 'L1' || setup.drillFamily === 'L4');
+  if (!reps?.length && !outcome) return Promise.resolve();
+  queue = queue.then(() => analyse(p, clip, setup, reps ?? [], scenarios, windows)).catch((e) => console.warn('analysis failed', e));
   return queue;
 }

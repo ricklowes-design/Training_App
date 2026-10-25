@@ -11,7 +11,7 @@ import type { RoomCheck } from '../camera/roomCheck';
 import type { RunBlock } from '../domain/plans';
 import type { RunState } from './engine';
 
-export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'defender'>>;
+export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'defender' | 'windows'>>;
 
 const flip = (s: Side): Side => (s === 'left' ? 'right' : 'left');
 

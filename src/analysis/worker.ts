@@ -5,6 +5,7 @@ import { motionFraction, toGray, type Gray } from '../camera/frames';
 import type { CueLogEntry } from '../cue/engine';
 import type { Pt } from '../db/types';
 import { analyseBlock, analyseReps, type AnalysisContext, type FrameData } from './compute';
+import { slalomRuns, vPullWindows, type Window } from './outcome';
 import { boxesToDetections, createBallDetector, createPose, toPose } from './pose';
 import type { ColourModel } from '../ball/colour';
 import { detectBall, sizeModel, type SizeModel } from '../ball/detect';
@@ -40,7 +41,7 @@ export type ToWorker =
       ball?: { profileId: string; colour?: ColourModel; sizeSamples: { y: number; diameterPx: number }[]; width: number; neural?: boolean };
     }
   | { type: 'frame'; tMs: number; bitmap: ImageBitmap }
-  | { type: 'finish'; log: CueLogEntry[]; ctx: AnalysisContext; gateZones: string[] }
+  | { type: 'finish'; log: CueLogEntry[]; ctx: AnalysisContext; gateZones: string[]; windows?: Window[] }
   | { type: 'bench'; model: 'lite' | 'full'; wasmBase: string; bitmaps: ImageBitmap[]; fps: number }
   | { type: 'benchBall'; wasmBase: string; bitmaps: ImageBitmap[]; fps: number };
 
@@ -124,6 +125,11 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
     } else if (m.type === 'finish') {
       const reps = analyseReps(frames, m.log, m.ctx, m.gateZones);
       const block = analyseBlock(reps, { poseUsed: !!landmarker, analysedFps: m.ctx.fps, analysisMs: Math.round(performance.now() - started) });
+      // Slalom runs and V-pull windows (plan/12 §12.3).
+      const polygons = Object.fromEntries(zonesAll.map((z) => [z.name, z.polygon]));
+      if (m.windows?.length && m.ctx.kind === 'slalom')
+        block.slalom = slalomRuns(frames, m.windows, { stopZone: 'stop zone', edges: zonesAll.map((z) => z.name).filter((n) => n.includes('lane edge')), polygons, track: ball?.tracker.track });
+      if (m.windows?.length && m.ctx.kind === 'control') block.vPulls = vPullWindows(m.windows, polygons['square'], ball?.tracker.track, m.ctx.fps);
       const ballSummary = ball ? summarise(ball.tracker.track, ball.frames, zonesAll.slice(1), ball.profileId, ball.colour ? (ballDetector ? 'colour+model' : 'colour') : 'model') : undefined;
       ball = null;
       ballDetector?.close();
