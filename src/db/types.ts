@@ -95,6 +95,18 @@ export interface Settings {
   gameDays: number[];
   /** Weekly allocation per area (relative weight, 1 = equal share). Absent = all equal. */
   allocation?: Record<string, number>;
+  /** Completion messages to a chat webhook (plan/14), when the Notifications feature is on. */
+  notify?: {
+    channel: 'discord' | 'telegram';
+    webhookUrl?: string;
+    telegramToken?: string;
+    telegramChatId?: string;
+    /** Optional first name for the greeting (the only personal detail sent). */
+    firstName?: string;
+    pausedUntil?: string;
+    pauseReason?: string;
+    queue?: import('../app/notify').QueuedMessage[];
+  };
   /** Dates marked in the availability calendar (YYYY-MM-DD): a rest day, a light day or a game. */
   availability?: { date: string; kind: 'rest' | 'light' | 'game' }[];
 }

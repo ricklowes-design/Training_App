@@ -1,3 +1,4 @@
+import { notifyFinished } from '../app/notify';
 import { modelVersionLabel, personalisedThresholds } from '../learning/service';
 import { useBlockAnalysis } from '../analysis/Scorecard';
 import { cameraPrefill, PREFILL_KINDS, type PrefillKind } from '../analysis/prefill';
@@ -232,6 +233,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         const recs = await saveProgress(withExtras(s), ids, new Set(savedRef.current.map((r) => r.blockIndex)), true);
         await db.settings.update('main', { lastSeenAppVersion: APP_VERSION, lastSeenContentVersion: p.version });
         await recordMilestones(p);
+        // Opt-in completion message (plan/14): one small record per completed session.
+        void notifyFinished(p, recs).catch(() => undefined);
         if (recs[0]?.kind === 'baseline' && recs[0].status !== 'stopped') go({ name: 'baselineQuestions', recordId: recs[0].id });
         else go({ name: 'summary', runId: ids.runId });
       })();

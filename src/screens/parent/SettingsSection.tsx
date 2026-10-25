@@ -1,3 +1,5 @@
+import { configured, paused, sendText } from '../../app/notify';
+import { tryFill } from '../../domain/templates';
 import { useEffect, useState } from 'react';
 import { listVoices, say, setSoundSettings, tone, unlockAudio } from '../../audio/audio';
 import { logHistory, useData } from '../../app/data';
@@ -114,6 +116,8 @@ export function SettingsSection() {
         </label>
       </div>
 
+      {settings.flags.notifications ? <NotificationsCard /> : null}
+
       <div className="card stack">
         <h2>Weekly allocation</h2>
         <p className="muted">How the suggested session shares the week between areas. Equal is the plan's default; the next suggestion is the area furthest below its share, then the one practised least recently.</p>
@@ -210,7 +214,7 @@ const FLAG_TEXT: { key: keyof Settings['flags']; label: string; detail: string }
   { key: 'realisticDefender', label: 'Realistic defender movement', detail: 'Experimental. The 3D defender moves with recorded movement of a real person defending (load, lunge, push back) instead of generated poses. Its reactions and scoring are unchanged. Compare both in Parent → 3D defender test first.' },
   { key: 'liveOnsetDetector', label: 'Live feint onset detector', detail: 'The camera starts the defender when the feint begins. Experimental until validated (part 16 §12 "Feint"); otherwise planned timing, labelled.' },
   { key: 'speechDiagnostic', label: 'Digit diagnostic (speech)', detail: "Experimental. In the optional scanning diagnostic, Chrome listens for the numbers she calls (Chrome sends the audio to Google's speech service). Its count is only a starting estimate on the result card; you confirm it. Never needed to play." },
-  { key: 'notifications', label: 'Notifications', detail: 'Send one small session record per finished session (plan/14). Not built yet.' },
+  { key: 'notifications', label: 'Notifications', detail: 'After each completed session, post one short message to a Discord or Telegram chat you choose (set it up in Settings → Notifications). Only the date, area, session number, status and minutes are sent.' },
   { key: 'ballTracking', label: 'Ball tracking', detail: 'Use the registered ball profile in after-block analysis (part 17). Experimental until validated.' },
   { key: 'coneDetection', label: 'Cone detection', detail: 'Experimental. In Room profiles, finds orange cones in the room photo and moves the suggested markers onto them; you check and confirm every position.' },
   { key: 'neuralBallDetector', label: 'Ball detector model', detail: "Experimental. Adds MediaPipe's object detector (EfficientDet-Lite0, Apache-2.0, downloaded from Google once) to ball tracking. Run Parent → Balls → detector speed test first; results stay estimates until validated." },
@@ -236,6 +240,107 @@ export function FeaturesCard() {
         This Chromebook: {cap ? (cap.webgl ? `WebGL ${cap.webgl2 ? '2' : '1'} available (${cap.renderer ?? 'unknown renderer'})` : 'no WebGL, the 3D defender falls back to word/arrow cues') : 'not checked yet'}
         {cap?.defenderFps ? ` · 3D defender measured at ${cap.defenderFps} fps` : ' · 3D defender frame rate not measured yet (Parent → 3D defender test)'}.
       </p>
+    </div>
+  );
+}
+
+/** Parent → Settings → Notifications (plan/14): a chat webhook for completion messages; nothing else leaves the device. */
+function NotificationsCard() {
+  const { settings, programme } = useData();
+  const n = settings.notify ?? { channel: 'discord' as const };
+  const [msg, setMsg] = useState('');
+  const [pauseDays, setPauseDays] = useState(7);
+  const [reason, setReason] = useState('rest week');
+  const save = (patch: Partial<NonNullable<Settings['notify']>>) => db.settings.update('main', { notify: { ...n, ...patch } });
+  const ready = configured(n);
+  const sample = `${n.firstName ? `${n.firstName}: ` : ''}${tryFill(programme.feedbackTemplates, 'completed', { area: programme.areas[1]?.name ?? 'Feinting', n: 8, blocks: 4, minutes: 20 }) ?? ''}`;
+  return (
+    <div className="card stack" data-testid="notifications-card">
+      <h2>Notifications</h2>
+      <p className="muted">
+        When a session is completed (not partial, stopped, a trial or an extra), the Chromebook posts one message to your chat. Only this leaves the device: the date, the area, the session number, the status and the minutes. No results, clips or notes. Reminders need a small scheduled service and are not set up.
+      </p>
+      <div className="row">
+        <span className="muted">Send to</span>
+        <Seg value={n.channel} onChange={(channel) => save({ channel })} options={[{ value: 'discord', label: 'Discord channel' }, { value: 'telegram', label: 'Telegram chat' }]} />
+      </div>
+      {n.channel === 'discord' ? (
+        <label className="field">
+          <span>Discord webhook URL (channel settings → Integrations → Webhooks → Copy webhook URL)</span>
+          <input type="url" id="notify-webhook" value={n.webhookUrl ?? ''} onChange={(e) => save({ webhookUrl: e.target.value.trim() })} placeholder="https://discord.com/api/webhooks/…" />
+        </label>
+      ) : (
+        <div className="grid2">
+          <label className="field">
+            <span>Telegram bot token (from @BotFather)</span>
+            <input id="notify-token" value={n.telegramToken ?? ''} onChange={(e) => save({ telegramToken: e.target.value.trim() })} placeholder="123456:ABC…" />
+          </label>
+          <label className="field">
+            <span>Chat ID (send the bot a message, then look it up)</span>
+            <input id="notify-chat" value={n.telegramChatId ?? ''} onChange={(e) => save({ telegramChatId: e.target.value.trim() })} placeholder="123456789" />
+          </label>
+        </div>
+      )}
+      <label className="field">
+        <span>First name for the greeting (optional; the only personal detail sent)</span>
+        <input id="notify-name" value={n.firstName ?? ''} onChange={(e) => save({ firstName: e.target.value })} />
+      </label>
+      <p>
+        Example: <span className="mono">{sample}</span>
+      </p>
+      <div className="row">
+        <button
+          className="btn small"
+          disabled={!ready}
+          onClick={async () => {
+            setMsg('Sending…');
+            try {
+              await sendText(n, tryFill(programme.feedbackTemplates, 'notifyTest', {}) ?? 'Test message.');
+              setMsg('Sent. Check the chat.');
+            } catch (e) {
+              setMsg(`Not sent: ${e instanceof Error ? e.message : 'check the link and the Wi-Fi'}.`);
+            }
+          }}
+        >
+          Send a test message
+        </button>
+        <button className="btn small" onClick={() => save({ webhookUrl: undefined, telegramToken: undefined, telegramChatId: undefined, queue: [] })}>
+          Delete the link
+        </button>
+        <span className="muted">{ready ? msg || (n.queue?.length ? `${n.queue.length} message(s) waiting to be sent.` : '') : 'Not set up yet.'}</span>
+      </div>
+      <div className="row">
+        {paused(n) ? (
+          <>
+            <span>
+              Paused until {n.pausedUntil} ({n.pauseReason}).
+            </span>
+            <button className="btn small" onClick={() => save({ pausedUntil: undefined, pauseReason: undefined })}>
+              Resume
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="muted">Pause for</span>
+            <Seg value={pauseDays} onChange={setPauseDays} options={[3, 7, 14].map((d) => ({ value: d, label: `${d} days` }))} />
+            <select aria-label="Pause reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+              {['rest week', 'holiday', 'injury', 'exams'].map((r) => (
+                <option key={r}>{r}</option>
+              ))}
+            </select>
+            <button
+              className="btn small"
+              onClick={() => {
+                const d = new Date();
+                d.setDate(d.getDate() + pauseDays - 1);
+                void save({ pausedUntil: d.toISOString().slice(0, 10), pauseReason: reason });
+              }}
+            >
+              Pause
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

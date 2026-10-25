@@ -4178,7 +4178,9 @@
     "scanMode": "{mode}: {note}.",
     "recommendWhy": "Why this session: {reasons}.",
     "lightDay": "Light day in the calendar: a light session is suggested.",
-    "restDay": "Rest day in the calendar: no session is planned. A light one is still there if wanted."
+    "restDay": "Rest day in the calendar: no session is planned. A light one is still there if wanted.",
+    "benchmarkSkippedNote": "(Benchmark skipped.)",
+    "notifyTest": "Test message from the home training app. Completion messages will arrive here."
   },
   "anchors": [
     {

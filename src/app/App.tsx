@@ -1,3 +1,4 @@
+import { flushQueue } from './notify';
 import { useEffect, useState } from 'react';
 import { loadProgrammeFile, type ContentLoad } from '../content/load';
 import { db } from '../db/db';
@@ -99,6 +100,8 @@ export function App() {
       .then(async () => {
         const st = await db.settings.get('main');
         await pruneClips(st?.camera.retentionDays ?? 30).catch(() => 0);
+        // Completion messages that could not be sent last time (offline) go now.
+        void flushQueue().catch(() => undefined);
         // WebGL capability check (task 0.1); the measured 3D frame rate is kept from the defender test.
         const cap = checkCapabilities();
         await db.settings.update('main', { capabilities: { ...st?.capabilities, ...cap } });
