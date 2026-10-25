@@ -137,7 +137,8 @@ test('room profiles: an unchanged save makes no new layout; a narrower space doe
   // Shrink the safe space: the receive box no longer fits and its drills are refused.
   await edit();
   await page.getByLabel('Clear floor width (m, approximate)').fill('2.2');
-  await expect(page.locator('li', { hasText: 'L3 Receive box' })).toContainText('not available here');
+  await expect(page.getByText(/Not available here: the receive box needs about 2.4 m of clear width/)).toBeVisible();
+  await expect(page.getByTestId('layout-diagram-L3')).toContainText('Not available in this room');
   await button(page, 'Save and close').click();
   await closeParent(page);
   await place(page, 'Scanning', 1);

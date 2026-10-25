@@ -267,7 +267,7 @@ test('demonstrations: own clip loops in the demo view; a link that cannot play s
   await expect(d1).toContainText('Own clip stored');
   const d2 = page.locator('.card', { hasText: 'D2 · Push-and-go' });
   await expect(button(d2, 'Save link')).toBeDisabled();
-  await d2.getByPlaceholder('YouTube link').fill('https://youtu.be/abcdefghijk');
+  await d2.getByLabel('D2 link').fill('https://youtu.be/abcdefghijk');
   await button(d2, 'Save link').click();
   await closeParent(page);
   await place(page, 'Dribbling', 2);
@@ -277,5 +277,5 @@ test('demonstrations: own clip loops in the demo view; a link that cannot play s
   await button(page, '▶ Start block').click();
   await advance(page, 10_000 + 360_000 + 21_000 + 61_000); // D1, card, rest
   await expect(page.getByText('The uploader does not allow this video to play inside other apps.')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open on YouTube' })).toHaveAttribute('href', 'https://youtu.be/abcdefghijk');
+  await expect(page.getByRole('link', { name: 'Open on YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=abcdefghijk');
 });

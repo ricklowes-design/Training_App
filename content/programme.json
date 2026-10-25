@@ -1,7 +1,7 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "generated": "2026-10-13",
-  "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8).",
+  "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them.",
   "layouts": {
     "L1": {
       "name": "Slalom",
@@ -101,12 +101,19 @@
         "Stopping the ball to look"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=ibB0Ip1Xgrg",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Improve Your Scanning/Awareness From Home",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=ibB0Ip1Xgrg",
+            "title": "Improve Your Scanning/Awareness From Home"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -134,12 +141,23 @@
         "Push too far"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=b_Gebed7DPE",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "How to get young players to SCAN as much as a PRO player.",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=b_Gebed7DPE",
+            "title": "How to get young players to SCAN as much as a PRO player."
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=FXG5ZRVyXVU",
+            "title": "Two Ball \"Check Your Shoulder\" Game"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -201,12 +219,23 @@
         "Touch into the blocked side"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=FXG5ZRVyXVU",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Two Ball \"Check Your Shoulder\" Game",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=FXG5ZRVyXVU",
+            "title": "Two Ball \"Check Your Shoulder\" Game"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=b_Gebed7DPE",
+            "title": "How to get young players to SCAN as much as a PRO player."
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -234,12 +263,23 @@
         "Always right foot"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=CgQxnkrYpC0",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Scanning and Decision Making Training Exercises and Drills",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=CgQxnkrYpC0",
+            "title": "Scanning and Decision Making Training Exercises and Drills"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=b_Gebed7DPE",
+            "title": "How to get young players to SCAN as much as a PRO player."
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -292,12 +332,27 @@
         "Exit touch too short"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=Z-3WzTcS0Xk",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Mastering the Body Feint Technique in Soccer",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=Z-3WzTcS0Xk",
+            "title": "Mastering the Body Feint Technique in Soccer"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=4w1he8tFC74",
+            "title": "How To Do A Body Feint In Soccer"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=KGihE2Zm7ho",
+            "title": "No.1 Messi Body Feint You Have to Learn - The Shoulder Drop"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -323,12 +378,27 @@
         "Looking at the ball at exit"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=KGihE2Zm7ho",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "No.1 Messi Body Feint You Have to Learn - The Shoulder Drop",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=KGihE2Zm7ho",
+            "title": "No.1 Messi Body Feint You Have to Learn - The Shoulder Drop"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=Z-3WzTcS0Xk",
+            "title": "Mastering the Body Feint Technique in Soccer"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=ErXpUCC0_qU",
+            "title": "How to Feint like MESSI in Soccer"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -354,12 +424,27 @@
         "Inside-foot exit that kills pace"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=ox7EDXk7AX4",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": "scissors move tutorial outside foot exit both sides",
         "outsideMustShow": "Single scissors at pace with the exit touch, both sides",
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "How To Do The Single Scissor Soccer Football Move",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=ox7EDXk7AX4",
+            "title": "How To Do The Single Scissor Soccer Football Move"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=6dcW1VhK3Yw",
+            "title": "Learn how to do the Scissors Move - Football Soccer 1v1 Tutorial"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=JhKGhCnUQDM",
+            "title": "How to do the Scissors or Step over Football Dribbling Move"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -384,12 +469,23 @@
         "Stopping dead"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=r2gC8urXb5E",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Step Over and Scissors to Fake Out an Opponent",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=r2gC8urXb5E",
+            "title": "Step Over and Scissors to Fake Out an Opponent"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=neA1TK3625c",
+            "title": "5 Easy Body Feints To Beat Defenders"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -416,12 +512,23 @@
         "Slowing to read"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=Z-3WzTcS0Xk",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Mastering the Body Feint Technique in Soccer",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=Z-3WzTcS0Xk",
+            "title": "Mastering the Body Feint Technique in Soccer"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=4w1he8tFC74",
+            "title": "How To Do A Body Feint In Soccer"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -538,12 +645,27 @@
         "Touching cones"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=bY8b-flvo50",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": "cone slalom dribbling inside outside both feet drill",
         "outsideMustShow": "Slalom with inside and outside of the same foot, both feet",
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Soccer Dribbling Exercise #1 - Inside & Outside Touches (One Foot)",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=bY8b-flvo50",
+            "title": "Soccer Dribbling Exercise #1 - Inside & Outside Touches (One Foot)"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=LfC-nTxvGV0",
+            "title": "Soccer Dribbling Drill: Inside Outside Touch"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=fPnIGE_vWEg",
+            "title": "Soccer Drills for Dribbling - Outside Inside Slalom"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -569,12 +691,27 @@
         "No change of pace"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=8Ew29EZCT7g",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Dribbling: Beating an Opponent: Push and Go",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=8Ew29EZCT7g",
+            "title": "Dribbling: Beating an Opponent: Push and Go"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=mQz3l9Ro2nE",
+            "title": "How To Do The Change Pace Stop and Go Soccer Football Move"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=WBQ9SJSo2Ok",
+            "title": "5 Change of Pace SECRETS (With Drills)"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -599,12 +736,19 @@
         "Wide slow cut"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=yi7bSqDwH20",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Learn These THREE Moves To Change Direction Quickly",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=yi7bSqDwH20",
+            "title": "Learn These THREE Moves To Change Direction Quickly"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -689,12 +833,27 @@
         "Ball exposed"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=YpuAC0whCY4",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": "drag back turn Cruyff turn tutorial",
         "outsideMustShow": "Drag-back and outside-foot hook at pace, both feet",
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "How to do a Drag Back Turn - Football Soccer Move Tutorial",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=YpuAC0whCY4",
+            "title": "How to do a Drag Back Turn - Football Soccer Move Tutorial"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=K4JR-gK1SXU",
+            "title": "How to Do a Cruyff Turn in Soccer"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=M18c1NA0NzY",
+            "title": "Change Direction And Beat Defenders With The Cruyff Turn & Flick"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -721,12 +880,27 @@
         "Looking down throughout"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=b8pL4-h6dyA",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": "ball mastery V pull sole roll inside outside tutorial",
         "outsideMustShow": "Each move slowly then at speed",
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "4 V-Pull Ball Mastery Soccer Moves",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=b8pL4-h6dyA",
+            "title": "4 V-Pull Ball Mastery Soccer Moves"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=SxI9PjFG_KQ",
+            "title": "5 Easy Sole Roll Mastery Skills"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=iCLRtN0N0x4",
+            "title": "30 Ball Mastery / Coerver Drills You Can Do At Home From Easiest to Hardest"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -752,12 +926,27 @@
         "Touch too heavy"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=VhHjC7KbK20",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "First Touch Soccer Drill: Outside Trap and Play",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=VhHjC7KbK20",
+            "title": "First Touch Soccer Drill: Outside Trap and Play"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=YQMI8h5krR4",
+            "title": "Soccer Drills for Kids - First Touch Outside the Foot"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=ZZ90Is0CpEI",
+            "title": "First Touch: Inside Trap and Outside Play"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -781,12 +970,23 @@
         "Turning into the blocked side"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=YpuAC0whCY4",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "How to do a Drag Back Turn - Football Soccer Move Tutorial",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=YpuAC0whCY4",
+            "title": "How to do a Drag Back Turn - Football Soccer Move Tutorial"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=K4JR-gK1SXU",
+            "title": "How to Do a Cruyff Turn in Soccer"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -812,12 +1012,23 @@
         "Body closed"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=8xfWkNLdVYE",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "How I Coach First Touch Under Pressure for Soccer",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=8xfWkNLdVYE",
+            "title": "How I Coach First Touch Under Pressure for Soccer"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=DgUObd_YIxM",
+            "title": "First Touch Soccer Drill To Help You Stay Calm Under Pressure"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -844,12 +1055,27 @@
         "Always right foot"
       ],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=7KbDKI9WHmo",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "Soccer TRAINING - Receiving on the Half Turn",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=7KbDKI9WHmo",
+            "title": "Soccer TRAINING - Receiving on the Half Turn"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=5gQdHnf6jLA",
+            "title": "Receiving the Ball with a Half Turn"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=bI8BXGpdido",
+            "title": "How to coach receiving on the half turn for 8-13 year old players"
+          }
+        ]
       },
       "safety": "Clear 0.5 m around gates and stop zones",
       "variants": {
@@ -869,12 +1095,27 @@
       "cues": [],
       "commonErrors": [],
       "demo": {
-        "type": "none",
-        "ref": "",
+        "type": "youtube",
+        "ref": "https://www.youtube.com/watch?v=nv634_GvXHE",
         "ownDemoPlanned": true,
         "outsideSearchPhrase": null,
         "outsideMustShow": null,
-        "status": "demonstration unverified"
+        "status": "demonstration unverified: outside video chosen from its title and description, not yet watched; a parent checks it and sets the part to show (Parent → Demonstrations)",
+        "title": "3 BEST Wall Training Drills",
+        "alternatives": [
+          {
+            "ref": "https://www.youtube.com/watch?v=nv634_GvXHE",
+            "title": "3 BEST Wall Training Drills"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=DuFc-pgZCn0",
+            "title": "Follow Along Soccer Wall Passing Drills for Beginners"
+          },
+          {
+            "ref": "https://www.youtube.com/watch?v=quDH7EgDWRI",
+            "title": "First Touch and Passing Using Wall"
+          }
+        ]
       },
       "safety": "Off by default; enable only with a bare wall and household agreement",
       "variants": {

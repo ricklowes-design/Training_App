@@ -9,7 +9,8 @@ import { recordMilestones } from '../../domain/milestoneStore';
 import { areaName } from '../../domain/plans';
 import { countedResults } from '../../domain/records';
 import { canDemote, demote, promote } from '../../domain/trial';
-import { youtubeId } from '../../runner/DemoVideo';
+import { DemoVideo, fmtTime, linkStart, parseTime, youtubeId } from '../../runner/DemoVideo';
+import type { Drill } from '../../content/types';
 import { downloadText, fmtDate, Modal, StatusPill } from '../../ui/widgets';
 import { ruleStatusFor, useAreaProgress } from '../helpers';
 
@@ -332,73 +333,148 @@ export function PlacementSection() {
 export function DemosSection() {
   const { programme: p, demoClipIds } = useData();
   const [msg, setMsg] = useState('');
-  const [links, setLinks] = useState<Record<string, string>>({});
   return (
     <div className="stack">
       <p className="muted">
-        Own clips: 15–30 s, landscape, filmed by a parent with the coach's nod (plan/03 §3.10). They loop in the demo view. Links must play inside the app; the app shows a fallback when
-        embedding is disabled.
+        Own clips: 15–30 s, landscape, filmed by a parent with the coach's nod (plan/03 §3.10). They loop in the demo view and always take priority over a link. The suggested YouTube links were
+        chosen from their titles and descriptions and have not been watched: press Preview, check the video shows the move, and set the start and end so only the useful part plays (it loops).
       </p>
       {msg ? <div className="note-box">{msg}</div> : null}
       {p.drills.map((d) => (
-        <div key={d.id} className="card tight row spread">
-          <span style={{ flex: 1 }}>
-            <strong>
-              {d.id} · {d.name}
-            </strong>
-            <br />
-            <span className="muted">
-              {demoClipIds.includes(d.id) ? 'Own clip stored' : d.demo.type === 'youtube' && d.demo.ref ? `Link: ${d.demo.ref}` : 'No demonstration yet'} · {d.demo.status}
-            </span>
+        <DemoCard key={d.id} d={d} hasClip={demoClipIds.includes(d.id)} onMsg={setMsg} />
+      ))}
+    </div>
+  );
+}
+
+async function saveDemo(d: Drill, value: Partial<Drill['demo']>, what: string) {
+  await db.overrides.add({
+    date: new Date().toISOString(),
+    author: 'parent',
+    target: { kind: 'drill', id: d.id },
+    field: 'demo',
+    value,
+    previousValue: { type: d.demo.type, ref: d.demo.ref, title: d.demo.title, startS: d.demo.startS, endS: d.demo.endS },
+  });
+  await logHistory('parent', 'demo', `${d.id}: ${what}`);
+}
+
+function DemoCard({ d, hasClip, onMsg }: { d: Drill; hasClip: boolean; onMsg: (m: string) => void }) {
+  const [link, setLink] = useState('');
+  const [preview, setPreview] = useState(false);
+  const [start, setStart] = useState(d.demo.startS !== undefined ? fmtTime(d.demo.startS) : '');
+  const [end, setEnd] = useState(d.demo.endS !== undefined ? fmtTime(d.demo.endS) : '');
+  const isLink = d.demo.type === 'youtube' && !!d.demo.ref;
+  const startS = parseTime(start);
+  const endS = parseTime(end);
+  const timesBad = (start.trim() && startS === null) || (end.trim() && endS === null) || (startS !== null && endS !== null && endS <= startS);
+  return (
+    <div className="card tight stack" data-testid={`demo-${d.id}`}>
+      <div className="row spread">
+        <span style={{ flex: 1 }}>
+          <strong>
+            {d.id} · {d.name}
+          </strong>
+          <br />
+          <span className="muted">
+            {hasClip ? 'Own clip stored (used instead of any link)' : isLink ? `${d.demo.title ? `“${d.demo.title}”` : 'Link'}${d.demo.startS !== undefined || d.demo.endS !== undefined ? ` · ${fmtTime(d.demo.startS ?? 0)}–${d.demo.endS !== undefined ? fmtTime(d.demo.endS) : 'end'}` : ' · whole video'}` : 'No demonstration yet'} · {d.demo.status}
           </span>
-          <label className="btn small">
-            {demoClipIds.includes(d.id) ? 'Replace clip' : 'Add own clip'}
-            <input
-              type="file"
-              accept="video/*"
-              style={{ display: 'none' }}
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                await db.demoClips.put({ drillId: d.id, blob: f, mime: f.type, date: new Date().toISOString() });
-                await logHistory('parent', 'demo clip', `${d.id}: own clip stored (${Math.round(f.size / 1e5) / 10} MB)`);
-                setMsg(`${d.id}: clip stored.`);
-                e.target.value = '';
-              }}
-            />
-          </label>
-          {demoClipIds.includes(d.id) ? (
-            <button
-              className="btn small"
-              onClick={async () => {
-                await db.demoClips.delete(d.id);
-                await logHistory('parent', 'demo clip', `${d.id}: own clip removed`);
-              }}
-            >
-              Remove clip
-            </button>
-          ) : null}
-          <input type="url" placeholder="YouTube link" value={links[d.id] ?? ''} onChange={(e) => setLinks({ ...links, [d.id]: e.target.value })} style={{ maxWidth: 260 }} />
+        </span>
+        {isLink || hasClip ? (
+          <button className="btn small" onClick={() => setPreview(!preview)}>
+            {preview ? 'Close preview' : 'Preview'}
+          </button>
+        ) : null}
+        <label className="btn small">
+          {hasClip ? 'Replace clip' : 'Add own clip'}
+          <input
+            type="file"
+            accept="video/*"
+            style={{ display: 'none' }}
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              await db.demoClips.put({ drillId: d.id, blob: f, mime: f.type, date: new Date().toISOString() });
+              await logHistory('parent', 'demo clip', `${d.id}: own clip stored (${Math.round(f.size / 1e5) / 10} MB)`);
+              onMsg(`${d.id}: clip stored.`);
+              e.target.value = '';
+            }}
+          />
+        </label>
+        {hasClip ? (
           <button
             className="btn small"
-            disabled={!youtubeId(links[d.id] ?? '')}
             onClick={async () => {
-              await db.overrides.add({
-                date: new Date().toISOString(),
-                author: 'parent',
-                target: { kind: 'drill', id: d.id },
-                field: 'demo',
-                value: { type: 'youtube', ref: links[d.id].trim() },
-                previousValue: { type: d.demo.type, ref: d.demo.ref },
-              });
-              setLinks({ ...links, [d.id]: '' });
-              setMsg(`${d.id}: link saved. Open a session with this drill to check it plays.`);
+              await db.demoClips.delete(d.id);
+              await logHistory('parent', 'demo clip', `${d.id}: own clip removed`);
             }}
           >
-            Save link
+            Remove clip
           </button>
+        ) : null}
+      </div>
+      {preview ? (
+        <div style={{ maxWidth: 560 }}>
+          <DemoVideo drill={d} hasOwnClip={hasClip} />
         </div>
-      ))}
+      ) : null}
+      {isLink && !hasClip ? (
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <span className="muted">Show only</span>
+          <input value={start} onChange={(e) => setStart(e.target.value)} placeholder="start m:ss" aria-label={`${d.id} start`} style={{ width: 100 }} />
+          <span className="muted">to</span>
+          <input value={end} onChange={(e) => setEnd(e.target.value)} placeholder="end m:ss" aria-label={`${d.id} end`} style={{ width: 100 }} />
+          <button
+            className="btn small"
+            disabled={!!timesBad}
+            onClick={async () => {
+              await saveDemo(d, { startS: startS ?? undefined, endS: endS ?? undefined }, startS === null && endS === null ? 'whole video' : `part ${fmtTime(startS ?? 0)}–${endS !== null ? fmtTime(endS) : 'end'}`);
+              onMsg(`${d.id}: ${startS === null && endS === null ? 'the whole video will play' : 'only that part will play, on a loop'}.`);
+            }}
+          >
+            Save part
+          </button>
+          {timesBad ? <span className="muted">Use m:ss, with the end after the start.</span> : null}
+        </div>
+      ) : null}
+      {d.demo.alternatives?.length && !hasClip ? (
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <span className="muted">Other suggestions:</span>
+          {d.demo.alternatives
+            .filter((a) => a.ref !== d.demo.ref)
+            .map((a) => (
+              <button
+                key={a.ref}
+                className="btn small"
+                onClick={async () => {
+                  await saveDemo(d, { type: 'youtube', ref: a.ref, title: a.title, startS: a.startS, endS: a.endS }, `switched to “${a.title}”`);
+                  setStart(a.startS !== undefined ? fmtTime(a.startS) : '');
+                  setEnd(a.endS !== undefined ? fmtTime(a.endS) : '');
+                  onMsg(`${d.id}: now using “${a.title}”. Preview it to check.`);
+                }}
+              >
+                Use “{a.title}”
+              </button>
+            ))}
+        </div>
+      ) : null}
+      <div className="row" style={{ flexWrap: 'wrap' }}>
+        <input type="url" placeholder="Paste a YouTube link (a ?t= time sets the start)" value={link} onChange={(e) => setLink(e.target.value)} style={{ flex: 1, minWidth: 240 }} aria-label={`${d.id} link`} />
+        <button
+          className="btn small"
+          disabled={!youtubeId(link)}
+          onClick={async () => {
+            const s = linkStart(link);
+            await saveDemo(d, { type: 'youtube', ref: link.trim(), title: 'Your link', startS: s, endS: undefined }, 'own link saved');
+            setLink('');
+            setStart(s !== undefined ? fmtTime(s) : '');
+            setEnd('');
+            onMsg(`${d.id}: link saved. Preview it, then set where it should stop.`);
+          }}
+        >
+          Save link
+        </button>
+      </div>
     </div>
   );
 }

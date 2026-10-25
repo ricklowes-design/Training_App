@@ -32,6 +32,13 @@ export interface DemoRef {
   outsideSearchPhrase: string | null;
   outsideMustShow: string | null;
   status: string;
+  /** Title of the linked video, as published. */
+  title?: string;
+  /** Only this part of the linked video is shown (seconds); it loops. */
+  startS?: number;
+  endS?: number;
+  /** Other candidate videos a parent can switch to. */
+  alternatives?: { ref: string; title: string; startS?: number; endS?: number }[];
 }
 
 export interface Drill {
