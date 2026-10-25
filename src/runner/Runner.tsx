@@ -1,3 +1,4 @@
+import { modelVersionLabel, personalisedThresholds } from '../learning/service';
 import { useBlockAnalysis } from '../analysis/Scorecard';
 import { cameraPrefill, PREFILL_KINDS, type PrefillKind } from '../analysis/prefill';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -159,6 +160,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   };
   const [tallied, setTallied] = useState<Set<string>>(new Set());
   const cameraUsed = useRef(false);
+  const learningState = useLiveQuery(async () => ({ versions: await db.modelVersions.toArray(), ls: await db.learningSettings.get('main') }), []);
+  const personalModels = personalisedThresholds(learningState?.versions ?? [], learningState?.ls, !!settings.flags.learning).modelVersions;
   const [vPullsDone, setVPullsDone] = useState<Set<string>>(new Set());
   // Experimental digit diagnostic by voice (off by default): listens only during the diagnostic block.
   const listener = useRef<{ key: string; l: DigitListener } | null>(null);
@@ -274,7 +277,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     // Anchors are assessed against the fixed, non-learning benchmark opponent (part 18).
     defenderArchetype: b.kind === 'anchor' ? 'benchmarkOpponent' : undefined,
     cameraConfidence: camera.live ? (camera.roomCheck?.status === 'moved' ? 'low' : 'ok') : 'none',
-    modelVersion: 'rules-1',
+    // The base rules plus any personalised model the camera estimates used (part 18).
+    modelVersion: camera.live ? modelVersionLabel(personalModels) : 'rules-1',
     ballProfileId: settings.flags.ballTracking && camera.live ? settings.activeBallProfileId : undefined,
   });
 

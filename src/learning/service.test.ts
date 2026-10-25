@@ -56,3 +56,21 @@ describe('learning service (part 18)', () => {
     expect(exs).toHaveLength(60);
   });
 });
+
+describe('applying personalised models (part 18)', () => {
+  it('uses only active personalised models, when learning is on and not paused, and names them', async () => {
+    const { personalisedThresholds, modelVersionLabel } = await import('./service');
+    const v = (id: string, component: 'feintExecution' | 'scanPattern', status: 'active' | 'retired', note: string, threshold: number, direction = 1) =>
+      ({ id, component, n: Number(id.split('@')[1]), createdAt: '', kind: 'personalised', params: { threshold, direction }, note, status }) as never;
+    const versions = [v('feintExecution@1', 'feintExecution', 'retired', 'fakeShift', 0.1), v('feintExecution@2', 'feintExecution', 'active', 'fakeShift', 0.15), v('scanPattern@1', 'scanPattern', 'active', 'headTurn', 0.3)];
+    const on = personalisedThresholds(versions, { id: 'main', paused: false, components: {} } as never, true);
+    expect(on.thresholds).toEqual({ fakeMinHipWidths: 0.15, lookShoulderWidths: 0.3 });
+    expect(modelVersionLabel(on.modelVersions)).toBe('rules-1+feintExecution@2+scanPattern@1');
+    expect(personalisedThresholds(versions, { id: 'main', paused: true, components: {} } as never, true).modelVersions).toEqual([]);
+    expect(personalisedThresholds(versions, undefined, false).modelVersions).toEqual([]);
+    expect(personalisedThresholds(versions, { id: 'main', paused: false, components: { scanPattern: { paused: true } } } as never, true).thresholds).toEqual({ fakeMinHipWidths: 0.15 });
+    // A model pointing the other way is not applied.
+    expect(personalisedThresholds([v('scanPattern@2', 'scanPattern', 'active', 'headTurn', 0.3, -1)], undefined, true).modelVersions).toEqual([]);
+    expect(modelVersionLabel([])).toBe('rules-1');
+  });
+});

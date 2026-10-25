@@ -16,6 +16,8 @@ export interface RepAnalysis {
   decisionCorrect?: boolean;
   headUpAtExit?: boolean;
   looksBeforeTouch?: number;
+  /** Largest held head turn before the touch (shoulder widths), the scanning model's feature. */
+  maxHeadTurn?: number;
   lastLookToTouchMs?: number;
   touchMs?: number;
   zoneEvents: ZoneEvent[];
@@ -59,6 +61,8 @@ export interface BlockAnalysis {
   looksBeforeTouchRate?: number;
   medianLastLookToTouchMs?: number;
   flaggedRepIndexes: number[];
+  /** Personalised model versions this analysis used (part 18); absent = base rules only. History is never re-scored. */
+  modelVersions?: string[];
   /** Slalom runs (plan/12 §12.3): start tone → stop zone, lane-edge entries. Estimates. */
   slalom?: import('./outcome').SlalomRun[];
   /** V-pull windows: ball direction reversals in the square and balls lost from it. Estimates. */

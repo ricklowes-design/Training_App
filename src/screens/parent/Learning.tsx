@@ -11,7 +11,7 @@ const COMPONENTS: { id: LearningComponent; label: string; feature?: string; base
   { id: 'feintExecution', label: 'Feint execution (visible fake)', feature: 'fakeShift', base: { feature: 'fakeShift', threshold: 0.12, direction: 1 }, note: 'Labels from flagged-rep reviews (fake 0–2).' },
   { id: 'ballRecognition', label: 'Ball recognition', note: 'Uses the registered ball profile; personalisation waits for part 17 validation data.' },
   { id: 'touchClassification', label: 'Touch classification', note: 'Waits for validated touch labels (part 17 §BR-04).' },
-  { id: 'scanPattern', label: 'Scanning head/torso pattern', note: 'Waits for reviewed scan reps.' },
+  { id: 'scanPattern', label: 'Scanning look (head turn)', feature: 'headTurn', base: { feature: 'headTurn', threshold: 0.35, direction: 1 }, note: 'Labels from flagged-rep reviews of scanning reps (looked before the touch: yes/no).' },
   { id: 'defenderTendency', label: 'Adaptive defender', note: 'Reads her habitual fake side from camera-seen reps; never used by the fixed benchmark opponent.' },
 ];
 

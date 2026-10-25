@@ -84,6 +84,7 @@ export function Scorecard({ analysis: a, reps }: { analysis: BlockAnalysis; reps
       </div>
       <RepStrip reps={reps} />
       <OutcomeLines a={a} />
+      {a.modelVersions?.length ? <p className="muted">Personalised models used: {a.modelVersions.join(', ')} (validated on held-out reviewed reps; earlier analyses keep the rules they were made with).</p> : null}
       <p className="muted">Camera estimates (not yet validated against a parent's frame reading); unable-to-assess reps are left out, never counted as wrong.</p>
       {!a.enoughReps && !a.slalom && !a.vPulls ? <p className="pill warn">Fewer than {THRESHOLDS.minValidReps} reps could be assessed: rates are shown but not used for criteria.</p> : null}
       <table className="data">

@@ -4,6 +4,7 @@ import { scenariosToLog } from '../defender/analysisLog';
 import type { Programme } from '../content/types';
 import type { CueLogEntry } from '../cue/engine';
 import { db } from '../db/db';
+import { personalisedThresholds } from '../learning/service';
 import type { CameraSetup, Clip } from '../db/types';
 import type { RunBlock } from '../domain/plans';
 import type { DrillKind } from './compute';
@@ -88,6 +89,8 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
   const pose = settings?.camera.pose ?? 'off';
   const fps = settings?.camera.analysisFps ?? 15;
   const kind = KIND[setup.drillFamily] ?? 'feint';
+  // Active, validated personalised models (part 18): their thresholds, and their versions stored with the scores.
+  const personal = personalisedThresholds(await db.modelVersions.toArray(), await db.learningSettings.get('main'), !!settings?.flags?.learning);
   const worker = newWorker();
   let inFlight = 0;
   let wake: (() => void) | null = null;
@@ -133,13 +136,13 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
     call(worker, {
       type: 'finish',
       log,
-      ctx: { kind, mirror: setup.mirror, homography: setup.homography, blockEndMs: clip.durationS * 1000 + clip.startActiveMs, fps, alignmentErrorMs: settings?.timingBudget?.alignmentErrorMs },
+      ctx: { kind, mirror: setup.mirror, homography: setup.homography, blockEndMs: clip.durationS * 1000 + clip.startActiveMs, fps, alignmentErrorMs: settings?.timingBudget?.alignmentErrorMs, thresholds: personal.thresholds },
       gateZones,
       windows,
       rapid: !!settings?.flags?.ballTracking && !!settings.flags.rapidTouches,
     });
     const { reps, block: b0, ball } = await result;
-    const block = ball ? { ...b0, ball } : b0;
+    const block = { ...(ball ? { ...b0, ball } : b0), ...(personal.modelVersions.length ? { modelVersions: personal.modelVersions } : {}) };
     await db.transaction('rw', db.repAnalyses, db.blockAnalyses, async () => {
       await db.repAnalyses.bulkPut(reps.map((r) => ({ id: `${clip.id}:${r.repIndex}`, clipId: clip.id, repIndex: r.repIndex, data: r })));
       await db.blockAnalyses.put({ id: clip.id, clipId: clip.id, date: new Date().toISOString(), data: block });

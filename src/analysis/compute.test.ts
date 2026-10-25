@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CueLogEntry } from '../cue/engine';
-import { analyseBlock, analyseReps, decision, exitFromHips, herSide, looks, reactionOnset, slope, zoneEvents, type FrameData, type Pose } from './compute';
+import { analyseBlock, analyseReps, decision, exitFromHips, herSide, looks, maxHeadTurn, reactionOnset, slope, zoneEvents, type FrameData, type Pose } from './compute';
 
 const P = (x: number, y: number, v = 1) => ({ x, y, v });
 /** A standing figure centred at cx, facing the camera, head turned by `turn` shoulder widths. */
@@ -60,6 +60,14 @@ describe('analysis building blocks', () => {
     const l = looks(f, 0, 1800);
     expect(l.count).toBe(2);
     expect(l.lastEndMs).toBeGreaterThan(1440);
+  });
+
+  it('a personalised look threshold counts a smaller held head turn; the largest held turn is measured', () => {
+    // A turn of 0.3 shoulder widths held for 250 ms: below the base 0.35, above a learned 0.25.
+    const f = frames(0, 2000, 30, (t) => ({ pose: pose(0.5, 0.06, t > 800 && t < 1050 ? 0.3 : 0) }));
+    expect(looks(f, 0, 1800).count).toBe(0);
+    expect(looks(f, 0, 1800, 0.25).count).toBe(1);
+    expect(maxHeadTurn(f, 0, 1800)).toBeCloseTo(0.3, 2);
   });
 
   it('decisions from gates', () => {

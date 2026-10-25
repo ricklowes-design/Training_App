@@ -40,6 +40,8 @@ export interface AnalysisContext {
   fps: number;
   /** Measured camera-to-render clock alignment error (task 3.1), when known. */
   alignmentErrorMs?: number;
+  /** Thresholds from active personalised models (part 18); absent = the base rules. */
+  thresholds?: Partial<Pick<typeof THRESHOLDS, 'fakeMinHipWidths' | 'lookShoulderWidths'>>;
 }
 
 export const THRESHOLDS = {
@@ -179,7 +181,7 @@ export function headUpAt(frames: FrameData[], tMs: number): boolean | undefined 
 }
 
 /** Looks over the shoulder: nose off the shoulder centre by ≥ 0.35 shoulder widths for ≥ 100 ms. */
-export function looks(frames: FrameData[], fromMs: number, toMs: number): { count: number; lastEndMs?: number } {
+export function looks(frames: FrameData[], fromMs: number, toMs: number, lookShoulderWidths: number = THRESHOLDS.lookShoulderWidths): { count: number; lastEndMs?: number } {
   let count = 0;
   let start: number | null = null;
   let lastEndMs: number | undefined;
@@ -189,7 +191,7 @@ export function looks(frames: FrameData[], fromMs: number, toMs: number): { coun
     let turned = false;
     if (p && shouldersVisible(p)) {
       const sw = Math.abs(p.lShoulder.x - p.rShoulder.x) || 0.05;
-      turned = Math.abs(p.nose.x - (p.lShoulder.x + p.rShoulder.x) / 2) / sw >= THRESHOLDS.lookShoulderWidths;
+      turned = Math.abs(p.nose.x - (p.lShoulder.x + p.rShoulder.x) / 2) / sw >= lookShoulderWidths;
     }
     if (turned && start === null) start = f.tMs;
     if (!turned && start !== null) {
@@ -207,8 +209,29 @@ export function looks(frames: FrameData[], fromMs: number, toMs: number): { coun
   return { count, lastEndMs };
 }
 
+/** The largest head turn (nose offset from the shoulder centre, in shoulder widths) held for the look's minimum time. */
+export function maxHeadTurn(frames: FrameData[], fromMs: number, toMs: number): number | undefined {
+  const pts = frames
+    .filter((f) => f.tMs >= fromMs && f.tMs <= toMs && f.pose && shouldersVisible(f.pose))
+    .map((f) => {
+      const p = f.pose!;
+      const sw = Math.abs(p.lShoulder.x - p.rShoulder.x) || 0.05;
+      return { t: f.tMs, v: Math.abs(p.nose.x - (p.lShoulder.x + p.rShoulder.x) / 2) / sw };
+    });
+  if (pts.length < 2) return undefined;
+  let best = 0;
+  for (let i = 0; i < pts.length; i++) {
+    if (pts[pts.length - 1].t - pts[i].t < THRESHOLDS.lookMinMs) break;
+    // The lowest value over the look's minimum time from here: a turn held that long.
+    let lo = Infinity;
+    for (let j = i; j < pts.length && pts[j].t - pts[i].t <= THRESHOLDS.lookMinMs; j++) lo = Math.min(lo, pts[j].v);
+    best = Math.max(best, lo);
+  }
+  return Math.round(best * 100) / 100;
+}
+
 /** Fake and exit as hip shifts (hip widths) around the exit time; the sequence is observed when both are seen. */
-export function feintFeatures(frames: FrameData[], fromMs: number, exitMs: number | undefined, exitDir: Side | undefined, mirror: boolean): { status: 'observedExecution' | 'estimatedTechnique' | 'unableToAssess'; fake?: number; exit?: number } {
+export function feintFeatures(frames: FrameData[], fromMs: number, exitMs: number | undefined, exitDir: Side | undefined, mirror: boolean, fakeMin: number = THRESHOLDS.fakeMinHipWidths): { status: 'observedExecution' | 'estimatedTechnique' | 'unableToAssess'; fake?: number; exit?: number } {
   const win = frames.filter((f) => f.tMs >= fromMs && f.tMs <= (exitMs ?? fromMs) + 800 && f.pose && hipsVisible(f.pose));
   if (win.length < 6 || exitMs === undefined || !exitDir) return { status: 'unableToAssess' };
   const hipW = median(win.map((f) => Math.abs(f.pose!.lHip.x - f.pose!.rHip.x))) ?? 0.05;
@@ -223,7 +246,7 @@ export function feintFeatures(frames: FrameData[], fromMs: number, exitMs: numbe
   const exitShift = exitSign * (x(after[after.length - 1]) - x(after[0]));
   const fake = Math.round((100 * fakeExtreme) / hipW) / 100;
   const exit = Math.round((100 * exitShift) / hipW) / 100;
-  return { status: fake >= THRESHOLDS.fakeMinHipWidths ? 'observedExecution' : 'estimatedTechnique', fake, exit };
+  return { status: fake >= fakeMin ? 'observedExecution' : 'estimatedTechnique', fake, exit };
 }
 
 /** Which gate means which side, by the zone names from the camera set-up. */
@@ -302,11 +325,11 @@ export function analyseReps(frames: FrameData[], log: CueLogEntry[], ctx: Analys
       if (d.reaction) {
         r.defenderReaction = d.reaction;
         r.timingUncertaintyMs = Math.round(1000 / ctx.fps + (ctx.alignmentErrorMs ?? 33));
-        const ff = feintFeatures(frames, d.triggerMs ?? e.repStartMs, r.exitMs, r.exitDir, ctx.mirror);
+        const ff = feintFeatures(frames, d.triggerMs ?? e.repStartMs, r.exitMs, r.exitDir, ctx.mirror, ctx.thresholds?.fakeMinHipWidths);
         r.techniqueStatus = ff.status;
         r.fakeShiftHipWidths = ff.fake;
         r.exitShiftHipWidths = ff.exit;
-        r.preCueMovement = (ff.fake ?? 0) >= THRESHOLDS.fakeMinHipWidths;
+        r.preCueMovement = (ff.fake ?? 0) >= (ctx.thresholds?.fakeMinHipWidths ?? THRESHOLDS.fakeMinHipWidths);
         // Evidence, not mind-reading: the final exit run began before the defender's move could have been seen.
         if (r.exitMs !== undefined && e.cueMs !== undefined && r.exitMs + r.timingUncertaintyMs < e.cueMs + THRESHOLDS.perceptionMinMs) {
           r.possibleEarlyRouteCommitment = `final exit movement began ${e.cueMs - r.exitMs} ms before the defender moved (±${r.timingUncertaintyMs} ms)`;
@@ -314,8 +337,10 @@ export function analyseReps(frames: FrameData[], log: CueLogEntry[], ctx: Analys
       }
       if (anyPose && ctx.kind === 'scan') {
         const touch = r.touchMs ?? end;
-        const lk = looks(frames, e.repStartMs, touch);
+        const lk = looks(frames, e.repStartMs, touch, ctx.thresholds?.lookShoulderWidths);
         r.looksBeforeTouch = lk.count;
+        // The largest held head turn before the touch: the personalised scanning model's feature (part 18).
+        r.maxHeadTurn = maxHeadTurn(frames, e.repStartMs, touch);
         if (lk.lastEndMs !== undefined && r.touchMs !== undefined) r.lastLookToTouchMs = r.touchMs - lk.lastEndMs;
       }
     } else if (e.missedTripwire) {

@@ -150,3 +150,36 @@ export function rollback(versions: ModelVersion[], component: LearningComponent)
   const prev = versions.filter((v) => v.component === component && v.status === 'retired' && v.n < cur.n).sort((a, b) => b.n - a.n)[0];
   return versions.map((v) => (v.id === cur.id ? { ...v, status: 'rejected' as const } : prev && v.id === prev.id ? { ...v, status: 'active' as const } : v));
 }
+
+/** Which analysis threshold each component's model sets, by its feature (only models that point the expected way). */
+const APPLIES: Partial<Record<LearningComponent, { feature: string; key: 'fakeMinHipWidths' | 'lookShoulderWidths' }>> = {
+  feintExecution: { feature: 'fakeShift', key: 'fakeMinHipWidths' },
+  scanPattern: { feature: 'headTurn', key: 'lookShoulderWidths' },
+};
+
+/**
+ * The thresholds the after-block analysis uses from active, validated personalised models, and their version
+ * ids to store with every score they produce (part 18). Nothing when personalisation is off or paused, for a
+ * paused component, or for a model whose feature or direction is not the one the analysis uses.
+ */
+export function personalisedThresholds(
+  versions: ModelVersion[],
+  ls: LearningSettings | undefined,
+  learningOn: boolean,
+): { thresholds: Partial<Record<'fakeMinHipWidths' | 'lookShoulderWidths', number>>; modelVersions: string[] } {
+  const out = { thresholds: {} as Partial<Record<'fakeMinHipWidths' | 'lookShoulderWidths', number>>, modelVersions: [] as string[] };
+  if (!learningOn || ls?.paused) return out;
+  for (const [component, a] of Object.entries(APPLIES) as [LearningComponent, { feature: string; key: 'fakeMinHipWidths' | 'lookShoulderWidths' }][]) {
+    if (ls?.components[component]?.paused) continue;
+    const v = activeVersion(versions, component);
+    if (!v || v.kind !== 'personalised') continue;
+    const m = toModel(v);
+    if (m.feature !== a.feature || m.direction !== 1) continue;
+    out.thresholds[a.key] = m.threshold;
+    out.modelVersions.push(v.id);
+  }
+  return out;
+}
+
+/** The model-version label for a result's comparison context: the base rules plus any personalised models used. */
+export const modelVersionLabel = (ids: string[]) => ['rules-1', ...[...ids].sort()].join('+');
