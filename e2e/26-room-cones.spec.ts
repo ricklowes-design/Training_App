@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openParent, place, setup, start, table } from './helpers';
+import { advance, boot, button, closeParent, openParent, place, setup, start, table } from './helpers';
 
 // Measured once at set-up; the cones are shown when each drill starts, against the room's fixed points.
 
@@ -66,7 +66,7 @@ test('a second, very narrow room: drills become single-cone versions, and home s
   await expect(page.getByTestId('training-space')).toContainText('Training space: 1.3 m wide × 5 m long');
   await expect(page.getByTestId('training-space')).not.toContainText('Feint lane (');
   await button(page, 'Save and use this room').click();
-  const hall = page.locator('li', { hasText: 'Hallway' });
+  const hall = page.locator('li', { hasText: 'Hallway' }).first();
   await expect(hall).toContainText('in use');
   await hall.getByRole('button', { name: 'Edit' }).click();
   await page.getByText(/^Drill layouts in this space/).click();
@@ -74,6 +74,7 @@ test('a second, very narrow room: drills become single-cone versions, and home s
   await expect(page.getByText(/^two cones 0\.9 m apart in a line mid-room/)).toBeVisible();
   await button(page, 'Cancel').click();
   // The animated feint drill follows the room: past the exit cone, not through a gate.
+  await closeParent(page);
   await openParent(page, /^Demonstrations/);
   const card = page.getByTestId('demo-F4');
   await card.locator('summary').click();

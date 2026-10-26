@@ -53,7 +53,7 @@ test('the cone plans follow the size, the cones and the units', async ({ page })
   const s3b = shot('03b-narrow-room-feet-inches');
   if (s3b) await grid.screenshot({ path: s3b });
 
-  // Fewer cones: the slalom shortens, the feint lane loses its start cone, then refuses.
+  // Fewer cones: the slalom shortens, and the feint lane becomes its single-cone version.
   await button(page, 'Metres').click();
   await button(page, 'Cancel').click().catch(() => undefined);
   await patchSettings(page, { equipment: { cones: 4, sparePhone: false, tripod: false } });
@@ -62,7 +62,8 @@ test('the cone plans follow the size, the cones and the units', async ({ page })
   await page.locator('li', { hasText: 'Main room' }).getByRole('button', { name: 'Edit' }).click();
   await page.getByText(/^Drill layouts in this space/).click();
   await expect(page.getByText(/^4 cones .* apart/)).toBeVisible();
-  await expect(page.getByText('Not available here: needs 5 cones (you have 4).', { exact: false })).toBeVisible();
+  // Four cones are too few for the gates: the feint lane becomes its single-cone version.
+  await expect(page.getByText(/one exit cone at .*\(single-cone version, no gates\)/)).toBeVisible();
   const s4 = shot('04-four-cones');
   if (s4) await grid.screenshot({ path: s4 });
 });
