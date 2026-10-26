@@ -9,7 +9,10 @@ import { layoutSummary } from '../../domain/layout';
 import { CLASS_DIMS, effectiveDims, layoutCones, layoutFit, newProfile, profileClass, roomInputFor, scaledLayout, suggestPoint } from '../../domain/room';
 import { fmtDate, Seg } from '../../ui/widgets';
 import { LayoutDiagram, LayoutLegend } from '../../ui/LayoutDiagram';
-import { fmtLen, fromFtIn, localiseText, toFtIn, type Units } from '../../domain/units';
+import { fmtLen, localiseText, type Units } from '../../domain/units';
+import { landmarkFloor } from '../../domain/landmarks';
+import { MeasureRoom } from './RoomMeasure';
+import { FloorMapStep } from './FloorMap';
 import type { ColourModel } from '../../ball/colour';
 import { assignCones, colourAt, findCones, ORANGE } from '../../camera/cones';
 
@@ -50,34 +53,7 @@ export function UnitsChoice() {
   );
 }
 
-/** A length entry in the chosen units; the value is always metres. */
-function LengthInput({ label, value, units, min, onChange }: { label: string; value: number; units: Units; min: number; onChange: (m: number) => void }) {
-  if (units === 'metric')
-    return (
-      <label className="field">
-        <span>{label} (m, approximate)</span>
-        <input type="number" step="0.1" min={min} max="20" value={value} onChange={(e) => onChange(Number(e.target.value))} />
-      </label>
-    );
-  const { ft, inch } = toFtIn(value);
-  return (
-    <div className="field">
-      <span>{label} (approximate)</span>
-      <div className="row">
-        <label className="row">
-          <input type="number" min="0" max="65" style={{ width: 80 }} value={ft} aria-label={`${label} feet`} onChange={(e) => onChange(fromFtIn(Number(e.target.value), inch))} />
-          <span>ft</span>
-        </label>
-        <label className="row">
-          <input type="number" min="0" max="11" style={{ width: 70 }} value={inch} aria-label={`${label} inches`} onChange={(e) => onChange(fromFtIn(ft, Math.max(0, Math.min(11, Number(e.target.value)))))} />
-          <span>in</span>
-        </label>
-      </div>
-    </div>
-  );
-}
-
-export function RoomBasicsForm({ profile, onChange, cones }: { profile: RoomProfile; onChange: (p: RoomProfile) => void; cones: number }) {
+export function RoomBasicsForm({ profile, onChange, cones, showLayouts = true }: { profile: RoomProfile; onChange: (p: RoomProfile) => void; cones: number; showLayouts?: boolean }) {
   const { programme, settings } = useData();
   const units: Units = settings.units ?? 'metric';
   const g = programme.layoutGeometry;
@@ -87,17 +63,17 @@ export function RoomBasicsForm({ profile, onChange, cones }: { profile: RoomProf
   const hasPolygon = profile.safePolygonNormalized.length >= 3;
   return (
     <div className="stack">
-      <p className="muted">No tape and no measuring: pick the size that looks right. The drills scale to it; nothing needs to be exact.</p>
+      <p className="muted">Measure once with a tape (recommended), or pick the size that looks right if there is no tape. The drills scale to it, and each drill shows where its cones go when it starts.</p>
       <UnitsChoice />
       <div className="row">
         <span className="muted">Space from</span>
         <Seg
           value={profile.spaceSource}
-          onChange={(spaceSource) => onChange({ ...profile, spaceSource, approxUsableM: spaceSource === 'approxDims' ? (profile.approxUsableM ?? { length: dims.length, width: dims.width }) : profile.approxUsableM })}
+          onChange={(spaceSource) => onChange({ ...profile, spaceSource, measured: spaceSource === 'approxDims', approxUsableM: spaceSource === 'approxDims' ? (profile.approxUsableM ?? { length: dims.length, width: dims.width }) : profile.approxUsableM })}
           options={[
-            { value: 'parentClass', label: 'Pick a size' },
+            { value: 'approxDims', label: 'Measure it' },
+            { value: 'parentClass', label: 'No tape: pick a size' },
             ...(hasPolygon ? [{ value: 'polygon' as const, label: 'The safe floor on the photo' }] : []),
-            { value: 'approxDims', label: 'I know it roughly' },
           ]}
         />
       </div>
@@ -111,12 +87,7 @@ export function RoomBasicsForm({ profile, onChange, cones }: { profile: RoomProf
           ))}
         </div>
       ) : null}
-      {profile.spaceSource === 'approxDims' ? (
-        <div className="grid2">
-          <LengthInput label="Clear floor length" units={units} min={2} value={profile.approxUsableM?.length ?? dims.length} onChange={(length) => onChange({ ...profile, approxUsableM: { length, width: profile.approxUsableM?.width ?? dims.width } })} />
-          <LengthInput label="Clear floor width" units={units} min={1} value={profile.approxUsableM?.width ?? dims.width} onChange={(width) => onChange({ ...profile, approxUsableM: { width, length: profile.approxUsableM?.length ?? dims.length } })} />
-        </div>
-      ) : null}
+      {profile.spaceSource === 'approxDims' ? <MeasureRoom profile={profile} onChange={onChange} units={units} /> : null}
       {profile.spaceSource === 'polygon' ? <p>From the photo: about {fmtLen(dims.length, units)} × {fmtLen(dims.width, units)} of clear floor (approximate).</p> : null}
       <div className="row">
         <span className="muted">Floor</span>
@@ -134,8 +105,11 @@ export function RoomBasicsForm({ profile, onChange, cones }: { profile: RoomProf
         <input type="checkbox" checked={profile.wallUsable} onChange={(e) => onChange({ ...profile, wallUsable: e.target.checked })} />
         A wall can be used for passing and rebounds (household agrees, wall is bare)
       </label>
-      <div className="card tight stack">
-        <h3>Drill layouts in this space ({profileClass(profile)}, {cones} cones)</h3>
+      {showLayouts ? (
+      <details className="card tight stack">
+        <summary>
+          <strong>Drill layouts in this space ({profileClass(profile)}, {cones} cones)</strong> <span className="muted">· each drill also shows its own when it starts</span>
+        </summary>
         <p className="muted">Seen from above: the Chromebook stands at the front wall; the player starts at the back. Each plan changes as you change the size, the number of cones or the units.</p>
         <div className="layout-grid">
           {Object.entries(summary).map(([id, text]) => {
@@ -145,7 +119,7 @@ export function RoomBasicsForm({ profile, onChange, cones }: { profile: RoomProf
                 <strong>
                   {id} {programme.layouts[id]?.name}
                 </strong>
-                <LayoutDiagram layoutId={id} d={derived} lengthM={dims.length} widthM={dims.width} floor={profile.floor} units={units} screenBehindM={g.receiveBox.cueScreenBehindM} unavailable={fit.ok ? undefined : fit.reason} maxHeight={360} />
+                <LayoutDiagram layoutId={id} d={derived} lengthM={dims.length} widthM={dims.width} floor={profile.floor} units={units} screenBehindM={g.receiveBox.cueScreenBehindM} unavailable={fit.ok ? undefined : fit.reason} maxHeight={360} landmarks={(profile.landmarks ?? []).map((l) => ({ label: l.label, floor: landmarkFloor(l, dims.length, dims.width) }))} />
                 <span className={fit.ok ? '' : 'muted'}>{fit.ok ? text : `Not available here: ${localiseText(fit.reason ?? '', units)}. Drills on this layout are not offered.`}</span>
               </div>
             );
@@ -153,7 +127,8 @@ export function RoomBasicsForm({ profile, onChange, cones }: { profile: RoomProf
         </div>
         <LayoutLegend />
         <p className="muted">Distances are approximate; place cones by eye. No speed is ever shown in metres per second.</p>
-      </div>
+      </details>
+      ) : null}
     </div>
   );
 }
@@ -224,7 +199,7 @@ function PhotoBoard({
   );
 }
 
-const STEPS = ['Size', 'Photo', 'Anchors', 'Safe floor', 'Cones'] as const;
+const STEPS = ['Size', 'Photo', 'Floor map', 'Anchors', 'Safe floor', 'Cones'] as const;
 
 function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () => void }) {
   const d = useData();
@@ -293,7 +268,7 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
     const label = cam?.label ?? '';
     let h = 0;
     for (const ch of label) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    setProf({ ...prof, backgroundFrame: f.blob, backgroundThumb: Array.from(grey.data), cameraFingerprint: { deviceLabelHash: h.toString(16), width: f.width, height: f.height }, deviceId: cam?.deviceId });
+    setProf({ ...prof, floorMap: undefined, backgroundFrame: f.blob, backgroundThumb: Array.from(grey.data), cameraFingerprint: { deviceLabelHash: h.toString(16), width: f.width, height: f.height }, deviceId: cam?.deviceId });
     setStep(2);
   }
 
@@ -362,6 +337,9 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
         </div>
       )}
       {step === 2 && (
+        <FloorMapStep profile={prof} photoUrl={url} onChange={setProf} />
+      )}
+      {step === 3 && (
         <div className="grid2">
           {url ? (
             <PhotoBoard
@@ -396,7 +374,7 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
           </div>
         </div>
       )}
-      {step === 3 && (
+      {step === 4 && (
         <div className="grid2">
           {url ? (
             <PhotoBoard url={url} points={prof.safePolygonNormalized} polygon={prof.safePolygonNormalized} onTap={(pt) => setProf({ ...prof, safePolygonNormalized: [...prof.safePolygonNormalized, pt], spaceSource: 'polygon' })} />
@@ -414,7 +392,7 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
           </div>
         </div>
       )}
-      {step === 4 && (
+      {step === 5 && (
         <div className="grid2">
           {url ? (
             <PhotoBoard

@@ -19,7 +19,7 @@ test('off by default; when on, finds the cones in the photo and moves the marker
   await expect(button(page, 'Take room photo')).toBeEnabled({ timeout: 15_000 });
   await page.waitForTimeout(800);
   await button(page, 'Take room photo').click();
-  for (let i = 0; i < 2; i++) await button(page, 'Next').click();
+  for (let i = 0; i < 3; i++) await button(page, 'Next').click();
   await button(page, /^L4 /).click();
   await expect(button(page, 'Confirm L4 positions')).toBeVisible();
   await expect(button(page, 'Find cones in the photo')).toHaveCount(0); // switched off
@@ -31,6 +31,7 @@ test('off by default; when on, finds the cones in the photo and moves the marker
   await expect(button(page, 'Take room photo')).toBeEnabled({ timeout: 15_000 });
   await page.waitForTimeout(800);
   await button(page, 'Take room photo').click();
+  await button(page, 'Next').click(); // floor map
   await button(page, 'Next').click(); // anchors
   await button(page, 'Next').click(); // safe floor
   await button(page, /^L4 /).click();

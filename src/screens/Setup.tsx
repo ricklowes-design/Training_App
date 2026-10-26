@@ -20,7 +20,8 @@ export function Setup() {
   const [name, setName] = useState(player?.name ?? '');
   const [foot, setFoot] = useState<Foot>(player?.dominantFoot ?? 'right');
   const [position, setPosition] = useState(player?.position ?? '');
-  const [room, setRoom] = useState<RoomProfile>(roomProfile ?? newProfile('room-1', 'Main room', new Date().toISOString()));
+  // A new room starts on "Measure it": measured once here, every drill places its cones against it later.
+  const [room, setRoom] = useState<RoomProfile>(roomProfile ?? { ...newProfile('room-1', 'Main room', new Date().toISOString()), spaceSource: 'approxDims', measured: true, approxUsableM: { length: 6.1, width: 3.0 } });
   const [equipment, setEquipment] = useState(settings.equipment);
   const [priorities, setPriorities] = useState<string[]>(settings.priorities.length ? settings.priorities : programme.priorities);
   const [coachNote, setCoachNote] = useState('');
@@ -130,10 +131,10 @@ export function Setup() {
         {step === 1 && (
           <>
             <p className="muted">
-              The layouts below are the benchmark layout {layout ? `v${layout.version}` : 'v1'}. Changing the room later creates a new version; results are never compared across versions. The camera photo, furniture
-              anchors and safe floor are optional and added later in Parent → Room profiles.
+              Measure the room once now. You will not need the cone layouts yet: each drill shows where its cones go, against this room, when it starts. Changing the room later creates a new
+              layout version {layout ? `(now v${layout.version})` : ''}; results are never compared across versions. The webcam photo and the top-down floor map are added later in Parent → Room profiles.
             </p>
-            <RoomBasicsForm profile={room} onChange={setRoom} cones={equipment.cones} />
+            <RoomBasicsForm profile={room} onChange={setRoom} cones={equipment.cones} showLayouts={false} />
           </>
         )}
         {step === 2 && (

@@ -170,6 +170,7 @@ export function SettingsSection() {
         <UnitsChoice />
         <Stepper label="End-of-drill card: Next after (s)" value={settings.cardAutoAdvanceS} min={5} max={120} step={5} onChange={(cardAutoAdvanceS) => save({ cardAutoAdvanceS })} />
         <Stepper label="Demo view: start block after (s)" value={settings.demoAutoStartS} min={5} max={180} step={5} onChange={(demoAutoStartS) => save({ demoAutoStartS })} />
+        <Stepper label="…when the cones need moving (s)" value={settings.coneSetupS ?? 60} min={20} max={300} step={10} onChange={(coneSetupS) => save({ coneSetupS })} />
         <label className="check">
           <input type="checkbox" checked={settings.cueEngine} onChange={(e) => save({ cueEngine: e.target.checked })} />
           Cue engine: show cues full screen in cue drills (off = use SwitchedOn and log cue accuracy by hand)

@@ -167,6 +167,21 @@ export function Home() {
       </div>
 
       <div style={{ marginTop: 16 }} className="stack">
+        {!settings.ballCheck ? (
+          <div className="card tight row spread" data-testid="ball-check-prompt">
+            <span>
+              <strong>Before the first drills (parent, 3 minutes):</strong> show the webcam each ball you have, and the app picks the one it can follow best.
+            </span>
+            <span className="row">
+              <button className="btn small primary" onClick={() => go({ name: 'parent', section: 'balls' })}>
+                Ball check
+              </button>
+              <button className="btn small" onClick={() => db.settings.update('main', { ballCheck: { date: new Date().toISOString(), skipped: true, results: [] } })}>
+                Not now
+              </button>
+            </span>
+          </div>
+        ) : null}
         {suggestion && sessionTitle ? (
           <>
             <div className="row" style={{ fontSize: '1.2rem' }}>

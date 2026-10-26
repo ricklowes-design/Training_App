@@ -10,18 +10,23 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await page.getByLabel('Position').fill('winger');
   await button(page, 'Next').click();
 
-  // Room: no measuring needed (part 15 D1). A size class is enough; layouts follow it.
+  // Room: measured once (length, width, fixed points), with a live plan of the room and no cone layouts yet.
+  await expect(page.getByLabel('Clear floor length metres')).toBeVisible();
+  await page.getByLabel('Clear floor length metres').fill('4.3');
+  await page.getByLabel('Clear floor width metres').fill('1.9');
+  await expect(page.getByTestId('room-map')).toContainText('4.3 m long');
+  await button(page, '+ Add a fixed point').click();
+  await page.getByLabel('Reference point 1 name').fill('Door frame');
+  await page.getByLabel('Reference point 1 side').selectOption('right');
+  await page.getByLabel('Reference point 1: distance from the back wall metres').fill('1.7');
+  await expect(page.getByTestId('room-map').getByTestId('landmark')).toContainText('Door frame');
+  await expect(page.getByTestId('layout-diagram-L1')).toHaveCount(0); // cones come with each drill
+  // No tape: a size class is enough; layouts follow it.
+  await button(page, 'No tape: pick a size').click();
   await expect(page.getByLabel(/^Standard: about 6 × 3 m/)).toBeChecked();
-  await expect(page.getByText('5 cones 1 m apart')).toBeVisible();
-  await page.getByLabel(/^Compact: about 4 × 2.4 m/).check();
-  await expect(page.getByText(/4 cones 0\.7 m apart/)).toBeVisible(); // fewer cones, not cramped spacing
-  // Approximate dimensions are optional.
-  await button(page, 'I know it roughly').click();
-  await page.getByLabel('Clear floor length (m, approximate)').fill('5');
-  await expect(page.getByText(/5 cones 0\.7 m apart/)).toBeVisible();
-  await page.getByLabel('Clear floor length (m, approximate)').fill('6.1');
-  await page.getByLabel('Clear floor width (m, approximate)').fill('3');
-  await expect(page.getByText('5 cones 1 m apart')).toBeVisible();
+  await button(page, 'Measure it').click();
+  await page.getByLabel('Clear floor length metres').fill('6.1');
+  await page.getByLabel('Clear floor width metres').fill('3');
   await button(page, 'Next').click();
 
   await page.getByLabel('Spare phone (for a cue screen)').check();
@@ -47,8 +52,9 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   const layouts = await table<{ version: number; derived: { slalomSpacingM: number } }>(page, 'layouts');
   expect(layouts).toHaveLength(1);
   expect(layouts[0]).toMatchObject({ version: 1, derived: { slalomSpacingM: 1 }, roomProfileId: 'room-1' });
-  const [room] = await table<{ name: string; spaceSource: string; usableSpaceClass: string }>(page, 'roomProfiles');
-  expect(room).toMatchObject({ name: 'Main room', spaceSource: 'approxDims', usableSpaceClass: 'standard' });
+  const [room] = await table<{ name: string; spaceSource: string; usableSpaceClass: string; measured: boolean; landmarks: { label: string; side: string; alongM: number }[] }>(page, 'roomProfiles');
+  expect(room).toMatchObject({ name: 'Main room', spaceSource: 'approxDims', usableSpaceClass: 'standard', measured: true });
+  expect(room.landmarks).toEqual([expect.objectContaining({ label: 'Door frame', side: 'right', alongM: 1.7 })]);
   const [settings] = await table<{ equipment: { sparePhone: boolean }; pinHash: string; priorities: string[]; firstRunDone: boolean }>(page, 'settings');
   expect(settings.equipment.sparePhone).toBe(true);
   expect(settings.pinHash).toMatch(/^[0-9a-f]{64}$/);
@@ -117,7 +123,7 @@ test('Parent → Content lists every drill by area', async ({ page }) => {
   await boot(page);
   await setup(page);
   await openParent(page, /^Content/);
-  await expect(page.getByText(/version 0\.5\.1 .* loaded and valid: 26 drills, 64 sessions/)).toBeVisible();
+  await expect(page.getByText(/version 0\.5\.2 .* loaded and valid: 26 drills, 64 sessions/)).toBeVisible();
   for (const id of ['S1', 'S6', 'F1', 'F8', 'D1', 'D6', 'C1', 'C6']) await expect(page.getByRole('cell', { name: id, exact: true })).toBeVisible();
   await page.locator('tr', { hasText: 'F3' }).getByRole('button', { name: 'Adjust' }).click();
   await expect(page.getByRole('heading', { name: /F3 · Scissors/ })).toBeVisible();

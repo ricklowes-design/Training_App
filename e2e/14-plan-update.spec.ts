@@ -28,6 +28,15 @@ test('room profile: photo, anchors, safe floor and cone overlay, no measuring', 
   await page.waitForTimeout(800);
   await page.getByLabel('The camera mount is in its usual place').check();
   await button(page, 'Take room photo').click();
+  // Floor map: the four corners of the clear floor tapped on the photo → a top-down picture.
+  for (const [x, y] of [[0.3, 0.45], [0.7, 0.45], [0.95, 0.95], [0.05, 0.95]]) {
+    const b = (await page.getByTestId('floor-map-photo').boundingBox())!;
+    await page.mouse.click(b.x + x * b.width, b.y + y * b.height);
+  }
+  await button(page, 'Make the top-down map').click();
+  await expect(page.getByText(/^Map made/)).toBeVisible();
+  await expect(page.getByTestId('floor-image')).toHaveCount(1);
+  await button(page, 'Next').click();
   // Anchors.
   await page.getByLabel('Next anchor is a').selectOption('Desk corner');
   await photoTap(page, 0.2, 0.3);

@@ -44,6 +44,7 @@ export const DEFAULT_SETTINGS: Settings = {
   demoChoice: {},
   cardAutoAdvanceS: 20,
   demoAutoStartS: 20,
+  coneSetupS: 60,
   cueEngine: true,
   camera: { enabled: false, retentionDays: 30, pose: 'off', analysisFps: 15 },
   // Part 16 feature flags. The 3D defender is the default for scored reactive drills (D3);

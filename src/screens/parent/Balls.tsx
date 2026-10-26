@@ -10,6 +10,7 @@ import { newWorker, playFrames, wasmBase } from '../../analysis/run';
 import type { FromWorker } from '../../analysis/worker';
 import type { BallProfile } from '../../db/types';
 import { fmtDate, Seg } from '../../ui/widgets';
+import { BallCheck } from './BallCheck';
 
 // Parent → Balls (task 6.2, part 17 BR-01): register a ball, switch between balls, recalibrate.
 
@@ -247,9 +248,26 @@ export function BallsSection() {
   const { settings } = useData();
   const balls = useLiveQuery(() => db.ballProfiles.toArray(), []);
   const [reg, setReg] = useState<string | null>(null);
+  // Open on the ball check until it has been done once.
+  const [checking, setChecking] = useState(!settings.ballCheck || !!settings.ballCheck.skipped);
   if (reg !== null) return <Register name0={reg} onDone={() => setReg(null)} />;
   return (
     <div className="stack">
+      {checking ? (
+        <BallCheck onRegister={(name) => (setChecking(false), setReg(name))} onClose={() => setChecking(false)} />
+      ) : (
+        <div className="card row spread">
+          <span>
+            Ball check:{' '}
+            {settings.ballCheck && !settings.ballCheck.skipped
+              ? `${fmtDate(settings.ballCheck.date)}, ${settings.ballCheck.recommended ? `${settings.ballCheck.recommended} recommended` : 'no ball stood out'}`
+              : 'not done'}
+          </span>
+          <button className="btn small" onClick={() => setChecking(true)}>
+            Compare the balls you have
+          </button>
+        </div>
+      )}
       <div className="card stack">
         <p>
           A registered ball lets the after-block analysis follow the ball: gate crossings and observable touches. Its numbers stay estimates, and never move a stage, until checked in Parent → Validation (part 17).

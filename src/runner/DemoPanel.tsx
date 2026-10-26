@@ -9,11 +9,10 @@ import { useData } from '../app/data';
 import type { Drill } from '../content/types';
 import { layoutSummary } from '../domain/layout';
 import { localiseText } from '../domain/units';
-import { LayoutDiagram } from '../ui/LayoutDiagram';
-import { layoutFit } from '../domain/room';
 import type { RunBlock } from '../domain/plans';
 import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
+import { ConeSetup } from './ConeSetup';
 
 export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
   if (!id) return '';
@@ -34,8 +33,10 @@ export function DemoPanel(props: {
   framing?: import('../camera/frames').FramingResult | null;
   cameraError?: string;
   roomCheck?: import('../camera/roomCheck').RoomCheck | null;
+  /** The cones must be moved for this block: the set-up comes first and the block waits longer. */
+  conesChanged?: boolean;
 }) {
-  const { block, blockNo, blockCount, autoStartS, phaseStartMs, paused, onStart, onSkip, onStop, framing, cameraError, roomCheck } = props;
+  const { block, blockNo, blockCount, phaseStartMs, paused, onStart, onSkip, onStop, framing, cameraError, roomCheck, conesChanged } = props;
   const { programme: p, notes, layout, demoClipIds, roomProfile, settings } = useData();
   const units = settings.units ?? 'metric';
   const [playing, setPlaying] = useState(false);
@@ -52,6 +53,7 @@ export function DemoPanel(props: {
   const sets = layout ? layoutSummary(layout.derived, units) : {};
   const scanMode = scanModeFor(p, drill, block.params, roomProfile);
 
+  const autoStartS = conesChanged ? Math.max(props.autoStartS, settings.coneSetupS ?? 60) : props.autoStartS;
   const lastTick = useRef(Date.now());
   useEffect(() => {
     const t = setInterval(() => {
@@ -79,6 +81,7 @@ export function DemoPanel(props: {
           {block.cueLevel ? ` · level ${block.cueLevel}` : ''}
         </div>
         <h1 style={{ textTransform: 'uppercase' }}>{title}</h1>
+        {layoutId && conesChanged ? <ConeSetup layoutId={layoutId} changed /> : null}
         {drill ? (
           <>
             <p>
@@ -102,12 +105,10 @@ export function DemoPanel(props: {
             </div>
             <p className="muted">Common errors: {drill.commonErrors.join(' · ')}</p>
             <p className="muted">Safety: {drill.safety}</p>
-            {layoutId && layout ? (
+            {layoutId && layout && !conesChanged ? (
               <details>
-                <summary>Cone layout from above</summary>
-                <div style={{ maxWidth: 360 }}>
-                  <LayoutDiagram layoutId={layoutId} d={layout.derived} lengthM={layout.roomLengthM} widthM={layout.roomWidthM} floor={layout.floor} units={units} screenBehindM={p.layoutGeometry.receiveBox.cueScreenBehindM} unavailable={layoutFit(layoutId, layout.derived, p.layoutGeometry, layout.cones).ok ? undefined : 'not available'} maxHeight={320} />
-                </div>
+                <summary>Cones (same as the last block)</summary>
+                <ConeSetup layoutId={layoutId} changed={false} />
               </details>
             ) : null}
             {layoutId ? <RoomOverlay layoutId={layoutId} /> : null}

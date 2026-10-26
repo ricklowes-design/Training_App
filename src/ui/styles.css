@@ -199,3 +199,10 @@ table.data th { color: var(--muted); font-weight: 600; }
 .trend-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; }
 .trend-tip { min-height: 1.5em; }
 .trend-notes { font-size: 0.95rem; }
+
+/* Cone set-up at the start of a drill, and the room measurement steps. */
+.cone-setup.changed { border: 2px solid var(--accent); }
+.cone-list { margin: 0; padding-left: 1.4em; font-size: 1.05rem; line-height: 1.45; }
+.cone-list li { margin-bottom: 6px; }
+.measure-steps { margin: 0; padding-left: 1.3em; line-height: 1.45; }
+.measure-steps li { margin-bottom: 4px; }

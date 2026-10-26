@@ -83,6 +83,10 @@ export interface Settings {
   demoChoice: Record<string, 'outside' | 'own'>;
   cardAutoAdvanceS: number;
   demoAutoStartS: number;
+  /** Demo view when the cones have to be moved for this block: start after this many seconds. */
+  coneSetupS?: number;
+  /** The ball check before the first drills: which ball the camera tells apart from the room best. */
+  ballCheck?: { date: string; skipped?: boolean; recommended?: string; results: { name: string; verdict: string; backgroundMatchShare?: number }[] };
   persistGranted?: boolean;
   cueEngine: boolean;
   camera: CameraSettings;
@@ -426,6 +430,33 @@ export interface RoomAnchor {
   patch?: number[];
 }
 
+/** A fixed reference point on an edge of the clear floor. Facing the Chromebook from the start
+ *  wall: on the left or right edge, alongM is the distance from the back (start) wall; on the back
+ *  or front edge, alongM is the distance from the left edge. */
+export interface Landmark {
+  id: string;
+  label: string;
+  side: 'left' | 'right' | 'back' | 'front';
+  alongM: number;
+}
+
+/** A floor point with a known room position, located on the room photo. ref: a corner
+ *  ('corner:back-left' …) or a landmark id. */
+export interface FloorMapPoint {
+  ref: string;
+  img: Pt;
+}
+
+export interface FloorMap {
+  points: FloorMapPoint[];
+  /** Top-down picture of the floor (front at the top), pxPerM pixels per metre over the clear floor. */
+  image?: Blob;
+  pxPerM?: number;
+  /** Mean distance between tapped points and where the fitted map puts them, in metres. */
+  fitErrorM?: number;
+  createdAt?: string;
+}
+
 export interface RoomProfile {
   id: string;
   name: string; // "Living room", parent-chosen
@@ -451,6 +482,13 @@ export interface RoomProfile {
   scaleConfidence?: 'low' | 'medium';
   /** Approximate usable floor in metres, when the parent gave it. Optional: no measuring is required. */
   approxUsableM?: { length: number; width: number };
+  /** True when the parent measured the clear floor with a tape (once, at set-up). */
+  measured?: boolean;
+  /** Fixed things around the clear floor, measured once, that cones are placed against. Not part of
+   *  the profile version: renaming or adding one never resets a trend. */
+  landmarks?: Landmark[];
+  /** Photo → top-down floor map: floor points the parent tapped on the photo, and the map made from them. */
+  floorMap?: FloorMap;
   floor: 'hard' | 'carpet' | 'rubber';
   wallUsable: boolean;
   savedLayoutRefs: string[];

@@ -34,7 +34,7 @@ const TILES: { section: ParentSection; title: string; detail: string }[] = [
   { section: 'posetest', title: 'Pose speed test', detail: 'How fast pose runs on this Chromebook' },
   { section: 'defender', title: '3D defender test', detail: 'Frame rate and the reactions, from the far end' },
   { section: 'timing', title: 'Timing budget', detail: 'Camera and screen timing before thresholds' },
-  { section: 'balls', title: 'Balls', detail: 'Register a ball for ball tracking; switch balls' },
+  { section: 'balls', title: 'Balls', detail: 'Ball check (which ball works best), register a ball, switch balls' },
   { section: 'learning', title: 'Learning', detail: 'Personalised models, validation, rollback' },
   { section: 'validation', title: 'Validation', detail: 'Camera measures checked against your reading' },
   { section: 'room', title: 'Room profiles', detail: 'Photo, anchors, safe floor, cone positions' },

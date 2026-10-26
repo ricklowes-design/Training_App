@@ -16,8 +16,8 @@ export async function setup(page: Page, opts: { name?: string; length?: string; 
   await page.getByLabel("Player's first name").fill(opts.name ?? 'Sam');
   await button(page, 'Next').click();
   if (opts.length) {
-    await button(page, 'I know it roughly').click();
-    await page.getByLabel('Clear floor length (m, approximate)').fill(opts.length);
+    await button(page, 'Measure it').click();
+    await page.getByLabel('Clear floor length metres').fill(opts.length);
   }
   for (let i = 0; i < 4; i++) await button(page, 'Next').click();
   await page.getByLabel('Parent PIN (4 digits)').fill(PIN);

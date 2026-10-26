@@ -14,6 +14,7 @@ import type { RunBlock, RunPlan } from '../domain/plans';
 import { fmtClock } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
+import { conesChanged } from './ConeSetup';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
@@ -354,6 +355,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return (
       <DemoPanel
         key={s.blockIdx}
+        conesChanged={conesChanged(s.plan.blocks, s.blockIdx, p)}
         block={block}
         blockNo={s.blockIdx + 1}
         blockCount={s.plan.blocks.length}

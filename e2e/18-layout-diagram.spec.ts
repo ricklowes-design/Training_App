@@ -12,6 +12,7 @@ test('the cone plans follow the size, the cones and the units', async ({ page })
   await setup(page);
   await openParent(page, /^Room profiles/);
   await page.locator('li', { hasText: 'Main room' }).getByRole('button', { name: 'Edit' }).click();
+  await page.getByText(/^Drill layouts in this space/).click();
   for (const id of ['L1', 'L2', 'L3', 'L4']) await expect(page.getByTestId(`layout-diagram-${id}`)).toBeVisible();
   const l1 = page.getByTestId('layout-diagram-L1');
   await expect(l1).toContainText('FRONT');
@@ -30,7 +31,7 @@ test('the cone plans follow the size, the cones and the units', async ({ page })
   await expect(l1).toContainText('20 ft long');
   const s2 = shot('02-standard-feet-inches');
   if (s2) await grid.screenshot({ path: s2 });
-  await button(page, 'I know it roughly').click();
+  await button(page, 'Measure it').click();
   await page.getByLabel('Clear floor length feet').fill('14');
   await page.getByLabel('Clear floor length inches').fill('0');
   await page.getByLabel('Clear floor width feet').fill('7');
@@ -59,6 +60,7 @@ test('the cone plans follow the size, the cones and the units', async ({ page })
   await page.reload();
   await openParent(page, /^Room profiles/);
   await page.locator('li', { hasText: 'Main room' }).getByRole('button', { name: 'Edit' }).click();
+  await page.getByText(/^Drill layouts in this space/).click();
   await expect(page.getByText(/^4 cones .* apart/)).toBeVisible();
   await expect(page.getByText('Not available here: needs 5 cones (you have 4).', { exact: false })).toBeVisible();
   const s4 = shot('04-four-cones');

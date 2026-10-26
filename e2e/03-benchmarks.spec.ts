@@ -135,8 +135,8 @@ test('a room change starts a new layout line: no comparison across layouts, with
   // Change the room: layout v2.
   await openParent(page, /^Room profiles/);
   await page.locator('li', { hasText: 'Main room' }).getByRole('button', { name: 'Edit' }).click();
-  await button(page, 'I know it roughly').click();
-  await page.getByLabel('Clear floor length (m, approximate)').fill('5.0');
+  await button(page, 'Measure it').click();
+  await page.getByLabel('Clear floor length metres').fill('5.0');
   await button(page, 'Save and close').click();
   await expect(page.locator('li', { hasText: /^v2 ·/ })).toBeVisible();
   await closeParent(page);
