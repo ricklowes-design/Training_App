@@ -34,7 +34,7 @@ export type Route =
   | { name: 'setup' }
   | { name: 'run'; plan: RunPlan; trial: boolean; trialReasons: string[] }
   | { name: 'summary'; runId: string }
-  | { name: 'progress'; tab: 'week' | 'skills' | 'drills' }
+  | { name: 'progress'; tab: 'week' | 'skills' | 'drills' | 'review' }
   | { name: 'drill'; key: string }
   | { name: 'builder' }
   | { name: 'start'; plan: RunPlan }

@@ -7,6 +7,8 @@ import { comparability, pickComparison, type ComparePick } from '../domain/compa
 import { comparisonSentences, resultLines } from '../domain/metrics';
 import { countedResults, isRecorded } from '../domain/records';
 import { tryFill } from '../domain/templates';
+import { trendFor } from '../domain/trend';
+import { TrendChart } from '../ui/TrendChart';
 import { fmtClock, fmtDate, Seg } from '../ui/widgets';
 
 const condText = (r: BenchmarkResult) => `${r.conditions.layoutVersion === 0 ? 'anchor layout' : `layout v${r.conditions.layoutVersion}`} · level ${r.conditions.cueLevel}`;
@@ -42,6 +44,7 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
   }
 
   const pbs = personalBests(now, all);
+  const trend = trendFor(all, id, drillId);
   return (
     <div className="stack">
       <div className="card stack">
@@ -91,6 +94,12 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
           </div>
         ) : null}
       </div>
+      {trend && trend.included.length > 1 ? (
+        <div className="card stack">
+          <h3 style={{ margin: 0 }}>Trend (same conditions only)</h3>
+          <TrendChart trend={trend} testId="trend-chart" />
+        </div>
+      ) : null}
       <div className="card">
         <h3>History (same conditions; others greyed with the reason)</h3>
         <table className="data">

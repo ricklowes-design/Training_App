@@ -1,5 +1,10 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { capstoneGates } from '../domain/capstone';
 import { useState } from 'react';
+import { db } from '../db/db';
+import { monthReview, reviewText } from '../domain/review';
+import { trendFor } from '../domain/trend';
+import { TrendChart } from '../ui/TrendChart';
 import { useData } from '../app/data';
 import { useNav } from '../app/nav';
 import { resultText } from '../domain/metrics';
@@ -7,7 +12,7 @@ import { areaName, findSession, repeatPlan } from '../domain/plans';
 import { countedResults, countsForWeek, isRecorded } from '../domain/records';
 import { addDays, weekStart } from '../domain/sequencing';
 import { tryFill } from '../domain/templates';
-import { fmtDate, statusText } from '../ui/widgets';
+import { downloadText, fmtDate, statusText } from '../ui/widgets';
 import { ruleStatusFor, useAreaProgress } from './helpers';
 
 const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -266,7 +271,77 @@ function DrillsTab() {
   );
 }
 
-export function Progress({ tab }: { tab: 'week' | 'skills' | 'drills' }) {
+/** The monthly review (plan/05 §5.6): the month in numbers, then one chart per test done in it. */
+function ReviewTab() {
+  const d = useData();
+  const { programme: p, results, records } = d;
+  const [offset, setOffset] = useState(0);
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+  const m = monthReview({ ...d, weeklyTarget: d.settings.weeklyTarget }, first.getFullYear(), first.getMonth(), today);
+  const kept = useLiveQuery(() => db.clips.where('date').between(m.start.toISOString(), m.end.toISOString()).filter((c) => !!c.keep).count(), [m.start.getTime()]) ?? 0;
+  const counted = countedResults(results, records).filter((r) => new Date(r.date) < m.end);
+  const name = (id: string) => p.benchmarks.find((b) => b.id === id)?.name ?? (p.anchors.find((a) => a.id === id) ? `Anchor ${id} · ${p.anchors.find((a) => a.id === id)!.name}` : id);
+  const text = reviewText(m, kept);
+  const rows: [string, string][] = [
+    ['Consistency', text.split('\n')[1].replace('Consistency: ', '')],
+    ['Areas', m.areas.length ? m.areas.map((a) => `${a.name} ${a.sessions}`).join(' · ') : '—'],
+    ['Benchmarks', m.benchmarks.length ? m.benchmarks.join(' · ') : '—'],
+    ['Left/right', m.leftRight.length ? m.leftRight.join(' · ') : '—'],
+    ['Advanced', m.advanced.length ? m.advanced.join(' · ') : '—'],
+    ['Coach feedback', m.coach.length ? m.coach.join(' → ') : '—'],
+    ['Clips marked for review', String(kept)],
+  ];
+  return (
+    <div className="stack">
+      <div className="card stack">
+        <div className="row spread">
+          <h2 style={{ margin: 0 }}>{m.title}</h2>
+          <div className="row">
+            <button className="btn small" aria-label="Previous month" onClick={() => setOffset(offset - 1)}>
+              ◀
+            </button>
+            <button className="btn small" aria-label="Next month" disabled={offset >= 0} onClick={() => setOffset(offset + 1)}>
+              ▶
+            </button>
+          </div>
+        </div>
+        <table className="data" data-testid="month-review">
+          <tbody>
+            {rows.map(([k, v]) => (
+              <tr key={k}>
+                <th style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>{k}</th>
+                <td>{v}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="row">
+          <button className="btn small" onClick={() => downloadText(`review-${m.start.getFullYear()}-${String(m.start.getMonth() + 1).padStart(2, '0')}.txt`, text + '\n', 'text/plain')}>
+            Export summary (text)
+          </button>
+          <span className="muted">Saved to this Chromebook; nothing is sent anywhere. Kept clips can be downloaded one by one from Parent → Clips.</span>
+        </div>
+      </div>
+      {m.charted.map((t) => {
+        const tr = trendFor(counted, t.benchmarkId, t.drillId);
+        if (!tr) return null;
+        return (
+          <div key={`${t.benchmarkId}:${t.drillId ?? ''}`} className="card stack">
+            <h3 style={{ margin: 0 }}>
+              {t.benchmarkId} · {name(t.benchmarkId)}
+              {t.drillId ? ` · ${t.drillId}` : ''}
+            </h3>
+            <TrendChart trend={tr} highlight={{ start: m.start, end: m.end }} testId={`trend-${t.benchmarkId}${t.drillId ? `-${t.drillId}` : ''}`} />
+          </div>
+        );
+      })}
+      {m.charted.length ? null : <p className="muted">No tests or anchors this month; their charts appear here once there is a result.</p>}
+    </div>
+  );
+}
+
+export function Progress({ tab }: { tab: 'week' | 'skills' | 'drills' | 'review' }) {
   const { go } = useNav();
   return (
     <div className="page">
@@ -277,13 +352,13 @@ export function Progress({ tab }: { tab: 'week' | 'skills' | 'drills' }) {
         </button>
       </div>
       <div className="tabs">
-        {(['week', 'skills', 'drills'] as const).map((t) => (
+        {(['week', 'skills', 'drills', 'review'] as const).map((t) => (
           <button key={t} className={t === tab ? 'on' : ''} onClick={() => go({ name: 'progress', tab: t })}>
-            {t === 'week' ? 'Week' : t === 'skills' ? 'Skills' : 'Drills'}
+            {t === 'week' ? 'Week' : t === 'skills' ? 'Skills' : t === 'drills' ? 'Drills' : 'Review'}
           </button>
         ))}
       </div>
-      {tab === 'week' ? <WeekTab /> : tab === 'skills' ? <SkillsTab /> : <DrillsTab />}
+      {tab === 'week' ? <WeekTab /> : tab === 'skills' ? <SkillsTab /> : tab === 'drills' ? <DrillsTab /> : <ReviewTab />}
     </div>
   );
 }

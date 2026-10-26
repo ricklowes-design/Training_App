@@ -101,7 +101,7 @@ Not done in milestone 1:
 - Benchmark "unreliable" flag (e.g. start tone missed) has a field but no button yet.
 - Personal-best line per layout/cue level/foot is not shown (comparisons and history are).
 - Set announcements inside a block ("Set two. Left exit.") are not generated; blocks announce start, half-way, 30 s and end only, because set structure is free text in the content.
-- Review tab and charts are v2 (per plan).
+- Review tab and charts are v2 (per plan). (Built 2026-10-26, see below.)
 
 Not done in milestone 2:
 - None of the camera numbers has been checked against a real recording; the thresholds in `src/analysis/compute.ts` (`THRESHOLDS`) and `src/camera/session.ts` are starting values to tune during the parent's validation.
@@ -113,9 +113,11 @@ Not done in milestone 2:
 - 2026-10-14 Automated testing: 64 Playwright end-to-end tests over every screen (see README → Tests) plus the unit tests, run in GitHub Actions on every push. Bugs the e2e suite found and fixed: a double tap on a benchmark Save stored two results; the clip player's Keep box did not update; a week with only an anchor check or extras hid them; "First session in N days" could be one day short; restoring a backup on a fresh device needed set-up first (a restore button is now on the first set-up screen).
 
 - 2026-10-25 Animated drill demos: the app's own combinations (F2, F4, F5, F6, D3, D4, S2, S4, S5, C3) now have a top-down animation drawn on the room's own cone plan (sized from the room profile, front = Chromebook, back = start wall): player, ball, partner or target, the screen cue and a caption for each step, with one button per outcome (for example GO / HELD) and Pause. Shown under the demo video before the drill and in Parent → Demonstrations → "Animated drill". They show the drill's flow only; the technique itself still comes from the demo video or your own clip. Unit tests check every position stays inside small, medium and large rooms; an e2e test covers the Parent view.
+- 2026-10-26 Review tab and benchmark charts (task 5.2, plan/05 §5.6, plan/13 month view): Progress → Review shows one month at a time (◀ ▶): consistency (completed of planned, with partial and stopped), sessions per area, each test's first→last result that month at the same conditions (a time always with its errors), left as a share of right for two-footed scored tests (with the earlier value), confirmed stage advances, coach notes and content changes, and clips marked to keep. "Export summary (text)" saves the same lines as a text file on the Chromebook. Below it, one chart per test or anchor done that month; the same chart is in Drills → a test's history. Charts join only results at the latest result's conditions (same rule as comparisons); results at other conditions are listed with the reason, results marked unreliable are listed and never drawn, missing weeks (over 14 days) are gaps, right and left feet are drawn together in fixed colours, and a time and its errors are separate panels on a shared date axis (no second scale, no combined score). Tap a point for its numbers; "Table" lists them. Unit tests cover the trend joining, panels, gaps and the monthly arithmetic; an e2e test covers the tab and the drill-view chart.
 
 ## Manual checks pending (parent)
 Run these on the Chromebook in Chrome, from the deployed site.
+- Review tab: after a month with a few benchmarks, open Progress → Review. Check the numbers against Drills → each test's history, check the slalom chart shows time and errors together for each foot, and that a result you marked unreliable is listed under the chart rather than drawn. Press "Export summary (text)" and open the file.
 - Animated drills: Parent → Demonstrations, open "Animated drill" on F4, D3, S4 and C3. Does each match how you would explain the drill (where the player starts, where the ball goes, what each screen cue means)? Note any step that is wrong or confusing.
 
 Plan update (parts 15–18), part 16 §12:
@@ -185,3 +187,4 @@ Plan update (parts 15–18), part 16 §12:
 - 2026-10-14 Anchor results are stored at layout version 0 ("anchor layout") because their conditions are fixed regardless of the room; A3 and A4 use cue level `manual-switchedon` until the cue engine exists.
 - 2026-10-14 End-of-drill cards are shown after drill blocks (work, benchmark, anchor, quiz), not after warm-up, rests or cool-down.
 - 2026-10-14 Picture quiz items are generated diagrams (pressure left/right/both → touch right/left/back) rather than 20 authored pictures; in a work block the quiz repeats until the block's time ends and the first round's score is stored.
+- 2026-10-26 Review tab: "Export with clips" (plan/05 §5.6) is not built as one file; the text summary exports from the Review tab and kept clips download one by one from Parent → Clips (a combined archive would need a zip dependency). "Planned" sessions for a month are the weekly target spread over the month's days so far.

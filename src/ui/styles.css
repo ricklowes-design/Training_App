@@ -181,3 +181,21 @@ table.data th { color: var(--muted); font-weight: 600; }
 .defender-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .layout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; align-items: start; }
 .calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+
+/* Benchmark trend charts: series colours validated on --panel (dataviz validator, dark mode). */
+:root {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+}
+.trend { display: flex; flex-direction: column; gap: 6px; }
+.trend svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
+.trend-title { font-size: 0.95rem; color: var(--muted); }
+.trend-grid { stroke: var(--line); stroke-width: 1; }
+.trend-cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.trend-band { fill: var(--text); opacity: 0.05; }
+.trend-axis { fill: var(--muted); font-size: 13px; }
+.trend-direct { fill: var(--text); font-size: 14px; font-weight: 600; }
+.trend-legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--text); }
+.trend-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; }
+.trend-tip { min-height: 1.5em; }
+.trend-notes { font-size: 0.95rem; }
