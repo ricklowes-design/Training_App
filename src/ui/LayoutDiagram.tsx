@@ -2,6 +2,8 @@ import type { DerivedLayout, RoomLayout } from '../db/types';
 import { layoutCones } from '../domain/room';
 import { gateInner } from '../domain/layout';
 import { fmtLen, type Units } from '../domain/units';
+import { footprints, workspace } from '../domain/space';
+import type { Space } from '../db/types';
 
 // Top-down plan of one drill layout in the room (not to an exact scale the parent must match:
 // distances are approximate and cones are placed by eye). The front wall, where the Chromebook
@@ -32,19 +34,32 @@ interface Props {
   numbered?: boolean;
   /** The room only: walls, Chromebook and landmarks, no drill. */
   roomOnly?: boolean;
-  /** Top-down picture of the floor made from the room photo, covering the clear floor (front at the top). */
+  /** Top-down picture of the floor made from the room photo (front at the top). */
   floorImage?: string;
+  /** What the floor picture covers: the whole room (guided measurement) or the clear floor. */
+  floorImageCovers?: 'room' | 'clear';
+  /** The guided measurement: the whole room is drawn, with the measured things and the training space inside it. */
+  space?: Space;
 }
 
-export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', units = 'metric', screenBehindM = 1.5, unavailable, maxHeight = 420, overlay, landmarks = [], numbered, roomOnly, floorImage }: Props) {
+export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', units = 'metric', screenBehindM = 1.5, unavailable, maxHeight = 420, overlay, landmarks = [], numbered, roomOnly, floorImage, floorImageCovers = 'clear', space }: Props) {
   const L = (m: number) => fmtLen(m, units);
   const padX = 1.3;
   const pad = 0.8;
-  const W = widthM + 2 * padX;
-  const H = lengthM + 2 * pad;
+  // With a guided measurement the drawing is the whole room, the training space placed inside it.
+  const ws = space ? workspace(space) : null;
+  const roomW = space?.widthM ?? widthM;
+  const roomL = space?.lengthM ?? lengthM;
+  const offX = ws ? (ws.x0 + ws.x1) / 2 - roomW / 2 : 0;
+  const offY = ws?.y0 ?? 0;
+  const W = roomW + 2 * padX;
+  const H = roomL + 2 * pad;
   // Room metres → drawing: x across from the lane centre (left negative), y along from the back wall.
-  const X = (x: number) => padX + widthM / 2 + x;
-  const Y = (y: number) => pad + (lengthM - y);
+  const X = (x: number) => padX + roomW / 2 + offX + x;
+  const Y = (y: number) => pad + (roomL - offY - y);
+  // Wall coordinates (from the left wall and the back wall) → drawing.
+  const WX = (wx: number) => padX + wx;
+  const WY = (wy: number) => pad + (roomL - wy);
   const fs = Math.max(0.2, Math.min(0.3, Math.max(widthM, lengthM) / 26));
   const cones = roomOnly ? [] : layoutCones(layoutId, d, lengthM);
   const inside = (c: [number, number]) => Math.abs(c[0]) <= widthM / 2 && c[1] >= 0 && c[1] <= lengthM;
@@ -100,8 +115,24 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxHeight, display: 'block' }} role="img" aria-label={roomOnly ? 'Room from above' : `${layoutId} layout from above`} data-testid={roomOnly ? 'room-map' : `layout-diagram-${layoutId}`}>
       <rect x={0} y={0} width={W} height={H} fill="#11161d" rx={0.1} />
       {/* Room */}
-      <rect x={X(-widthM / 2)} y={Y(lengthM)} width={widthM} height={lengthM} fill={FLOOR[floor]} stroke="#c8d2de" strokeWidth={0.04} />
-      {floorImage ? <image href={floorImage} x={X(-widthM / 2)} y={Y(lengthM)} width={widthM} height={lengthM} preserveAspectRatio="none" opacity={0.85} data-testid="floor-image" /> : null}
+      {space ? <rect x={WX(0)} y={WY(roomL)} width={roomW} height={roomL} fill="#262b33" stroke="#c8d2de" strokeWidth={0.04} data-testid="room-walls" /> : null}
+      <rect x={X(-widthM / 2)} y={Y(lengthM)} width={widthM} height={lengthM} fill={FLOOR[floor]} stroke={space ? '#3ddc84' : '#c8d2de'} strokeWidth={space ? 0.025 : 0.04} strokeDasharray={space ? '0.1 0.07' : undefined} />
+      {floorImage ? (
+        floorImageCovers === 'room' ? (
+          <image href={floorImage} x={WX(0)} y={WY(roomL)} width={roomW} height={roomL} preserveAspectRatio="none" opacity={0.85} data-testid="floor-image" />
+        ) : (
+          <image href={floorImage} x={X(-widthM / 2)} y={Y(lengthM)} width={widthM} height={lengthM} preserveAspectRatio="none" opacity={0.85} data-testid="floor-image" />
+        )
+      ) : null}
+      {space
+        ? footprints(space).map((f, i) => (
+            <g key={`fp-${i}`} data-testid="space-item">
+              <rect x={WX(f.rect[0])} y={WY(f.rect[3])} width={Math.max(0.05, f.rect[2] - f.rect[0])} height={Math.max(0.05, f.rect[3] - f.rect[1])} fill="#6b5a48" stroke="#c8d2de" strokeWidth={0.015} opacity={0.9} />
+              {text(WX((f.rect[0] + f.rect[2]) / 2), WY((f.rect[1] + f.rect[3]) / 2) + fs * 0.3, f.label, { size: fs * 0.7, fill: '#f0e2d0' })}
+            </g>
+          ))
+        : null}
+      {space && ws && roomOnly ? text(X(0), Y(lengthM / 2), `training space\n${L(ws.widthM)} × ${L(ws.lengthM)}`, { size: fs * 0.85, fill: '#9fe6bd', weight: 700 }) : null}
       {/* Fixed reference points */}
       {landmarks.map((l, i) => {
         const [lx, ly] = l.floor;
@@ -116,12 +147,12 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
           </g>
         );
       })}
-      {text(W / 2, Y(lengthM) - 0.32, 'FRONT', { weight: 700, size: fs * 1.05 })}
-      {text(W / 2, Y(0) + (landmarks.some((l) => l.floor[1] <= 1e-6) ? 0.55 : 0.38), 'BACK (start wall)', { weight: 700, size: fs * 1.05 })}
+      {text(W / 2, WY(roomL) - 0.32, 'FRONT', { weight: 700, size: fs * 1.05 })}
+      {text(W / 2, WY(0) + (landmarks.some((l) => l.floor[1] <= -offY + 1e-6) ? 0.55 : 0.38), 'BACK (start wall)', { weight: 700, size: fs * 1.05 })}
       {/* Room size */}
-      {text(W / 2, Y(0) + 0.66, `${L(widthM)} wide`, { size: fs * 0.85, fill: '#a9b4c2' })}
-      <text x={X(-widthM / 2) - 0.2} y={Y(lengthM / 2)} fontSize={fs * 0.85} fill="#a9b4c2" textAnchor="middle" transform={`rotate(-90 ${X(-widthM / 2) - 0.2} ${Y(lengthM / 2)})`}>
-        {`${L(lengthM)} long`}
+      {text(W / 2, WY(0) + 0.66, `${L(roomW)} wide`, { size: fs * 0.85, fill: '#a9b4c2' })}
+      <text x={WX(0) - 0.2} y={WY(roomL / 2)} fontSize={fs * 0.85} fill="#a9b4c2" textAnchor="middle" transform={`rotate(-90 ${WX(0) - 0.2} ${WY(roomL / 2)})`}>
+        {`${L(roomL)} long`}
       </text>
 
       {/* Stop zones */}

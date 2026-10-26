@@ -15,10 +15,11 @@ export const button = (page: Page | Locator, name: string | RegExp) => page.getB
 export async function setup(page: Page, opts: { name?: string; length?: string; focus?: boolean } = {}): Promise<void> {
   await page.getByLabel("Player's first name").fill(opts.name ?? 'Sam');
   await button(page, 'Next').click();
-  if (opts.length) {
-    await button(page, 'Measure it').click();
-    await page.getByLabel('Clear floor length metres').fill(opts.length);
-  }
+  // Your space: measure the room, skip the photo, nothing to measure from, the training space.
+  if (opts.length) await page.getByLabel('Room length metres').fill(opts.length);
+  await button(page, 'Next: take a photo of the space').click();
+  await button(page, 'Skip the photo').click();
+  await button(page, 'Next: your training space').click();
   for (let i = 0; i < 4; i++) await button(page, 'Next').click();
   await page.getByLabel('Parent PIN (4 digits)').fill(PIN);
   await button(page, 'Finish set-up').click();

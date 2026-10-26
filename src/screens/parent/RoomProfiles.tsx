@@ -13,6 +13,7 @@ import { fmtLen, localiseText, type Units } from '../../domain/units';
 import { landmarkFloor } from '../../domain/landmarks';
 import { MeasureRoom } from './RoomMeasure';
 import { FloorMapStep } from './FloorMap';
+import { SpaceWizard, type WizardStep } from '../space/SpaceWizard';
 import type { ColourModel } from '../../ball/colour';
 import { assignCones, colourAt, findCones, ORANGE } from '../../camera/cones';
 
@@ -53,7 +54,7 @@ export function UnitsChoice() {
   );
 }
 
-export function RoomBasicsForm({ profile, onChange, cones, showLayouts = true }: { profile: RoomProfile; onChange: (p: RoomProfile) => void; cones: number; showLayouts?: boolean }) {
+export function RoomBasicsForm({ profile, onChange, cones, showLayouts = true, sizeOnly }: { profile: RoomProfile; onChange: (p: RoomProfile) => void; cones: number; showLayouts?: boolean; sizeOnly?: boolean }) {
   const { programme, settings } = useData();
   const units: Units = settings.units ?? 'metric';
   const g = programme.layoutGeometry;
@@ -65,7 +66,7 @@ export function RoomBasicsForm({ profile, onChange, cones, showLayouts = true }:
     <div className="stack">
       <p className="muted">Measure once with a tape (recommended), or pick the size that looks right if there is no tape. The drills scale to it, and each drill shows where its cones go when it starts.</p>
       <UnitsChoice />
-      <div className="row">
+      <div className="row" style={sizeOnly ? { display: 'none' } : undefined}>
         <span className="muted">Space from</span>
         <Seg
           value={profile.spaceSource}
@@ -477,16 +478,41 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
   );
 }
 
+/** The guided measurement for an existing room (the same steps as the first set-up). */
+function GuidedMeasure({ initial, onDone }: { initial: RoomProfile; onDone: () => void }) {
+  const { programme, settings } = useData();
+  const [prof, setProf] = useState<RoomProfile>(initial.spaceSource === 'approxDims' ? initial : { ...initial, spaceSource: 'approxDims', measured: true });
+  const [step, setStep] = useState<WizardStep>(initial.space ? 'space' : 'measure');
+  return (
+    <div className="stack">
+      <div className="card stack">
+        <SpaceWizard profile={prof} onChange={setProf} step={step} setStep={setStep} />
+      </div>
+      <div className="row spread">
+        <button className="btn" onClick={onDone}>
+          Cancel
+        </button>
+        <button className="btn primary" disabled={!prof.space} onClick={async () => (await saveRoomProfile(prof, programme, settings), onDone())}>
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function RoomProfilesSection() {
   const { roomProfiles, settings, programme, layouts, layout } = useData();
   const [editing, setEditing] = useState<RoomProfile | null>(null);
+  const [guided, setGuided] = useState<RoomProfile | null>(null);
   if (editing) return <ProfileEditor initial={editing} onDone={() => setEditing(null)} />;
+  if (guided) return <GuidedMeasure initial={guided} onDone={() => setGuided(null)} />;
   const active = settings.activeRoomProfileId;
   return (
     <div className="stack">
       <div className="card stack">
         <p>
-          Room profiles hold the camera photo, the furniture anchors, the safe floor and the cone positions. No tape, stickers or measuring. Current drill geometry: layout v{layout?.version ?? '—'}.
+          Room profiles hold the measurements, the camera photo and what the drills are placed against. "Measure (guided)" walks through measuring the room, the photo from the Chromebook and the
+          things in it. Current drill geometry: layout v{layout?.version ?? '—'}.
         </p>
         <ul className="clean">
           {roomProfiles
@@ -504,7 +530,10 @@ export function RoomProfilesSection() {
                       Use this room
                     </button>
                   ) : null}
-                  <button className="btn small primary" onClick={() => setEditing(r)}>
+                  <button className="btn small primary" onClick={() => setGuided(r)}>
+                    Measure (guided)
+                  </button>
+                  <button className="btn small" onClick={() => setEditing(r)}>
                     Edit
                   </button>
                 </span>

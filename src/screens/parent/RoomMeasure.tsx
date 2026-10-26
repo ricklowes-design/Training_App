@@ -37,6 +37,9 @@ export function LengthInput({ label, value, units, min, onChange }: { label: str
   );
 }
 
+/** Typing a clear-floor size by hand replaces the guided measurement (and the room-wide floor map). */
+const dropGuided = (p: RoomProfile): RoomProfile => ({ ...p, space: undefined, floorMap: p.floorMap?.covers === 'room' ? undefined : p.floorMap });
+
 const SIDES: Landmark['side'][] = ['left', 'right', 'back', 'front'];
 
 /** The clear floor and its fixed reference points, with a live plan of the room. */
@@ -50,6 +53,7 @@ export function MeasureRoom({ profile, onChange, units }: { profile: RoomProfile
   const unused = LANDMARK_SUGGESTIONS.filter((l) => !marks.some((m) => m.label === l));
   return (
     <div className="stack">
+      {profile.space ? <p className="pill info">Measured with the guided steps (Room profiles → Measure (guided)). Changing the size here replaces those measurements.</p> : null}
       <ol className="measure-steps">
         <li>
           Stand at the <strong>back</strong> of the space, where the player will start, facing where the Chromebook will stand (the <strong>front</strong>). Left and right are as you face it.
@@ -65,8 +69,8 @@ export function MeasureRoom({ profile, onChange, units }: { profile: RoomProfile
         </li>
       </ol>
       <div className="grid2">
-        <LengthInput label="Clear floor length" units={units} min={2} value={profile.approxUsableM?.length ?? dims.length} onChange={(length) => onChange({ ...profile, measured: true, approxUsableM: { length, width: profile.approxUsableM?.width ?? dims.width } })} />
-        <LengthInput label="Clear floor width" units={units} min={1} value={profile.approxUsableM?.width ?? dims.width} onChange={(width) => onChange({ ...profile, measured: true, approxUsableM: { width, length: profile.approxUsableM?.length ?? dims.length } })} />
+        <LengthInput label="Clear floor length" units={units} min={2} value={profile.approxUsableM?.length ?? dims.length} onChange={(length) => onChange({ ...dropGuided(profile), measured: true, approxUsableM: { length, width: profile.approxUsableM?.width ?? dims.width } })} />
+        <LengthInput label="Clear floor width" units={units} min={1} value={profile.approxUsableM?.width ?? dims.width} onChange={(width) => onChange({ ...dropGuided(profile), measured: true, approxUsableM: { width, length: profile.approxUsableM?.length ?? dims.length } })} />
       </div>
       <div className="grid2">
         <div className="stack">

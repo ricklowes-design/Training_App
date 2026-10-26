@@ -6,7 +6,7 @@ import { advance, boot, button, openParent, place, setup, start, table } from '.
 test('a drill starts with its cone set-up, placed against the measured fixed points', async ({ page }) => {
   await boot(page);
   await setup(page);
-  // Add a fixed point to the room (as the parent would in the set-up's room step), then reload.
+  // Measure from a door frame on the right wall (as in the set-up's "now measure these"), then reload.
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
@@ -15,7 +15,8 @@ test('a drill starts with its cone set-up, placed against the measured fixed poi
           const tx = r.result.transaction('roomProfiles', 'readwrite');
           const st = tx.objectStore('roomProfiles');
           const g = st.get('room-1');
-          g.onsuccess = () => st.put({ ...g.result, landmarks: [{ id: 'door', label: 'Door frame', side: 'right', alongM: 1.8 }] });
+          g.onsuccess = () =>
+            st.put({ ...g.result, space: { ...g.result.space, items: [{ id: 'door', label: 'Door frame', place: 'right', a: 1.8, b: g.result.space.widthM, source: 'typed' }] } });
           tx.oncomplete = () => resolve();
         };
       }),
@@ -27,9 +28,9 @@ test('a drill starts with its cone set-up, placed against the measured fixed poi
   await advance(page, 10_000 + 180_000 + 1_000);
   const cones = page.getByTestId('cone-setup');
   await expect(cones).toContainText('Set out the cones');
-  await expect(cones.locator('.cone-list li').first()).toHaveText('Slalom cone 1: 0.8 m from the back wall, on the centre line');
-  await expect(cones.locator('.cone-list li').nth(1)).toHaveText('Slalom cone 2: 1.8 m from the back wall, on the centre line, level with the door frame (right)');
-  await expect(cones.getByTestId('landmark')).toContainText('Door frame');
+  await expect(cones.locator('.cone-list li').first()).toHaveText('Slalom cone 1: 0.8 m from the back wall, in the middle, 1.5 m from each side wall');
+  await expect(cones.locator('.cone-list li').nth(1)).toHaveText('Slalom cone 2: 1.8 m from the back wall, in the middle, 1.5 m from each side wall, level with the door frame (right)');
+  await expect(cones.getByTestId('landmark')).toContainText('door frame');
   await expect(page.getByText(/Starts by itself in (5\d|60) s/)).toBeVisible();
   await advance(page, 25_000);
   await expect(button(page, '▶ Start block')).toBeVisible(); // still waiting after the usual 20 s

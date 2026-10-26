@@ -56,6 +56,50 @@ export async function createBallDetector(wasmBase: string): Promise<{ detector: 
   throw new Error('unreachable');
 }
 
+// Room set-up (parent request 2026-10-26): the same detector model finds furniture in the room
+// photo, so the app can ask the parent to measure from it. COCO furniture classes only.
+export const ROOM_CLASSES: Record<string, string> = {
+  couch: 'Couch',
+  chair: 'Chair',
+  bed: 'Bed',
+  'dining table': 'Table',
+  tv: 'TV',
+  'potted plant': 'Plant',
+  refrigerator: 'Fridge',
+  bench: 'Bench',
+  oven: 'Oven',
+  sink: 'Sink',
+};
+
+export async function detectRoomObjects(wasmBase: string, bitmap: ImageBitmap): Promise<{ label: string; score: number; box: { x: number; y: number; w: number; h: number } }[]> {
+  const { ObjectDetector } = await import('@mediapipe/tasks-vision');
+  const fileset = await FilesetResolver.forVisionTasks(wasmBase, true);
+  const detector = await ObjectDetector.createFromOptions(fileset, {
+    baseOptions: { modelAssetPath: BALL_MODEL_URL, delegate: 'CPU' },
+    runningMode: 'IMAGE',
+    categoryAllowlist: Object.keys(ROOM_CLASSES),
+    scoreThreshold: 0.3,
+    maxResults: 6,
+  });
+  try {
+    const W = bitmap.width;
+    const H = bitmap.height;
+    return detector
+      .detect(bitmap)
+      .detections.filter((d) => d.boundingBox && d.categories[0])
+      .map((d) => {
+        const b = d.boundingBox!;
+        return {
+          label: ROOM_CLASSES[d.categories[0].categoryName] ?? d.categories[0].categoryName,
+          score: Math.round(100 * d.categories[0].score) / 100,
+          box: { x: b.originX / W, y: b.originY / H, w: b.width / W, h: b.height / H },
+        };
+      });
+  } finally {
+    detector.close();
+  }
+}
+
 /** Detector boxes (pixels) as ball detections in picture fractions. */
 export function boxesToDetections(dets: { boundingBox?: { originX: number; originY: number; width: number; height: number }; categories: { score: number }[] }[], w: number, h: number) {
   return dets

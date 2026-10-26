@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { rankBalls } from '../ball/compare';
 import type { Capture } from '../ball/register';
-import type { Landmark } from '../db/types';
+import type { Landmark, Space } from '../db/types';
+import { guessPlace, photoFloorPairs, questions, withSpace, workspace } from './space';
 import { loadProgramme } from '../test/fixtures';
 import { apply, fitError, fitHomography, invert, type H, type P2 } from './homography';
 import { coneGuide, landmarkFloor, refPoint } from './landmarks';
@@ -106,5 +107,48 @@ describe('ball check', () => {
 
   it('recommends none when every ball looks like the room', () => {
     expect(rankBalls([{ name: 'Brown ball', captures: [cap(0.08, 0.55, 0.45)], misses: 0 }], room).recommended).toBeUndefined();
+  });
+});
+
+describe('guided measurement (space)', () => {
+  // 14 ft × 9 ft room; a couch along the left wall sticking 0.9 m out, its near end 2.5 m from the back;
+  // a bookcase on the back wall, 0.3 m deep, 0.4 m from the left wall; a door frame on the right wall.
+  const space: Space = {
+    lengthM: 4.27,
+    widthM: 2.74,
+    items: [
+      { id: 'c', label: 'Couch', place: 'left', a: 2.5, b: 1.84, box: { x: 0.02, y: 0.4, w: 0.25, h: 0.3 }, source: 'detected' },
+      { id: 'b', label: 'Bookcase', place: 'back', a: 0.4, b: 0.3, box: { x: 0.35, y: 0.15, w: 0.12, h: 0.25 }, source: 'tapped' },
+      { id: 'd', label: 'Door frame', place: 'right', a: 1.2, b: 2.74, source: 'typed' },
+      { id: 'x', label: 'Not measured', place: 'right', source: 'typed' },
+    ],
+    backCorners: { left: { x: 0.25, y: 0.35 }, right: { x: 0.75, y: 0.35 } },
+  };
+
+  it('asks two measurements worded for where each thing stands', () => {
+    expect(questions({ label: 'Couch', place: 'left' })[1].text).toBe('From the couch straight across to the right wall');
+    expect(questions({ label: 'Bookcase', place: 'back' })[1].text).toBe('How far the bookcase sticks out from the back wall');
+    expect(guessPlace({ x: 0.7, w: 0.2 })).toBe('right');
+  });
+
+  it('works out the training space as the room less what sticks out', () => {
+    const ws = workspace(space);
+    expect(ws).toMatchObject({ x0: 0.9, x1: 2.74, y0: 0.3, lengthM: 3.97, widthM: 1.84 });
+    expect(ws.limits).toEqual(['the couch on the left', 'the bookcase at the back']);
+    const p = withSpace({ spaceSource: 'parentClass', measured: false } as { spaceSource: string; measured?: boolean; approxUsableM?: { length: number; width: number }; space?: Space }, space);
+    expect(p).toMatchObject({ spaceSource: 'approxDims', measured: true, approxUsableM: { length: 3.97, width: 1.84 } });
+  });
+
+  it('gives the floor map photo points from the corners and the measured things', () => {
+    const pairs = photoFloorPairs(space);
+    expect(pairs.map((x) => x.floor.map((v) => Math.round(v * 100) / 100))).toEqual([[0, 0], [2.74, 0], [0.9, 2.5], [0.4, 0.3]]);
+    expect(pairs[2].img).toEqual([0.27, 0.7]);
+  });
+
+  it('places cones from the real walls, against the measured things', () => {
+    const d2 = scaledLayout({ roomLengthM: 3.97, roomWidthM: 1.84, floor: 'hard', wallUsable: false, cones: 12 }, g);
+    const guide = coneGuide('L1', d2, 3.97, 1.84, [], 'metric', space);
+    // The training space starts 0.3 m out (the bookcase) and is centred 1.82 m from the left wall.
+    expect(guide[0].text).toBe('1.1 m from the back wall, 0.92 m from the right wall, level with the door frame (right)');
   });
 });

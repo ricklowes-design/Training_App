@@ -137,7 +137,7 @@ test("the end-of-drill card shows last time's block from an earlier session", as
   await home(page);
   await start(page, 'Dribbling · Stage 1 · Session 2');
   await toBlock2Demo(page);
-  await advance(page, 25_000 + 10_000 + 360_000);
+  await advance(page, 65_000 + 10_000 + 360_000); // the slalom's cones are set out first: 60 s
   await expect(page.locator('.endcard')).toContainText(/Last time \(Nov 3\): 3:00 of 3:00/);
 });
 

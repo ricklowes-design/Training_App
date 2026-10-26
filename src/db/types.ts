@@ -455,6 +455,35 @@ export interface FloorMap {
   /** Mean distance between tapped points and where the fitted map puts them, in metres. */
   fitErrorM?: number;
   createdAt?: string;
+  /** The whole room (guided measurement) or only the clear floor. Absent = clear floor. */
+  covers?: 'room' | 'clear';
+}
+
+/** Where a measured thing stands. */
+export type ItemPlace = 'left' | 'right' | 'back' | 'inRoom';
+
+/** Something in the room the parent measured from (couch, bookcase, door frame…). Facing the
+ *  Chromebook from the back wall:
+ *  - left/right wall: a = back wall → its near end (toward the Chromebook); b = from it across to the other wall.
+ *  - back wall: a = left wall → its left edge; b = how far it sticks out from the back wall.
+ *  - in the room: a = back wall → it; b = left wall → it. */
+export interface SpaceItem {
+  id: string;
+  label: string;
+  place: ItemPlace;
+  a?: number;
+  b?: number;
+  /** Where it is on the room photo (0..1), when it came from the photo. */
+  box?: { x: number; y: number; w: number; h: number };
+  source: 'detected' | 'tapped' | 'typed';
+}
+
+export interface Space {
+  lengthM: number; // back wall to the front (Chromebook) wall
+  widthM: number; // side wall to side wall
+  items: SpaceItem[];
+  /** Where the back wall meets the floor on the photo, left and right (optional; for the floor map). */
+  backCorners?: { left?: Pt; right?: Pt };
 }
 
 export interface RoomProfile {
@@ -489,6 +518,8 @@ export interface RoomProfile {
   landmarks?: Landmark[];
   /** Photo → top-down floor map: floor points the parent tapped on the photo, and the map made from them. */
   floorMap?: FloorMap;
+  /** The guided measurement (set-up): walls, the things seen in the photo and their measurements. */
+  space?: Space;
   floor: 'hard' | 'carpet' | 'rubber';
   wallUsable: boolean;
   savedLayoutRefs: string[];

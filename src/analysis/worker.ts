@@ -6,7 +6,7 @@ import type { CueLogEntry } from '../cue/engine';
 import type { Pt } from '../db/types';
 import { analyseBlock, analyseReps, type AnalysisContext, type FrameData } from './compute';
 import { slalomRuns, tapWindows, vPullWindows, type Window } from './outcome';
-import { boxesToDetections, createBallDetector, createPose, toPose } from './pose';
+import { boxesToDetections, createBallDetector, createPose, detectRoomObjects, toPose } from './pose';
 import type { ColourModel } from '../ball/colour';
 import { detectBall, sizeModel, type SizeModel } from '../ball/detect';
 import { BallTracker } from '../ball/track';
@@ -43,7 +43,8 @@ export type ToWorker =
   | { type: 'frame'; tMs: number; bitmap: ImageBitmap }
   | { type: 'finish'; log: CueLogEntry[]; ctx: AnalysisContext; gateZones: string[]; windows?: Window[]; rapid?: boolean }
   | { type: 'bench'; model: 'lite' | 'full'; wasmBase: string; bitmaps: ImageBitmap[]; fps: number }
-  | { type: 'benchBall'; wasmBase: string; bitmaps: ImageBitmap[]; fps: number };
+  | { type: 'benchBall'; wasmBase: string; bitmaps: ImageBitmap[]; fps: number }
+  | { type: 'detectRoom'; wasmBase: string; bitmap: ImageBitmap };
 
 export type FromWorker =
   | { type: 'ready'; poseUsed: boolean; error?: string }
@@ -51,6 +52,7 @@ export type FromWorker =
   | { type: 'result'; reps: ReturnType<typeof analyseReps>; block: ReturnType<typeof analyseBlock>; ball?: BallSummary }
   | { type: 'bench'; model: 'lite' | 'full'; fps: number; delegate: string; frames: number; detected: number }
   | { type: 'benchBall'; fps: number; delegate: string; frames: number; detected: number }
+  | { type: 'room'; items: { label: string; score: number; box: { x: number; y: number; w: number; h: number } }[] }
   | { type: 'error'; message: string };
 
 const post = (m: FromWorker) => (self as unknown as Worker).postMessage(m);
@@ -143,6 +145,8 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
       landmarker = null;
       frames = [];
       post({ type: 'result', reps, block, ball: ballSummary });
+    } else if (m.type === 'detectRoom') {
+      post({ type: 'room', items: await detectRoomObjects(m.wasmBase, m.bitmap) });
     } else if (m.type === 'benchBall') {
       const { detector, delegate } = await createBallDetector(m.wasmBase);
       detector.detectForVideo(m.bitmaps[0], 0); // warm-up

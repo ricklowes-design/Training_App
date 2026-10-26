@@ -9,9 +9,10 @@ import type { Foot, RoomProfile } from '../db/types';
 import { newProfile } from '../domain/room';
 import { saveRoomProfile } from '../app/room';
 import { RoomBasicsForm } from './parent/RoomProfiles';
+import { SpaceWizard, type WizardStep } from './space/SpaceWizard';
 import { Seg, todayISO } from '../ui/widgets';
 
-const STEPS = ['Player', 'Room', 'Equipment', 'Priorities', 'Demonstrations', 'Backup and PIN'] as const;
+const STEPS = ['Player', 'Your space', 'Equipment', 'Priorities', 'Demonstrations', 'Backup and PIN'] as const;
 
 export function Setup() {
   const { programme, settings, player, layout, roomProfile } = useData();
@@ -30,6 +31,10 @@ export function Setup() {
   const [backup, setBackup] = useState(settings.backupReminder);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  // The room: the guided measurement (measure → photo → measure from the photo → training space), or a size without a tape.
+  // Re-running the set-up with a guided measurement already made opens on the training space.
+  const [spaceStep, setSpaceStep] = useState<WizardStep>(roomProfile?.space ? 'space' : 'measure');
+  const [noTape, setNoTape] = useState(!!roomProfile && roomProfile.spaceSource === 'parentClass');
 
   const coreMoves = programme.drills.filter((d) => programme.coreMoveDrills.includes(d.id));
   const allTags = [...new Set([...programme.priorities, ...programme.areas.flatMap((a) => a.priorityTags)])];
@@ -128,15 +133,23 @@ export function Setup() {
             </label>
           </>
         )}
-        {step === 1 && (
-          <>
-            <p className="muted">
-              Measure the room once now. You will not need the cone layouts yet: each drill shows where its cones go, against this room, when it starts. Changing the room later creates a new
-              layout version {layout ? `(now v${layout.version})` : ''}; results are never compared across versions. The webcam photo and the top-down floor map are added later in Parent → Room profiles.
-            </p>
-            <RoomBasicsForm profile={room} onChange={setRoom} cones={equipment.cones} showLayouts={false} />
-          </>
-        )}
+        {step === 1 &&
+          (noTape ? (
+            <>
+              <p className="muted">
+                Pick the size that looks right. Each drill shows where its cones go when it starts. Changing the room later creates a new layout version {layout ? `(now v${layout.version})` : ''}; results are never
+                compared across versions.
+              </p>
+              <RoomBasicsForm profile={room} onChange={setRoom} cones={equipment.cones} showLayouts={false} sizeOnly />
+              <div>
+                <button className="btn" onClick={() => (setNoTape(false), setSpaceStep('measure'), setRoom({ ...room, spaceSource: 'approxDims', measured: true }))}>
+                  Measure with a tape instead
+                </button>
+              </div>
+            </>
+          ) : (
+            <SpaceWizard profile={room} onChange={setRoom} step={spaceStep} setStep={setSpaceStep} onNoTape={() => (setNoTape(true), setRoom({ ...room, spaceSource: 'parentClass', measured: false }))} />
+          ))}
         {step === 2 && (
           <>
             <label className="field" style={{ maxWidth: 240 }}>
@@ -220,7 +233,9 @@ export function Setup() {
         <button className="btn" disabled={step === 0} onClick={() => setStep(step - 1)}>
           Back
         </button>
-        {step < STEPS.length - 1 ? (
+        {step === 1 && !noTape && spaceStep !== 'space' ? (
+          <span className="muted">Follow the steps above</span>
+        ) : step < STEPS.length - 1 ? (
           <button className="btn primary" disabled={!canNext()} onClick={() => setStep(step + 1)}>
             Next
           </button>

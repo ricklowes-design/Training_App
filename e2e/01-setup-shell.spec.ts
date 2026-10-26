@@ -10,23 +10,51 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await page.getByLabel('Position').fill('winger');
   await button(page, 'Next').click();
 
-  // Room: measured once (length, width, fixed points), with a live plan of the room and no cone layouts yet.
-  await expect(page.getByLabel('Clear floor length metres')).toBeVisible();
-  await page.getByLabel('Clear floor length metres').fill('4.3');
-  await page.getByLabel('Clear floor width metres').fill('1.9');
+  // Your space, 1: measure the room wall to wall, with a live plan.
+  await expect(page.getByRole('heading', { name: "Let's start with measuring your space" })).toBeVisible();
+  await page.getByLabel('Room length metres').fill('4.3');
+  await page.getByLabel('Room width metres').fill('2.8');
   await expect(page.getByTestId('room-map')).toContainText('4.3 m long');
-  await button(page, '+ Add a fixed point').click();
-  await page.getByLabel('Reference point 1 name').fill('Door frame');
-  await page.getByLabel('Reference point 1 side').selectOption('right');
-  await page.getByLabel('Reference point 1: distance from the back wall metres').fill('1.7');
-  await expect(page.getByTestId('room-map').getByTestId('landmark')).toContainText('Door frame');
-  await expect(page.getByTestId('layout-diagram-L1')).toHaveCount(0); // cones come with each drill
-  // No tape: a size class is enough; layouts follow it.
-  await button(page, 'No tape: pick a size').click();
-  await expect(page.getByLabel(/^Standard: about 6 × 3 m/)).toBeChecked();
-  await button(page, 'Measure it').click();
-  await page.getByLabel('Clear floor length metres').fill('6.1');
-  await page.getByLabel('Clear floor width metres').fill('3');
+  await expect(page.getByText('Follow the steps above')).toBeVisible(); // the set-up's own Next waits
+  await button(page, 'Next: take a photo of the space').click();
+  // 2: the Chromebook where it will stand, and a photo (Chromium's fake webcam).
+  await expect(page.getByRole('heading', { name: 'Position the Chromebook and take a photo' })).toBeVisible();
+  await expect(button(page, 'Take the photo')).toBeEnabled({ timeout: 15_000 });
+  await page.waitForTimeout(800);
+  await button(page, 'Take the photo').click();
+  // 3: "now measure these": furniture is looked for in the photo; anything else is tapped.
+  await expect(page.getByRole('heading', { name: 'Now measure these for me' })).toBeVisible();
+  await expect(page.getByTestId('detect-status')).not.toContainText('Looking', { timeout: 90_000 });
+  const n0 = await page.locator('[data-testid^="space-item-"]').count();
+  const photo = page.getByTestId('space-photo');
+  const tap = async (x: number, y: number) => {
+    const b = (await photo.boundingBox())!;
+    await page.mouse.click(b.x + x * b.width, b.y + y * b.height);
+  };
+  await tap(0.15, 0.6);
+  const couch = page.getByTestId(`space-item-${n0}`);
+  await couch.getByLabel(`Thing ${n0 + 1} name`).fill('Couch');
+  await couch.getByLabel(`Thing ${n0 + 1} place`).selectOption('left');
+  await couch.getByLabel('A: From the back wall to the near end of the couch (the end nearest the Chromebook) metres').fill('2');
+  await couch.getByLabel('B: From the couch straight across to the right wall metres').fill('1.9');
+  await button(page, 'marks the back-left corner').click();
+  await tap(0.25, 0.35);
+  await tap(0.75, 0.35); // then the back-right corner
+  await tap(0.85, 0.6);
+  const shelf = page.getByTestId(`space-item-${n0 + 1}`);
+  await shelf.getByLabel(`Thing ${n0 + 2} name`).fill('Bookcase');
+  await shelf.getByLabel(`Thing ${n0 + 2} place`).selectOption('right');
+  await shelf.getByLabel('A: From the back wall to the near end of the bookcase (the end nearest the Chromebook) metres').fill('1');
+  await shelf.getByLabel('B: From the bookcase straight across to the left wall metres').fill('2.5');
+  // Detected furniture left unmeasured does not narrow the space.
+  await button(page, 'Next: your training space').click();
+  // 4: the training space worked out from the measurements, and the photo redrawn from above.
+  const space = page.getByTestId('training-space');
+  await expect(space).toContainText('Training space: 1.6 m wide × 4.3 m long (the room less the couch on the left, the bookcase on the right)');
+  await expect(space).toContainText('each drill shows where its cones go');
+  await expect(space.getByTestId('floor-image')).toHaveCount(1, { timeout: 15_000 });
+  await expect(space.getByTestId('space-item')).toHaveCount(2);
+  await expect(page.getByTestId('layout-diagram-L1')).toHaveCount(0); // no cone layouts at set-up
   await button(page, 'Next').click();
 
   await page.getByLabel('Spare phone (for a cue screen)').check();
@@ -51,10 +79,11 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   expect(player).toMatchObject({ name: 'Sam', dominantFoot: 'left', position: 'winger' });
   const layouts = await table<{ version: number; derived: { slalomSpacingM: number } }>(page, 'layouts');
   expect(layouts).toHaveLength(1);
-  expect(layouts[0]).toMatchObject({ version: 1, derived: { slalomSpacingM: 1 }, roomProfileId: 'room-1' });
-  const [room] = await table<{ name: string; spaceSource: string; usableSpaceClass: string; measured: boolean; landmarks: { label: string; side: string; alongM: number }[] }>(page, 'roomProfiles');
-  expect(room).toMatchObject({ name: 'Main room', spaceSource: 'approxDims', usableSpaceClass: 'standard', measured: true });
-  expect(room.landmarks).toEqual([expect.objectContaining({ label: 'Door frame', side: 'right', alongM: 1.7 })]);
+  expect(layouts[0]).toMatchObject({ version: 1, roomLengthM: 4.3, roomWidthM: 1.6, roomProfileId: 'room-1' });
+  const [room] = await table<{ name: string; spaceSource: string; measured: boolean; approxUsableM: object; space: { items: { label: string }[] }; floorMap: { covers: string }; backgroundFrame: unknown }>(page, 'roomProfiles');
+  expect(room).toMatchObject({ name: 'Main room', spaceSource: 'approxDims', measured: true, approxUsableM: { length: 4.3, width: 1.6 }, floorMap: { covers: 'room' } });
+  expect(room.space.items.map((x) => x.label)).toEqual(expect.arrayContaining(['Couch', 'Bookcase']));
+  expect(room.backgroundFrame).toBeTruthy();
   const [settings] = await table<{ equipment: { sparePhone: boolean }; pinHash: string; priorities: string[]; firstRunDone: boolean }>(page, 'settings');
   expect(settings.equipment.sparePhone).toBe(true);
   expect(settings.pinHash).toMatch(/^[0-9a-f]{64}$/);
