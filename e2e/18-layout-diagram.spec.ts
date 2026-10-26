@@ -37,9 +37,20 @@ test('the cone plans follow the size, the cones and the units', async ({ page })
   await page.getByLabel('Clear floor width inches').fill('6');
   await expect(l1).toContainText('14 ft long');
   await expect(page.getByTestId('layout-diagram-L2')).toContainText(/gates 1 ft 8 in wide/);
-  await expect(page.getByText(/receive box needs about 7 ft 10 in of clear width/)).toBeVisible();
+  // 7 ft 6 in wide: the standard gates still fit; the receive box uses its narrow-room version.
+  await expect(page.getByText(/cue screen behind the box \(narrow-room version/)).toBeVisible();
   const s3 = shot('03-small-room-feet-inches');
   if (s3) await grid.screenshot({ path: s3 });
+
+  // 14 ft × 6 ft 2 in: both the feint lane and the receive box use their narrow-room versions.
+  await page.getByLabel('Clear floor width feet').fill('6');
+  await page.getByLabel('Clear floor width inches').fill('2');
+  await expect(page.getByTestId('layout-diagram-L2')).toContainText(/gates 1 ft (9|10) in wide/);
+  await expect(page.getByText(/left and right, (0 ft )?8 in either side of the lane \(narrow-room version\)/)).toBeVisible();
+  await expect(page.getByText(/narrow-room version: short exits/)).toBeVisible();
+  await expect(page.getByText('Not available here', { exact: false })).toHaveCount(0);
+  const s3b = shot('03b-narrow-room-feet-inches');
+  if (s3b) await grid.screenshot({ path: s3b });
 
   // Fewer cones: the slalom shortens, the feint lane loses its start cone, then refuses.
   await button(page, 'Metres').click();

@@ -27,9 +27,13 @@ export interface DerivedLayout {
   feintStopZoneM: number;
   /** False when there are too few cones for a start cone: the run starts from the back wall. Absent = true. */
   feintStartCone?: boolean;
+  /** Lane centre to the inner cone of each feint gate. Absent = 0.3 m (the standard layout). */
+  feintGateInnerM?: number;
   receiveBoxSideM: number;
   receiveGateWidthM: number;
   masterySquareM: number;
+  /** Layouts shrunk to fit a narrow room (e.g. ['L2', 'L3']). Absent = none. */
+  narrow?: string[];
 }
 
 export interface RoomLayout {

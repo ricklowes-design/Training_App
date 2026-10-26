@@ -1,4 +1,5 @@
 import type { DerivedLayout } from '../db/types';
+import { gateInner } from '../domain/layout';
 
 // Scripted drill animations for the drills that combine a move with the app's own cue (no outside video
 // shows the whole drill). Room coordinates as in LayoutDiagram: x across (her left is -x when she faces the
@@ -72,7 +73,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
   const sy = d.feintStartCone === false ? 0.3 : d.feintStartM ?? 0.5;
   const cy = d.feintConeM;
   const gy = d.feintGateAtM;
-  const gx = 0.3 + d.feintGateWidthM / 2;
+  const gx = gateInner(d) + d.feintGateWidthM / 2;
   const sz = Math.min(lengthM - 0.35, gy + d.feintStopZoneM / 2);
   const lane = (caption: string) => ({ p: [0, sy] as V, b: [0, sy + 0.35] as V, face: FRONT, lean: 0, cue: '', caption });
   const approach = (title: string, caption = 'Dribble at pace toward the feint cone', stopShort = 0.9) =>
@@ -171,6 +172,8 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
   // Receive box (L3): she starts between the box and the screen, facing the back wall; her left is +x then.
   const mid = lengthM / 2;
   const s = d.receiveBoxSideM / 2;
+  // The narrow-room version keeps exits short: one touch out of the box and stop.
+  const exitM = d.narrow?.includes('L3') ? 0.35 : 0.75;
   const p0: V = [0, mid + s + 0.6];
   const box = (title: string, caption: string) => scene(title, { p: p0, b: [0, mid + s + 0.3], face: BACK, lean: 0, cue: '', caption });
   const push = (sc: ReturnType<typeof scene>) => sc.to(1.0, { b: [0, mid + 0.15], p: [0, mid + s + 0.15], caption: 'Push the ball 2 m into the box and follow it' });
@@ -180,7 +183,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
     const x = herSide === 'left' ? 1 : -1;
     return sc
       .to(0.5, { b: [x * (s + 0.15), mid], p: [x * 0.15, mid + 0.2], caption })
-      .to(0.7, { b: [x * (s + 0.75), mid], p: [x * (s + 0.4), mid], caption: `Through the ${herSide} gate` })
+      .to(0.7, { b: [x * (s + exitM), mid], p: [x * (s + exitM - 0.35), mid], caption: `Through the ${herSide} gate` })
       .hold(0.9);
   };
   switch (drillId) {
@@ -219,7 +222,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
         target,
         scenes: [
           out(look(push(box('If the screen says RIGHT FREE', 'Start between the box and the screen, facing away from it')), 'RIGHT FREE'), 'right', 'Touch to the free side')
-            .to(0.6, { b: [-(s + 0.5), mid - 0.6], p: [-(s + 0.4), mid - 0.3], caption: 'Two dribble touches' })
+            .to(0.6, { b: [-(s + exitM - 0.25), mid - 0.6], p: [-(s + exitM - 0.35), mid - 0.3], caption: 'Two dribble touches' })
             .to(0.7, { b: target, caption: 'Short pass into the target with the exit foot' })
             .hold(0.8)
             .done(),

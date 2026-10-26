@@ -82,7 +82,7 @@ function Wizard({ family, deviceId, deviceLabel, onDone }: { family: DrillFamily
   const videoRef = useRef<HTMLVideoElement>(null);
   const [step, setStep] = useState(0);
   const [photo, setPhoto] = useState<{ blob: Blob; width: number; height: number; url: string } | null>(null);
-  const cones = useMemo(() => (layout ? calibrationCones(family, layout.derived) : []), [family, layout]);
+  const cones = useMemo(() => (layout ? calibrationCones(family, layout.derived, undefined, layout.derived.feintGateInnerM !== undefined ? layout.derived.feintGateInnerM + layout.derived.feintGateWidthM / 2 : undefined) : []), [family, layout]);
   const [conePts, setConePts] = useState<Pt[]>([]);
   const spec = FAMILY_ZONES[family];
   const zoneNames = [...spec.zones, ...(spec.tripwire ? ['tripwire'] : [])];

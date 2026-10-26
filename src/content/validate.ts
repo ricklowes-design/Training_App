@@ -183,8 +183,8 @@ const programmeShape: Check = obj({
   layoutGeometry: obj({
     defaults: obj({ roomLengthM: posNum, roomWidthM: posNum, floor: str, wallUsable: bool, cones: num }),
     slalom: obj({ cones: posNum, startFromWallM: num, stopZoneM: num, marginM: num, maxSpacingM: posNum, minSpacingM: posNum }),
-    feintLane: obj({ startFromWallM: num, maxFeintConeM: posNum, gatePastConeM: posNum, gateWidthM: posNum, stopZoneM: posNum }),
-    receiveBox: obj({ maxSideM: posNum, sideClearanceM: num, gateWidthM: posNum, cueScreenBehindM: num }),
+    feintLane: obj({ startFromWallM: num, maxFeintConeM: posNum, gatePastConeM: posNum, gateWidthM: posNum, stopZoneM: posNum, narrow: optional(obj({ innerM: posNum, wallGapM: posNum, minGateM: posNum })) }),
+    receiveBox: obj({ maxSideM: posNum, sideClearanceM: num, gateWidthM: posNum, cueScreenBehindM: num, narrow: optional(obj({ sideClearanceM: posNum, minSideM: posNum })) }),
     masterySquare: obj({ sideM: posNum }),
   }),
   baselines: list(obj({ areaId: str, blocks: list(block), questions: list(str), defaultStartSession: posNum })),

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadProgramme } from '../test/fixtures';
-import { classFromDims, effectiveDims, layoutFit, layoutFromProfile, newProfile, polygonDims, profileChanged, profileClass, roomInputFor, scaledLayout, suggestPoint } from './room';
+import { classFromDims, effectiveDims, layoutCones, layoutFit, layoutFromProfile, newProfile, polygonDims, profileChanged, profileClass, roomInputFor, scaledLayout, suggestPoint } from './room';
+import { layoutSummary } from './layout';
 
 const p = loadProgramme();
 const g = p.layoutGeometry;
@@ -36,7 +37,9 @@ describe('room profiles (part 15 D1)', () => {
     const small = { ...big, safePolygonNormalized: [{ x: 0.35, y: 0.95 }, { x: 0.65, y: 0.95 }, { x: 0.6, y: 0.72 }, { x: 0.4, y: 0.72 }] };
     const f = fits(small);
     expect(f.L2).toBe(false);
-    expect(f.L3).toBe(false);
+    // About 1.8 m wide: the narrow-room receive box still fits.
+    expect(f.L3).toBe(true);
+    expect(scaledLayout(roomInputFor(small, 12), g).narrow).toContain('L3');
     expect(f.L4).toBe(true);
     expect(layoutFit('L2', scaledLayout(roomInputFor(small, 12), g), g).reason).toMatch(/clear length/);
     expect(profileClass(small)).toBe('compact');
@@ -101,10 +104,33 @@ describe('layouts follow the room inputs', () => {
     expect(layoutFit('L3', d3, g, 3).reason).toBe('needs 4 cones (you have 3)');
     expect(layoutFit('L1', d3, g, 3).ok).toBe(true);
   });
-  it('in a narrow room the feint gates narrow to keep clear of the side walls, and refuse below 0.5 m', () => {
-    expect(scaledLayout(room({ roomWidthM: 2.4 }), g).feintGateWidthM).toBe(0.6);
-    const tight = scaledLayout(room({ roomWidthM: 2.0 }), g);
-    expect(tight.feintGateWidthM).toBe(0.4);
-    expect(layoutFit('L2', tight, g).reason).toMatch(/clear width/);
+  it('in a narrow room the feint gates narrow to keep clear of the side walls', () => {
+    const d = scaledLayout(room({ roomWidthM: 2.4 }), g);
+    expect(d.feintGateWidthM).toBe(0.6);
+    expect(d.narrow).toBeUndefined();
+  });
+  it('a 6 ft 2 in room gets the narrow-room feint lane and receive box instead of refusing them', () => {
+    const d = scaledLayout(room({ roomLengthM: 4.27, roomWidthM: 1.88 }), g);
+    expect(d.narrow).toEqual(['L2', 'L3']);
+    expect(d.feintGateInnerM).toBe(0.2);
+    expect(d.feintGateWidthM).toBe(0.55);
+    expect(d.receiveBoxSideM).toBe(0.9);
+    expect(d.receiveGateWidthM).toBe(0.9);
+    expect(layoutFit('L2', d, g).ok).toBe(true);
+    expect(layoutFit('L3', d, g).ok).toBe(true);
+    // Every gate cone stays 0.15 m or more from the side walls.
+    for (const c of layoutCones('L2', d, 4.27)) expect(Math.abs(c.floor[0])).toBeLessThanOrEqual(1.88 / 2 - 0.15 + 1e-9);
+    expect(layoutSummary(d).L2).toMatch(/narrow-room version/);
+  });
+  it('below the narrow-room minimum, the layouts are refused with the width they need', () => {
+    const d = scaledLayout(room({ roomWidthM: 1.5 }), g);
+    expect(layoutFit('L2', d, g)).toEqual({ ok: false, reason: 'the feint gates need about 1.6 m of clear width' });
+    expect(layoutFit('L3', d, g)).toEqual({ ok: false, reason: 'the receive box needs about 1.8 m of clear width' });
+  });
+  it('the standard room keeps the standard layouts', () => {
+    const d = scaledLayout(room({}), g);
+    expect(d.narrow).toBeUndefined();
+    expect(d.feintGateInnerM).toBeUndefined();
+    expect(d.receiveGateWidthM).toBe(1);
   });
 });

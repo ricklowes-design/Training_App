@@ -1,6 +1,6 @@
 import type { LayoutGeometry } from '../content/types';
 import type { DerivedLayout, Pt, RoomLayout, RoomProfile, UsableSpaceClass } from '../db/types';
-import { deriveLayout, type RoomInput } from './layout';
+import { deriveLayout, gateInner, MIN_BOX_M, MIN_GATE_M, type RoomInput } from './layout';
 
 // Room profiles (part 15 D1, part 16 §2). No tape, no measuring: the usable space comes
 // from the parent's pick of a class, the safe floor polygon drawn on the camera photo, or
@@ -66,6 +66,17 @@ export function roomInputFor(p: RoomProfile, cones: number): RoomInput {
   return { roomLengthM: dims.length, roomWidthM: dims.width, floor: p.floor, wallUsable: p.wallUsable, cones };
 }
 
+/** The narrowest room each layout fits, in metres (with the narrow-room version when the content has one). */
+export function minWidthM(g: LayoutGeometry, layoutId: 'L2' | 'L3'): number {
+  if (layoutId === 'L2') {
+    const n = g.feintLane.narrow;
+    return n ? 2 * (n.innerM + n.minGateM + n.wallGapM) : 2 * (0.3 + MIN_GATE_M + 0.3);
+  }
+  const n = g.receiveBox.narrow;
+  return n ? n.minSideM + 2 * n.sideClearanceM : MIN_BOX_M + 2 * g.receiveBox.sideClearanceM;
+}
+const narrowWidthText = (g: LayoutGeometry, id: 'L2' | 'L3') => `${(Math.ceil(minWidthM(g, id) * 10) / 10).toFixed(1)} m`;
+
 /** Minimum geometry each layout needs to stay safe and meaningful (no long runs, no sprinting). */
 export function layoutFit(layoutId: string, d: DerivedLayout, g: LayoutGeometry, cones?: number): { ok: boolean; reason?: string } {
   const need = layoutCones(layoutId, d, 0).length;
@@ -77,9 +88,11 @@ export function layoutFit(layoutId: string, d: DerivedLayout, g: LayoutGeometry,
         : { ok: false, reason: 'the slalom needs about 3.5 m of clear length' };
     case 'L2':
       if (d.feintConeM < 1.5) return { ok: false, reason: 'the feint lane needs about 4 m of clear length' };
-      return d.feintGateWidthM >= 0.5 - 1e-9 ? { ok: true } : { ok: false, reason: 'the feint gates need about 2.2 m of clear width' };
+      if (d.narrow?.includes('L2')) return { ok: true };
+      return d.feintGateWidthM >= MIN_GATE_M - 1e-9 ? { ok: true } : { ok: false, reason: `the feint gates need about ${narrowWidthText(g, 'L2')} of clear width` };
     case 'L3':
-      return d.receiveBoxSideM >= 0.9 ? { ok: true } : { ok: false, reason: 'the receive box needs about 2.4 m of clear width' };
+      if (d.narrow?.includes('L3')) return { ok: true };
+      return d.receiveBoxSideM >= MIN_BOX_M - 1e-9 ? { ok: true } : { ok: false, reason: `the receive box needs about ${narrowWidthText(g, 'L3')} of clear width` };
     case 'L4':
       return d.masterySquareM >= 1 ? { ok: true } : { ok: false, reason: 'needs a 1 m square' };
     default:
@@ -191,13 +204,14 @@ export function layoutCones(layoutId: string, d: DerivedLayout, lengthM: number)
     }
     case 'L2': {
       const g = d.feintGateWidthM;
+      const gi = gateInner(d);
       return [
         ...(d.feintStartCone === false ? [] : [{ name: 'Start cone', floor: [0, d.feintStartM ?? 0.5] as [number, number] }]),
         { name: 'Feint cone', floor: [0, d.feintConeM] },
-        { name: 'Left gate, inner', floor: [-0.3, d.feintGateAtM] },
-        { name: 'Left gate, outer', floor: [-0.3 - g, d.feintGateAtM] },
-        { name: 'Right gate, inner', floor: [0.3, d.feintGateAtM] },
-        { name: 'Right gate, outer', floor: [0.3 + g, d.feintGateAtM] },
+        { name: 'Left gate, inner', floor: [-gi, d.feintGateAtM] },
+        { name: 'Left gate, outer', floor: [-gi - g, d.feintGateAtM] },
+        { name: 'Right gate, inner', floor: [gi, d.feintGateAtM] },
+        { name: 'Right gate, outer', floor: [gi + g, d.feintGateAtM] },
       ];
     }
     case 'L3': {

@@ -1,5 +1,5 @@
 {
-  "version": "0.5.1",
+  "version": "0.5.2",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -4354,13 +4354,22 @@
       "maxFeintConeM": 3.0,
       "gatePastConeM": 1.2,
       "gateWidthM": 0.8,
-      "stopZoneM": 0.8
+      "stopZoneM": 0.8,
+      "narrow": {
+        "innerM": 0.2,
+        "wallGapM": 0.15,
+        "minGateM": 0.45
+      }
     },
     "receiveBox": {
       "maxSideM": 1.5,
       "sideClearanceM": 0.75,
       "gateWidthM": 1.0,
-      "cueScreenBehindM": 1.5
+      "cueScreenBehindM": 1.5,
+      "narrow": {
+        "sideClearanceM": 0.45,
+        "minSideM": 0.9
+      }
     },
     "masterySquare": {
       "sideM": 1.0

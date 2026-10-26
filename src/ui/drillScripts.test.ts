@@ -8,6 +8,8 @@ const rooms = [
   { roomLengthM: 6.1, roomWidthM: 3.0 },
   { roomLengthM: 4.2, roomWidthM: 2.4 },
   { roomLengthM: 7.5, roomWidthM: 3.6 },
+  // 14 ft × 6 ft 2 in: the narrow-room versions of L2 and L3.
+  { roomLengthM: 4.27, roomWidthM: 1.88 },
 ];
 
 describe('drill animations', () => {

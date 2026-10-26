@@ -1,5 +1,6 @@
 import type { DerivedLayout, RoomLayout } from '../db/types';
 import { layoutCones } from '../domain/room';
+import { gateInner } from '../domain/layout';
 import { fmtLen, type Units } from '../domain/units';
 
 // Top-down plan of one drill layout in the room (not to an exact scale the parent must match:
@@ -80,7 +81,7 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
     pts.push(`L ${X(0)} ${Y(lengthM - d.slalomStopZoneM / 2)}`);
     route = pts.join(' ');
   } else if (layoutId === 'L2') {
-    const gx = 0.3 + d.feintGateWidthM / 2;
+    const gx = gateInner(d) + d.feintGateWidthM / 2;
     route = `M ${X(0)} ${Y(player.y)} L ${X(0)} ${Y(d.feintConeM - 0.35)} M ${X(0)} ${Y(d.feintConeM - 0.35)} Q ${X(-gx)} ${Y(d.feintConeM + 0.2)} ${X(-gx)} ${Y(d.feintGateAtM + 0.4)} M ${X(0)} ${Y(d.feintConeM - 0.35)} Q ${X(gx)} ${Y(d.feintConeM + 0.2)} ${X(gx)} ${Y(d.feintGateAtM + 0.4)}`;
   } else if (scanning) {
     route = `M ${X(0)} ${Y(player.y - 0.2)} L ${X(0)} ${Y(mid)} M ${X(0)} ${Y(mid)} L ${X(-boxS - 0.45)} ${Y(mid)} M ${X(0)} ${Y(mid)} L ${X(boxS + 0.45)} ${Y(mid)}`;
@@ -107,7 +108,7 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
 
       {/* Gates */}
       {layoutId === 'L2'
-        ? [-1, 1].map((s) => <line key={s} x1={X(s * 0.3)} y1={Y(d.feintGateAtM)} x2={X(s * (0.3 + d.feintGateWidthM))} y2={Y(d.feintGateAtM)} stroke="#3ddc84" strokeWidth={0.05} {...dash} />)
+        ? [-1, 1].map((s) => <line key={s} x1={X(s * gateInner(d))} y1={Y(d.feintGateAtM)} x2={X(s * (gateInner(d) + d.feintGateWidthM))} y2={Y(d.feintGateAtM)} stroke="#3ddc84" strokeWidth={0.05} {...dash} />)
         : null}
       {scanning ? (
         <>

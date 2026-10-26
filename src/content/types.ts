@@ -199,8 +199,23 @@ export interface AnchorCheck {
 export interface LayoutGeometry {
   defaults: { roomLengthM: number; roomWidthM: number; floor: string; wallUsable: boolean; cones: number };
   slalom: { cones: number; startFromWallM: number; stopZoneM: number; marginM: number; maxSpacingM: number; minSpacingM: number };
-  feintLane: { startFromWallM: number; maxFeintConeM: number; gatePastConeM: number; gateWidthM: number; stopZoneM: number };
-  receiveBox: { maxSideM: number; sideClearanceM: number; gateWidthM: number; cueScreenBehindM: number };
+  feintLane: {
+    startFromWallM: number;
+    maxFeintConeM: number;
+    gatePastConeM: number;
+    gateWidthM: number;
+    stopZoneM: number;
+    /** Narrow-room version: gates closer to the lane and to the side walls, never narrower than minGateM. */
+    narrow?: { innerM: number; wallGapM: number; minGateM: number };
+  };
+  receiveBox: {
+    maxSideM: number;
+    sideClearanceM: number;
+    gateWidthM: number;
+    cueScreenBehindM: number;
+    /** Narrow-room version: shorter exits either side of a box no smaller than minSideM. */
+    narrow?: { sideClearanceM: number; minSideM: number };
+  };
   masterySquare: { sideM: number };
 }
 
