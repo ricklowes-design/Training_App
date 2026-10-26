@@ -1,5 +1,6 @@
 import { useData } from '../app/data';
 import type { Programme } from '../content/types';
+import type { DerivedLayout } from '../db/types';
 import { coneGuide, landmarkFloor } from '../domain/landmarks';
 import { spaceRefs, workspace } from '../domain/space';
 import type { RunBlock } from '../domain/plans';
@@ -23,6 +24,15 @@ export function conesChanged(blocks: RunBlock[], idx: number, p: Programme): boo
     if (l) return l !== mine;
   }
   return true;
+}
+
+/** How this room changes the drill, when it does (the drill's own text still talks about gates and boxes). */
+export function variantNote(layoutId: string, d: DerivedLayout): string | null {
+  if (layoutId === 'L2' && d.singleCone?.includes('L2')) return 'This room’s version: no gates. Wherever the drill says “gate”, go past the exit cone on that side.';
+  if (layoutId === 'L3' && d.singleCone?.includes('L3')) return 'This room’s version: no box. Receive the ball between the two cones; wherever the drill says “gate”, go past the cones on that side and stop.';
+  if (layoutId === 'L2' && d.narrow?.includes('L2')) return 'This room’s version: narrower gates, closer to the lane.';
+  if (layoutId === 'L3' && d.narrow?.includes('L3')) return 'This room’s version: a smaller box with short exits: one touch out, then stop.';
+  return null;
 }
 
 export function ConeSetup({ layoutId, changed }: { layoutId: string; changed: boolean }) {
@@ -69,6 +79,11 @@ export function ConeSetup({ layoutId, changed }: { layoutId: string; changed: bo
           ))}
         </ol>
       </div>
+      {variantNote(layoutId, layout.derived) ? (
+        <p className="pill info" data-testid="layout-variant">
+          {variantNote(layoutId, layout.derived)}
+        </p>
+      ) : null}
       {points.length === 0 ? <p className="muted">Tip: measure from two or three things in the room (Parent → Re-run first-run set-up → Your space), and each cone is placed against them.</p> : null}
       <LayoutLegend />
     </div>

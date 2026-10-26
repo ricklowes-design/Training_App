@@ -129,15 +129,17 @@ test('room profiles: an unchanged save makes no new layout; a narrower space doe
   await expect(page.locator('li', { hasText: /^v\d+ ·/ })).toHaveCount(1);
   await edit();
   await button(page, 'Measure it').click();
+  await page.getByText(/^Drill layouts in this space/).click();
   await page.getByLabel('Clear floor width metres').fill('2.5');
   await expect(page.getByText(/1 m square mid-room/)).toBeVisible(); // receive box shrinks with the width
   await button(page, 'Save and close').click();
   await expect(page.locator('li', { hasText: /^v2 ·/ })).toContainText('about 6.1 × 2.5 m');
   await expect(page.locator('li', { hasText: /^v1 ·/ })).toContainText('about 6.1 × 3 m');
-  // Shrink the safe space: the receive box no longer fits and its drills are refused.
+  // Shrink the safe space below even the single-cone versions: the receiving drills are refused.
   await edit();
-  await page.getByLabel('Clear floor width metres').fill('2.2');
-  await expect(page.getByText(/Not available here: the receive box needs about 2.4 m of clear width/)).toBeVisible();
+  await page.getByText(/^Drill layouts in this space/).click();
+  await page.getByLabel('Clear floor width metres').fill('1.1');
+  await expect(page.getByText(/Not available here: the receiving drills need about 1.2 m of clear width/)).toBeVisible();
   await expect(page.getByTestId('layout-diagram-L3')).toContainText('Not available in this room');
   await button(page, 'Save and close').click();
   await closeParent(page);
@@ -150,7 +152,7 @@ test('room profiles: an unchanged save makes no new layout; a narrower space doe
 test('room profiles: a second room can be added and switched to without measuring', async ({ page }) => {
   await ready(page);
   await openParent(page, /^Room profiles/);
-  await button(page, 'New room profile').click();
+  await button(page, 'New room (no tape: pick a size)').click();
   await page.getByLabel('Profile name').fill('Garage');
   await page.getByLabel(/^Extended/).check();
   await button(page, 'Save and close').click();

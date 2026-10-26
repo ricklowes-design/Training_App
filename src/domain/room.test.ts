@@ -98,10 +98,17 @@ describe('layouts follow the room inputs', () => {
     expect(d4.slalomCones).toBe(4);
     expect(d4.slalomSpacingM).toBeLessThanOrEqual(g.slalom.maxSpacingM);
     expect(layoutFit('L1', d4, g, 4).ok).toBe(true);
-    expect(layoutFit('L2', d4, g, 4)).toEqual({ ok: false, reason: 'needs 5 cones (you have 4)' });
+    // Too few cones for four gate cones: the feint lane becomes the single-cone version, with its start cone.
+    expect(d4.singleCone).toEqual(['L2']);
+    expect(layoutCones('L2', d4, 6.1).map((c) => c.name)).toEqual(['Start cone', 'Feint cone', 'Exit cone']);
+    expect(layoutFit('L2', d4, g, 4).ok).toBe(true);
     expect(layoutFit('L3', d4, g, 4).ok).toBe(true);
     const d3 = scaledLayout(room({ cones: 3 }), g);
-    expect(layoutFit('L3', d3, g, 3).reason).toBe('needs 4 cones (you have 3)');
+    // Three cones: the receive box becomes two cones in a line.
+    expect(d3.singleCone).toEqual(['L2', 'L3']);
+    expect(layoutCones('L3', d3, 6.1).map((c) => c.name)).toEqual(['Receive cone, far', 'Receive cone, near']);
+    expect(layoutFit('L3', d3, g, 3).ok).toBe(true);
+    expect(layoutFit('L4', d3, g, 3).reason).toBe('needs 4 cones (you have 3)');
     expect(layoutFit('L1', d3, g, 3).ok).toBe(true);
   });
   it('in a narrow room the feint gates narrow to keep clear of the side walls', () => {
@@ -122,10 +129,24 @@ describe('layouts follow the room inputs', () => {
     for (const c of layoutCones('L2', d, 4.27)) expect(Math.abs(c.floor[0])).toBeLessThanOrEqual(1.88 / 2 - 0.15 + 1e-9);
     expect(layoutSummary(d).L2).toMatch(/narrow-room version/);
   });
-  it('below the narrow-room minimum, the layouts are refused with the width they need', () => {
+  it('too narrow for gates or a box: one exit cone, or two cones in a line, to go left or right of', () => {
     const d = scaledLayout(room({ roomWidthM: 1.5 }), g);
-    expect(layoutFit('L2', d, g)).toEqual({ ok: false, reason: 'the feint gates need about 1.6 m of clear width' });
-    expect(layoutFit('L3', d, g)).toEqual({ ok: false, reason: 'the receive box needs about 1.8 m of clear width' });
+    expect(d.singleCone).toEqual(['L2', 'L3']);
+    expect(d.narrow).toBeUndefined();
+    expect(layoutCones('L2', d, 6.1).map((c) => [c.name, c.floor[0]])).toEqual([
+      ['Start cone', 0],
+      ['Feint cone', 0],
+      ['Exit cone', 0],
+    ]);
+    expect(layoutFit('L2', d, g).ok).toBe(true);
+    expect(layoutFit('L3', d, g).ok).toBe(true);
+    expect(layoutSummary(d).L2).toMatch(/one exit cone at 4\.2 m on the same line: exit past it on the left or the right \(single-cone version/);
+    expect(layoutSummary(d).L3).toMatch(/^two cones 0\.9 m apart in a line/);
+  });
+  it('below the single-cone minimum, the layouts are refused with the width they need', () => {
+    const d = scaledLayout(room({ roomWidthM: 1.0 }), g);
+    expect(layoutFit('L2', d, g)).toEqual({ ok: false, reason: 'the feint lane needs about 1.1 m of clear width' });
+    expect(layoutFit('L3', d, g)).toEqual({ ok: false, reason: 'the receiving drills need about 1.2 m of clear width' });
   });
   it('the standard room keeps the standard layouts', () => {
     const d = scaledLayout(room({}), g);

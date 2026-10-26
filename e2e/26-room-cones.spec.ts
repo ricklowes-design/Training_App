@@ -49,3 +49,41 @@ test('home asks for the ball check once; "Not now" puts it away', async ({ page 
   await openParent(page, /^Balls/);
   await expect(page.getByTestId('ball-check')).toContainText('Which ball works best?');
 });
+
+test('a second, very narrow room: drills become single-cone versions, and home switches between rooms', async ({ page }) => {
+  test.setTimeout(180_000);
+  await boot(page, { clock: false });
+  await setup(page);
+  await openParent(page, /^Room profiles/);
+  await button(page, 'New room (guided measurement)').click();
+  await page.getByLabel('Room name').fill('Hallway');
+  await page.getByLabel('Room length metres').fill('5');
+  await page.getByLabel('Room width metres').fill('1.3');
+  await button(page, 'Next: take a photo of the space').click();
+  await button(page, 'Skip the photo').click();
+  await button(page, 'Next: your training space').click();
+  // Nothing is refused at 1.3 m: the feint lane and the receiving drills change shape instead.
+  await expect(page.getByTestId('training-space')).toContainText('Training space: 1.3 m wide × 5 m long');
+  await expect(page.getByTestId('training-space')).not.toContainText('Feint lane (');
+  await button(page, 'Save and use this room').click();
+  const hall = page.locator('li', { hasText: 'Hallway' });
+  await expect(hall).toContainText('in use');
+  await hall.getByRole('button', { name: 'Edit' }).click();
+  await page.getByText(/^Drill layouts in this space/).click();
+  await expect(page.getByText(/one exit cone at .* exit past it on the left or the right \(single-cone version, no gates\)/)).toBeVisible();
+  await expect(page.getByText(/^two cones 0\.9 m apart in a line mid-room/)).toBeVisible();
+  await button(page, 'Cancel').click();
+  // The animated feint drill follows the room: past the exit cone, not through a gate.
+  await openParent(page, /^Demonstrations/);
+  const card = page.getByTestId('demo-F4');
+  await card.locator('summary').click();
+  await expect(card.getByTestId('drill-animation-F4').locator('.note-box')).toContainText(/past the exit cone|Into the stop zone|Body feint|Run at the feint cone|GO/, { timeout: 10_000 });
+  // Home: choose the room before training; each keeps its own layout version.
+  await page.goto('/');
+  const choice = page.getByTestId('room-choice');
+  await expect(choice.getByLabel('Training room')).toHaveValue(/room-/);
+  await choice.getByLabel('Training room').selectOption({ label: 'Main room' });
+  await expect(choice).toContainText('layout v1');
+  await choice.getByLabel('Training room').selectOption({ label: 'Hallway' });
+  await expect(choice).toContainText('layout v2');
+});

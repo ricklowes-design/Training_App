@@ -74,6 +74,8 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
   const cy = d.feintConeM;
   const gy = d.feintGateAtM;
   const gx = gateInner(d) + d.feintGateWidthM / 2;
+  // Single-cone version: no gates, the exit is past the exit cone on that side.
+  const through = (side: string) => (d.singleCone?.includes('L2') ? `past the exit cone on the ${side}` : `through the ${side} gate`);
   const sz = Math.min(lengthM - 0.35, gy + d.feintStopZoneM / 2);
   const lane = (caption: string) => ({ p: [0, sy] as V, b: [0, sy + 0.35] as V, face: FRONT, lean: 0, cue: '', caption });
   const approach = (title: string, caption = 'Dribble at pace toward the feint cone', stopShort = 0.9) =>
@@ -90,7 +92,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
       return {
         layoutId: 'L2',
         scenes: ([[-1, 'left'], [1, 'right']] as const).map(([side, name]) =>
-          exit(approach(`Exit ${name}`).to(0.5, { lean: -side, caption: `Body feint: sell the ${side < 0 ? 'right' : 'left'}`, p: [-side * 0.08, cy - 0.7] }), side, `Push out through the ${name} gate`).done(),
+          exit(approach(`Exit ${name}`).to(0.5, { lean: -side, caption: `Body feint: sell the ${side < 0 ? 'right' : 'left'}`, p: [-side * 0.08, cy - 0.7] }), side, `Push out ${through(name)}`).done(),
         ),
       };
     case 'F4': {
@@ -146,7 +148,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
             approach(`If the screen shows ${arrow}`, 'Dribble toward the cone, eyes up', 1.2)
               .to(0.25, { cue: arrow, caption: 'Read the cue 1 m out' })
               .to(0.5, { caption: `Cut ${name}, late and sharp`, p: [side * 0.3, cy - 0.5], b: [side * 0.55, cy - 0.25] })
-              .to(0.9, { p: [side * gx, gy + 0.05], b: [side * gx, gy + 0.35], caption: `Through the ${name} gate` })
+              .to(0.9, { p: [side * gx, gy + 0.05], b: [side * gx, gy + 0.35], caption: `${through(name)[0].toUpperCase()}${through(name).slice(1)}` })
               .hold(0.9)
               .done(),
           ),
@@ -172,8 +174,10 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
   // Receive box (L3): she starts between the box and the screen, facing the back wall; her left is +x then.
   const mid = lengthM / 2;
   const s = d.receiveBoxSideM / 2;
+  // Across the room: the box's half-width, or (single-cone version) just beside the line of cones.
+  const sx = d.singleCone?.includes('L3') ? 0.12 : s;
   // The narrow-room version keeps exits short: one touch out of the box and stop.
-  const exitM = d.narrow?.includes('L3') ? 0.35 : 0.75;
+  const exitM = d.singleCone?.includes('L3') ? 0.3 : d.narrow?.includes('L3') ? 0.35 : 0.75;
   const p0: V = [0, mid + s + 0.6];
   const box = (title: string, caption: string) => scene(title, { p: p0, b: [0, mid + s + 0.3], face: BACK, lean: 0, cue: '', caption });
   const push = (sc: ReturnType<typeof scene>) => sc.to(1.0, { b: [0, mid + 0.15], p: [0, mid + s + 0.15], caption: 'Push the ball 2 m into the box and follow it' });
@@ -182,8 +186,8 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
   const out = (sc: ReturnType<typeof scene>, herSide: 'left' | 'right', caption: string) => {
     const x = herSide === 'left' ? 1 : -1;
     return sc
-      .to(0.5, { b: [x * (s + 0.15), mid], p: [x * 0.15, mid + 0.2], caption })
-      .to(0.7, { b: [x * (s + exitM), mid], p: [x * (s + exitM - 0.35), mid], caption: `Through the ${herSide} gate` })
+      .to(0.5, { b: [x * (sx + 0.15), mid], p: [x * 0.15, mid + 0.2], caption })
+      .to(0.7, { b: [x * (sx + exitM), mid], p: [x * (sx + exitM - 0.35), mid], caption: d.singleCone?.includes('L3') ? `Past the cones on the ${herSide}` : `Through the ${herSide} gate` })
       .hold(0.9);
   };
   switch (drillId) {
@@ -208,7 +212,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
             .to(0.5, { b: [0, mid - 0.4], face: FRONT, caption: 'Look over the shoulder during the pass' })
             .to(0.15, { cue: 'RIGHT FREE' })
             .to(0.35, { face: BACK, b: [0, mid + 0.05], caption: 'Picture before the ball arrives' })
-            .to(0.5, { b: [-(s + 0.2), mid], p: [-0.2, mid + 0.1], caption: 'First touch away from the blocked side' })
+            .to(0.5, { b: [-(sx + 0.2), mid], p: [-0.2, mid + 0.1], caption: 'First touch away from the blocked side' })
             .to(0.7, { b: partner, caption: 'Play it back with the second touch' })
             .hold(0.8)
             .done(),
@@ -222,7 +226,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
         target,
         scenes: [
           out(look(push(box('If the screen says RIGHT FREE', 'Start between the box and the screen, facing away from it')), 'RIGHT FREE'), 'right', 'Touch to the free side')
-            .to(0.6, { b: [-(s + exitM - 0.25), mid - 0.6], p: [-(s + exitM - 0.35), mid - 0.3], caption: 'Two dribble touches' })
+            .to(0.6, { b: [-(sx + exitM - 0.25), mid - 0.6], p: [-(sx + exitM - 0.35), mid - 0.3], caption: 'Two dribble touches' })
             .to(0.7, { b: target, caption: 'Short pass into the target with the exit foot' })
             .hold(0.8)
             .done(),

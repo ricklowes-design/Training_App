@@ -34,6 +34,8 @@ export interface DerivedLayout {
   masterySquareM: number;
   /** Layouts shrunk to fit a narrow room (e.g. ['L2', 'L3']). Absent = none. */
   narrow?: string[];
+  /** Layouts in their single-cone version (room too narrow, or too few cones, for gates or a box). */
+  singleCone?: string[];
 }
 
 export interface RoomLayout {

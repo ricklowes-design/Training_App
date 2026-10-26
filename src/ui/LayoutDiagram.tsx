@@ -64,6 +64,8 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
   const cones = roomOnly ? [] : layoutCones(layoutId, d, lengthM);
   const inside = (c: [number, number]) => Math.abs(c[0]) <= widthM / 2 && c[1] >= 0 && c[1] <= lengthM;
   const scanning = !roomOnly && layoutId === 'L3';
+  const singleL2 = !!d.singleCone?.includes('L2');
+  const singleL3 = !!d.singleCone?.includes('L3');
   const boxS = d.receiveBoxSideM / 2;
   const mid = lengthM / 2;
   const screenY = scanning ? Math.min(lengthM - 0.12, mid + boxS + screenBehindM) : lengthM - 0.12;
@@ -162,10 +164,10 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
       {layoutId === 'L2' ? text(X(0), Y(d.feintGateAtM + d.feintStopZoneM / 2) + fs * 0.35, 'stop zone', { size: fs * 0.8, fill: '#9fe6bd' }) : null}
 
       {/* Gates */}
-      {layoutId === 'L2'
+      {layoutId === 'L2' && !singleL2
         ? [-1, 1].map((s) => <line key={s} x1={X(s * gateInner(d))} y1={Y(d.feintGateAtM)} x2={X(s * (gateInner(d) + d.feintGateWidthM))} y2={Y(d.feintGateAtM)} stroke="#3ddc84" strokeWidth={0.05} {...dash} />)
         : null}
-      {scanning ? (
+      {scanning && !singleL3 ? (
         <>
           <rect x={X(-boxS)} y={Y(mid + boxS)} width={2 * boxS} height={2 * boxS} fill="none" stroke="#e8edf3" strokeWidth={0.025} opacity={0.6} />
           {[-1, 1].map((s) => (
@@ -198,10 +200,12 @@ export function LayoutDiagram({ layoutId, d, lengthM, widthM, floor = 'hard', un
       {layoutId === 'L2' && !numbered && !roomOnly ? (
         <>
           {text(X(0.2), Y(d.feintConeM) + fs * 0.35, `feint cone\n${L(d.feintConeM)} from back`, { anchor: 'start', size: fs * 0.8 })}
-          {text(X(0), Y(d.feintGateAtM) + fs * 1.3, `gates ${L(d.feintGateWidthM)} wide at ${L(d.feintGateAtM)}`, { size: fs * 0.8 })}
+          {singleL2
+            ? text(X(0.2), Y(d.feintGateAtM) + fs * 0.35, `exit cone at ${L(d.feintGateAtM)}:\npass it left or right`, { anchor: 'start', size: fs * 0.8 })
+            : text(X(0), Y(d.feintGateAtM) + fs * 1.3, `gates ${L(d.feintGateWidthM)} wide at ${L(d.feintGateAtM)}`, { size: fs * 0.8 })}
         </>
       ) : null}
-      {scanning && !numbered ? text(X(0), Y(mid - boxS) + fs * 1.2, `${L(d.receiveBoxSideM)} box, ${L(d.receiveGateWidthM)} gates`, { size: fs * 0.8 }) : null}
+      {scanning && !numbered ? text(singleL3 ? X(0.2) : X(0), Y(mid - boxS) + fs * 1.2, singleL3 ? 'receive between the cones,\nexit left or right' : `${L(d.receiveBoxSideM)} box, ${L(d.receiveGateWidthM)} gates`, { anchor: singleL3 ? 'start' : 'middle', size: fs * 0.8 }) : null}
       {layoutId === 'L4' && !numbered && !roomOnly ? text(X(sqS + 0.15), Y(lengthM - 1 - sqS) + fs * 0.35, `${L(d.masterySquareM)} square`, { anchor: 'start', size: fs * 0.8 }) : null}
 
       {/* Chromebook on its stand */}

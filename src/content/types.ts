@@ -207,6 +207,8 @@ export interface LayoutGeometry {
     stopZoneM: number;
     /** Narrow-room version: gates closer to the lane and to the side walls, never narrower than minGateM. */
     narrow?: { innerM: number; wallGapM: number; minGateM: number };
+    /** Single-cone version, for rooms too narrow (or too few cones) for gates: one exit cone to go left or right of. */
+    single?: { minWidthM: number };
   };
   receiveBox: {
     maxSideM: number;
@@ -215,6 +217,8 @@ export interface LayoutGeometry {
     cueScreenBehindM: number;
     /** Narrow-room version: shorter exits either side of a box no smaller than minSideM. */
     narrow?: { sideClearanceM: number; minSideM: number };
+    /** Single-cone version: two cones in a line instead of a box, exits left or right of them. */
+    single?: { minWidthM: number; coneGapM: number };
   };
   masterySquare: { sideM: number };
 }

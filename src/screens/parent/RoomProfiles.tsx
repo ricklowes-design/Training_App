@@ -486,14 +486,18 @@ function GuidedMeasure({ initial, onDone }: { initial: RoomProfile; onDone: () =
   return (
     <div className="stack">
       <div className="card stack">
+        <label className="field" style={{ maxWidth: 360 }}>
+          <span>Room name</span>
+          <input type="text" value={prof.name} onChange={(e) => setProf({ ...prof, name: e.target.value })} />
+        </label>
         <SpaceWizard profile={prof} onChange={setProf} step={step} setStep={setStep} />
       </div>
       <div className="row spread">
         <button className="btn" onClick={onDone}>
           Cancel
         </button>
-        <button className="btn primary" disabled={!prof.space} onClick={async () => (await saveRoomProfile(prof, programme, settings), onDone())}>
-          Save
+        <button className="btn primary" disabled={!prof.space || !prof.name.trim()} onClick={async () => (await saveRoomProfile(prof, programme, settings), onDone())}>
+          Save and use this room
         </button>
       </div>
     </div>
@@ -541,8 +545,11 @@ export function RoomProfilesSection() {
             ))}
         </ul>
         <div className="row">
+          <button className="btn" onClick={() => setGuided({ ...newProfile(`room-${Date.now().toString(36)}`, `Room ${roomProfiles.length + 1}`, new Date().toISOString()), spaceSource: 'approxDims', measured: true })}>
+            New room (guided measurement)
+          </button>
           <button className="btn" onClick={() => setEditing(newProfile(`room-${Date.now().toString(36)}`, `Room ${roomProfiles.length + 1}`, new Date().toISOString()))}>
-            New room profile
+            New room (no tape: pick a size)
           </button>
         </div>
       </div>

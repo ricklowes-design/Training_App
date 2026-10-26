@@ -4,6 +4,7 @@ import { unlockAudio } from '../audio/audio';
 import { useData } from '../app/data';
 import { useNav } from '../app/nav';
 import { db } from '../db/db';
+import { useRoomProfile } from '../app/room';
 import { areaName, buildPlan, digitDiagnosticPlan, findSession, noBallPlan, type RunPlan } from '../domain/plans';
 import { lastCredibleImprovement, todayGoals } from '../domain/focus';
 import { tryFill } from '../domain/templates';
@@ -167,6 +168,7 @@ export function Home() {
       </div>
 
       <div style={{ marginTop: 16 }} className="stack">
+        <RoomChoice />
         {!settings.ballCheck ? (
           <div className="card tight row spread" data-testid="ball-check-prompt">
             <span>
@@ -273,3 +275,24 @@ export function Home() {
     </div>
   );
 }
+
+/** Training in another room: each room keeps its own measurements, so its drills are set out to fit it. */
+function RoomChoice() {
+  const { programme, settings, roomProfiles, roomProfile, layout } = useData();
+  const rooms = roomProfiles.filter((r) => !r.retiredAt);
+  if (rooms.length < 2) return null;
+  return (
+    <label className="row muted" data-testid="room-choice">
+      <span>Training in</span>
+      <select value={roomProfile?.id ?? ''} aria-label="Training room" onChange={(e) => useRoomProfile(e.target.value, programme, settings)}>
+        {rooms.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.name}
+          </option>
+        ))}
+      </select>
+      <span>· drills are set out to fit this room{layout ? ` (layout v${layout.version})` : ''}</span>
+    </label>
+  );
+}
+

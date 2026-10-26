@@ -10,6 +10,8 @@ const rooms = [
   { roomLengthM: 7.5, roomWidthM: 3.6 },
   // 14 ft × 6 ft 2 in: the narrow-room versions of L2 and L3.
   { roomLengthM: 4.27, roomWidthM: 1.88 },
+  // Too narrow for gates or a box: the single-cone versions.
+  { roomLengthM: 4.27, roomWidthM: 1.3 },
 ];
 
 describe('drill animations', () => {
