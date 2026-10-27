@@ -115,3 +115,18 @@ test('ball detector model speed test (needs network for the model)', async ({ pa
   const [s] = await table<{ capabilities: { ballDetectorFps: number } }>(page, 'settings');
   expect(s.capabilities.ballDetectorFps).toBeGreaterThan(0);
 });
+
+test('ball detector speed test from a clip recorded on the spot: open the camera, record, stop, result', async ({ page }) => {
+  test.skip(!process.env.E2E_NETWORK, 'set E2E_NETWORK=1 to download the detector model');
+  test.setTimeout(300_000);
+  await boot(page, { clock: false });
+  await setup(page);
+  await openParent(page, /^Balls/);
+  await page.getByText('Advanced (optional): detector model speed test').click();
+  await button(page, 'Open the camera').click();
+  await expect(button(page, '● Record')).toBeVisible({ timeout: 15_000 });
+  await button(page, '● Record').click();
+  await page.waitForTimeout(3000);
+  await button(page, /■ Stop/).click();
+  await expect(page.locator('.note-box')).toContainText(/fps on the (GPU|CPU) delegate/, { timeout: 200_000 });
+});

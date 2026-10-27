@@ -177,6 +177,103 @@ export function Register({ onDone, name0 }: { onDone: () => void; name0: string 
 }
 
 /** Speed of the experimental ball detector model on this Chromebook (part 17 task 6.1), from a recorded clip. */
+/** A short test clip from the webcam: allow the camera, Record, roll the ball through the picture, Stop. */
+function TestRecorder({ onClip, disabled }: { onClip: (b: Blob) => void; disabled: boolean }) {
+  const { settings } = useData();
+  const video = useRef<HTMLVideoElement>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const rec = useRef<MediaRecorder | null>(null);
+  const [phase, setPhase] = useState<'idle' | 'opening' | 'ready' | 'recording'>('idle');
+  const [err, setErr] = useState('');
+  const [secs, setSecs] = useState(0);
+  const MAX_S = 10;
+
+  const close = () => {
+    stream.current?.getTracks().forEach((t) => t.stop());
+    stream.current = null;
+  };
+  useEffect(() => close, []);
+
+  async function open() {
+    setErr('');
+    setPhase('opening');
+    try {
+      const cam = preferredCamera(await listCameras(), settings.camera.deviceId);
+      stream.current = await openStream(cam?.deviceId);
+      if (video.current) {
+        video.current.srcObject = stream.current;
+        await video.current.play();
+      }
+      setPhase('ready');
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+      setPhase('idle');
+    }
+  }
+
+  function start() {
+    if (!stream.current) return;
+    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m));
+    const chunks: Blob[] = [];
+    const r = new MediaRecorder(stream.current, mime ? { mimeType: mime } : undefined);
+    r.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    r.onstop = () => {
+      close();
+      setPhase('idle');
+      onClip(new Blob(chunks, { type: r.mimeType || 'video/webm' }));
+    };
+    rec.current = r;
+    r.start(250);
+    setSecs(0);
+    setPhase('recording');
+  }
+  const stop = () => rec.current?.state === 'recording' && rec.current.stop();
+
+  // Stops by itself after MAX_S seconds.
+  useEffect(() => {
+    if (phase !== 'recording') return;
+    const t = setInterval(() => setSecs((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
+  useEffect(() => {
+    if (phase === 'recording' && secs >= MAX_S) stop();
+  }, [secs, phase]);
+
+  return (
+    <div className="stack">
+      <ol className="measure-steps">
+        <li>Press "Open the camera" (Chrome may ask to allow it).</li>
+        <li>Put the ball on the floor in the picture, then press Record.</li>
+        <li>Roll the ball slowly across the picture, then press Stop (it stops by itself after {MAX_S} seconds). The test then runs on its own.</li>
+      </ol>
+      <div style={{ maxWidth: 480, display: phase === 'idle' ? 'none' : undefined }}>
+        <video ref={video} muted playsInline style={{ width: '100%', borderRadius: 12, background: '#000', display: 'block' }} data-testid="detector-video" />
+      </div>
+      {err ? <div className="error-box">Camera could not start: {err}</div> : null}
+      <div className="row">
+        {phase === 'idle' || phase === 'opening' ? (
+          <button className="btn primary" disabled={disabled || phase === 'opening'} onClick={open}>
+            Open the camera
+          </button>
+        ) : phase === 'ready' ? (
+          <>
+            <button className="btn go" onClick={start}>
+              ● Record
+            </button>
+            <button className="btn" onClick={() => (close(), setPhase('idle'))}>
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button className="btn danger" onClick={stop}>
+            ■ Stop ({MAX_S - secs} s)
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DetectorSpeedTest() {
   const { settings } = useData();
   const clips = useLiveQuery(() => db.clips.orderBy('date').reverse().limit(10).toArray(), []);
@@ -185,8 +282,8 @@ function DetectorSpeedTest() {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const cap = settings.capabilities;
-  async function run() {
-    const source: Blob | undefined = file ?? clips?.find((c) => c.id === clipId)?.blob;
+  async function run(recorded?: Blob) {
+    const source: Blob | undefined = recorded ?? file ?? clips?.find((c) => c.id === clipId)?.blob;
     if (!source) return;
     setBusy(true);
     try {
@@ -216,8 +313,10 @@ function DetectorSpeedTest() {
     <div className="card stack">
       <h3>Detector model speed test (experimental)</h3>
       <p className="muted">
-        Measures how fast the optional detector model (EfficientDet-Lite0, Apache-2.0) runs on this Chromebook. Use a clip with the ball in view. Needs Wi-Fi the first time.
+        Measures how fast the optional detector model (EfficientDet-Lite0, Apache-2.0) runs on this Chromebook. Needs Wi-Fi the first time.
       </p>
+      <TestRecorder disabled={busy} onClip={(b) => void run(b)} />
+      <p className="muted">Or use a recording you already have:</p>
       <div className="row">
         <label className="btn">
           Choose a video file
@@ -231,7 +330,7 @@ function DetectorSpeedTest() {
             </option>
           ))}
         </select>
-        <button className="btn primary" disabled={busy || (!file && !clipId)} onClick={run}>
+        <button className="btn" disabled={busy || (!file && !clipId)} onClick={() => void run()}>
           Run the detector test
         </button>
       </div>
