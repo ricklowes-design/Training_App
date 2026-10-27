@@ -9,11 +9,14 @@ import type { Foot, RoomProfile } from '../db/types';
 import { newProfile } from '../domain/room';
 import { saveRoomProfile } from '../app/room';
 import { RoomBasicsForm } from './parent/RoomProfiles';
+import { BallCheck } from './parent/BallCheck';
+import { Register } from './parent/Balls';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { previousStep, SpaceWizard, type WizardStep } from './space/SpaceWizard';
 import { Seg, todayISO } from '../ui/widgets';
 
 // Demonstrations are not a set-up step: approved videos and animations come with the drills (Parent → Demonstrations to change them).
-const STEPS = ['Player', 'Your space', 'Equipment', 'Priorities', 'Backup and PIN'] as const;
+const STEPS = ['Player', 'Your space', 'Equipment', 'Your ball', 'Priorities', 'Backup and PIN'] as const;
 
 export function Setup() {
   const { programme, settings, player, layout, roomProfile } = useData();
@@ -30,6 +33,9 @@ export function Setup() {
   const [backup, setBackup] = useState(settings.backupReminder);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  // Your ball: the ball check, then teaching the camera the chosen ball.
+  const [registering, setRegistering] = useState<string | null>(null);
+  const balls = useLiveQuery(() => db.ballProfiles.toArray(), []) ?? [];
   // The room: the guided measurement (measure → photo → measure from the photo → training space), or a size without a tape.
   // Re-running the set-up with a guided measurement already made opens on the training space.
   const [spaceStep, setSpaceStep] = useState<WizardStep>(roomProfile?.space ? 'space' : 'measure');
@@ -40,7 +46,7 @@ export function Setup() {
   const canNext = () => {
     if (step === 0) return name.trim().length > 0;
     if (step === 1) return room.spaceSource !== 'approxDims' || ((room.approxUsableM?.length ?? 0) >= 2 && (room.approxUsableM?.width ?? 0) >= 1);
-    if (step === 4) return settings.pinHash ? pin === '' || validPin(pin) : validPin(pin);
+    if (step === 5) return settings.pinHash ? pin === '' || validPin(pin) : validPin(pin);
     return true;
   };
 
@@ -152,6 +158,26 @@ export function Setup() {
         )}
         {step === 3 && (
           <>
+            {registering !== null ? (
+              <Register name0={registering} onDone={() => setRegistering(null)} />
+            ) : (
+              <>
+                <p className="muted">
+                  Optional, about 5 minutes with the webcam on the training floor: compare the balls you have, then teach the camera the best one so it can follow the ball in the drills. Press Next to
+                  skip; Home reminds you before the first drills, and it is always in Parent → Balls.
+                </p>
+                {balls.length ? (
+                  <p className="pill go" data-testid="ball-registered">
+                    Ball for tracking: {balls.find((b) => b.active)?.name ?? balls[balls.length - 1].name}
+                  </p>
+                ) : null}
+                <BallCheck onRegister={setRegistering} />
+              </>
+            )}
+          </>
+        )}
+        {step === 4 && (
+          <>
             <p className="muted">Tick the priority skills. They show on the Skills tab and break ties in the next-session suggestion.</p>
             {allTags.map((t) => (
               <label className="check" key={t}>
@@ -165,7 +191,7 @@ export function Setup() {
             </label>
           </>
         )}
-        {step === 4 && (
+        {step === 5 && (
           <>
             <p>
               Everything lives only in this browser on this Chromebook. If Chrome's site data is cleared, it is gone unless there is a backup. A backup is one file you save to Downloads or Google

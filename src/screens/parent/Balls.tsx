@@ -22,7 +22,7 @@ const KIND_TEXT: Record<Capture['kind'], string> = {
 };
 const CW = 320;
 
-function Register({ onDone, name0 }: { onDone: () => void; name0: string }) {
+export function Register({ onDone, name0 }: { onDone: () => void; name0: string }) {
   const { settings } = useData();
   const video = useRef<HTMLVideoElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);

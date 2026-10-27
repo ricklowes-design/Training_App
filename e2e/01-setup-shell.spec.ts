@@ -68,6 +68,10 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
 
   await page.getByLabel('Spare phone (for a cue screen)').check();
   await button(page, 'Next').click();
+  // Your ball: the ball check with the webcam (optional; skipped here).
+  await expect(page.getByRole('heading', { name: 'Set-up · Your ball' })).toBeVisible();
+  await expect(page.getByTestId('ball-check')).toContainText('Which ball works best?');
+  await button(page, 'Next').click();
   await page.getByLabel('Coach notes so far (optional; the first entry in the coach log)').fill('Work on the left foot');
   await button(page, 'Next').click();
 
@@ -124,7 +128,7 @@ test('parent can re-run the first-run set-up and change the player', async ({ pa
   await openParent(page);
   await button(page, 'Re-run first-run set-up').click();
   await page.getByLabel("Player's first name").fill('Alex');
-  for (let i = 0; i < 4; i++) await button(page, 'Next').click();
+  for (let i = 0; i < 5; i++) await button(page, 'Next').click();
   await expect(page.getByLabel(/New parent PIN/)).toBeVisible();
   await button(page, 'Finish set-up').click(); // keeps the PIN
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Alex · Week of/);

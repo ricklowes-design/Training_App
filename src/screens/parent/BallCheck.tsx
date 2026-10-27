@@ -13,7 +13,7 @@ import { db } from '../../db/db';
 const CW = 320;
 const VERDICT: Record<BallResult['verdict'], string> = { standsOut: 'go', usable: 'info', hard: 'warn', notFound: 'warn' };
 
-export function BallCheck({ onRegister, onClose }: { onRegister: (name: string) => void; onClose: () => void }) {
+export function BallCheck({ onRegister, onClose }: { onRegister: (name: string) => void; onClose?: () => void }) {
   const { settings } = useData();
   const video = useRef<HTMLVideoElement>(null);
   const [err, setErr] = useState('');
@@ -101,7 +101,7 @@ export function BallCheck({ onRegister, onClose }: { onRegister: (name: string) 
         <li>Point the webcam at the training floor, as for a session, in the usual light.</li>
         <li>With no ball in view, press "Sample the empty floor".</li>
         <li>Put a ball on the floor in view, give it a name (e.g. "Orange size 4"), and tap the middle of it two or three times in different spots.</li>
-        <li>"Next ball" for each ball you have, then "Compare".</li>
+        <li>"Another ball" for each ball you have, then "Compare".</li>
       </ol>
       <div className="grid2">
         <video ref={video} muted playsInline onClick={onTap} style={{ width: '100%', borderRadius: 12, background: '#000', cursor: 'crosshair' }} data-testid="ball-check-video" />
@@ -118,14 +118,16 @@ export function BallCheck({ onRegister, onClose }: { onRegister: (name: string) 
           </p>
           <div className="row">
             <button className="btn" disabled={!cur.captures.length && !cur.misses} onClick={() => (setTries([...tries, { name: `Ball ${tries.length + 1}`, captures: [], misses: 0 }]), setMsg('Swap in the next ball and tap it.'))}>
-              Next ball
+              Another ball
             </button>
             <button className="btn primary" disabled={!bg.length || !tries.some((t) => t.captures.length || t.misses)} onClick={compare}>
               Compare
             </button>
-            <button className="btn" onClick={onClose}>
-              Close
-            </button>
+            {onClose ? (
+              <button className="btn" onClick={onClose}>
+                Close
+              </button>
+            ) : null}
           </div>
           {msg ? <div className="note-box">{msg}</div> : null}
         </div>
