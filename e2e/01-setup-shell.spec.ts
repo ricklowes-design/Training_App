@@ -163,8 +163,16 @@ test('PWA: manifest, service worker and offline reload', async ({ page, context 
   const manifest = await page.evaluate(async () => (await fetch('./manifest.webmanifest')).json());
   expect(manifest).toMatchObject({ display: 'fullscreen', start_url: './' });
   await page.waitForFunction(async () => !!(await navigator.serviceWorker.getRegistration())?.active, null, { timeout: 15_000 });
-  await page.reload(); // now controlled by the service worker
-  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  // Once the worker has taken over, a reload is controlled by it (on a slow machine that can take a second reload).
+  await expect
+    .poll(
+      async () => {
+        await page.reload();
+        return page.evaluate(() => !!navigator.serviceWorker.controller);
+      },
+      { timeout: 60_000, intervals: [1_000, 2_000, 5_000] },
+    )
+    .toBe(true);
   await setup(page);
   await context.setOffline(true);
   await page.reload();

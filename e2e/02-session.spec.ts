@@ -102,7 +102,14 @@ test('demo view starts by itself; Start block, DONE after 80%, Repeat and notes 
   // Demo view content.
   await expect(page.getByRole('heading', { name: 'SLALOM CLOSE CONTROL' })).toBeVisible();
   await expect(page.getByText(/Set-up:.*L1 Slalom — 5 cones 1 m apart/)).toBeVisible();
-  await expect(page.getByText('Own demonstration not recorded yet.').or(page.getByText(/No demonstration|could not be reached/))).toBeVisible();
+  // The slalom's approved YouTube demonstration plays when YouTube can be reached (CI); otherwise the fallback shows.
+  await expect(
+    page
+      .getByText('Own demonstration not recorded yet.')
+      .or(page.getByText(/No demonstration|could not be reached/))
+      .or(page.locator('.video iframe[src*="youtube"]'))
+      .first(),
+  ).toBeVisible();
   await expect(page.getByText(/Starts by itself in \d+ s/)).toBeVisible();
   await button(page, '▶ Start block').click();
   await expect(page.locator('.practice .drill')).toHaveText('Slalom close control');
