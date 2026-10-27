@@ -131,11 +131,31 @@ function MeasureStep({ profile, space, setSpace, onChange, units, onNext, onNoTa
   );
 }
 
+/** Mean brightness (0–255) of the live picture, from a small copy. */
+function brightness(v: HTMLVideoElement): number {
+  if (v.readyState < 2 || !v.videoWidth) return 0;
+  const c = document.createElement('canvas');
+  c.width = 32;
+  c.height = 18;
+  const ctx = c.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(v, 0, 0, 32, 18);
+  const d = ctx.getImageData(0, 0, 32, 18).data;
+  let sum = 0;
+  for (let k = 0; k < d.length; k += 4) sum += 0.299 * d[k] + 0.587 * d[k + 1] + 0.114 * d[k + 2];
+  return sum / (d.length / 4);
+}
+
+/** Below this the picture is black or nearly: the webcam is still starting, covered, or the room is dark. */
+const DARK = 28;
+
 function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile; onChange: (p: RoomProfile) => void; onNext: () => void; onBack: () => void }) {
   const { settings } = useData();
   const video = useRef<HTMLVideoElement>(null);
   const [err, setErr] = useState('');
-  const [ready, setReady] = useState(false);
+  const [started, setStarted] = useState(0); // when the stream began playing
+  const [level, setLevel] = useState(0);
+  const [now, setNow] = useState(Date.now());
+  const [taken, setTaken] = useState<{ fields: Awaited<ReturnType<typeof roomPhotoFields>>; url: string } | null>(null);
   useEffect(() => {
     let s: MediaStream | null = null;
     let stop = false;
@@ -147,7 +167,7 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
         if (video.current) {
           video.current.srcObject = s;
           await video.current.play();
-          setReady(true);
+          setStarted(Date.now());
         }
       } catch (e) {
         setErr(e instanceof Error ? e.message : String(e));
@@ -159,12 +179,30 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
     };
   }, [settings.camera.deviceId]);
 
+  // Webcams show black frames for a moment after starting: the photo waits for a real picture.
+  useEffect(() => {
+    if (!started) return;
+    const t = setInterval(() => {
+      if (video.current) setLevel(brightness(video.current));
+      setNow(Date.now());
+    }, 400);
+    return () => clearInterval(t);
+  }, [started]);
+  useEffect(() => () => (taken ? URL.revokeObjectURL(taken.url) : undefined), [taken]);
+  const lit = level >= DARK;
+  const waitedLong = started > 0 && !lit && now - started > 6000;
+
   async function take() {
-    if (!video.current) return;
+    if (!video.current || brightness(video.current) < DARK) return;
     const fields = await roomPhotoFields(video.current, settings.camera.deviceId);
+    setTaken({ fields, url: URL.createObjectURL(fields.backgroundFrame!) });
+  }
+
+  function use() {
+    if (!taken) return;
     // A new photo: things found in the old one lose their place on it, and the old map goes.
     const space = profile.space ? { ...profile.space, backCorners: undefined, items: profile.space.items.map((x) => ({ ...x, box: undefined })) } : undefined;
-    onChange({ ...profile, ...fields, mountConfirmed: true, floorMap: undefined, ...(space ? { space } : {}) });
+    onChange({ ...profile, ...taken.fields, mountConfirmed: true, floorMap: undefined, ...(space ? { space } : {}) });
     onNext();
   }
 
@@ -183,7 +221,7 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
       {err ? (
         <div className="error-box">Camera could not start: {err}. You can skip the photo and list what to measure from by hand.</div>
       ) : (
-        <div style={{ position: 'relative', maxWidth: 640 }}>
+        <div style={{ position: 'relative', maxWidth: 640, display: taken ? 'none' : undefined }}>
           <video ref={video} muted playsInline style={{ width: '100%', borderRadius: 12, background: '#000', display: 'block' }} />
           <svg viewBox="0 0 1 1" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
             <line x1={0.02} x2={0.98} y1={0.33} y2={0.33} stroke="#ffd23f" strokeWidth={0.004} strokeDasharray="0.02 0.015" />
@@ -191,16 +229,41 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
           <span style={{ position: 'absolute', left: 8, top: '26%', color: '#ffd23f', fontWeight: 700, fontSize: 14, textShadow: '0 0 3px #000' }}>bottom of the back wall about here</span>
         </div>
       )}
+      {taken ? (
+        <div className="stack" style={{ maxWidth: 640 }}>
+          <img src={taken.url} alt="The photo just taken" style={{ width: '100%', borderRadius: 12, display: 'block' }} data-testid="photo-taken" />
+          <p>Can you see the floor up to the back wall, and the furniture along the sides?</p>
+        </div>
+      ) : null}
+      {!err && !taken && waitedLong ? (
+        <div className="note-box" data-testid="photo-dark">
+          The camera picture is still dark. Check that the webcam isn't covered (some Chromebooks have a privacy slider or a camera switch on the side), that the lights are on, and that no other app or tab
+          (Google Meet, the Camera app) is using the webcam.
+        </div>
+      ) : null}
       <div className="row">
         <button className="btn" onClick={onBack}>
           Back
         </button>
-        <button className="btn primary" disabled={!ready} onClick={take}>
-          Take the photo
-        </button>
-        <button className="btn" onClick={onNext}>
-          {profile.backgroundFrame ? 'Keep the earlier photo' : 'Skip the photo'}
-        </button>
+        {taken ? (
+          <>
+            <button className="btn" onClick={() => setTaken(null)}>
+              Retake
+            </button>
+            <button className="btn primary" onClick={use}>
+              Use this photo
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn primary" disabled={!lit} onClick={take}>
+              {started && !lit ? 'Waiting for the camera picture…' : 'Take the photo'}
+            </button>
+            <button className="btn" onClick={onNext}>
+              {profile.backgroundFrame ? 'Keep the earlier photo' : 'Skip the photo'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

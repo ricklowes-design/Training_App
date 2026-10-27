@@ -22,6 +22,9 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await expect(button(page, 'Take the photo')).toBeEnabled({ timeout: 15_000 });
   await page.waitForTimeout(800);
   await button(page, 'Take the photo').click();
+  // The photo just taken is shown first: retake or use it.
+  await expect(page.getByTestId('photo-taken')).toBeVisible();
+  await button(page, 'Use this photo').click();
   // 3: "now measure these": furniture is looked for in the photo; anything else is tapped.
   await expect(page.getByRole('heading', { name: 'Now measure these for me' })).toBeVisible();
   await expect(page.getByTestId('detect-status')).not.toContainText('Looking', { timeout: 90_000 });
