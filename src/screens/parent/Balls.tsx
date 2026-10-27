@@ -307,7 +307,11 @@ export function BallsSection() {
           </button>
         </div>
       </div>
-      <DetectorSpeedTest />
+      <details className="card">
+        <summary>Advanced (optional): detector model speed test</summary>
+        <p className="muted">Not needed for ball tracking: the registered ball's colour is what the app follows. Only try this if tracking misses the ball often.</p>
+        <DetectorSpeedTest />
+      </details>
     </div>
   );
 }

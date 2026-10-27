@@ -108,6 +108,7 @@ test('ball detector model speed test (needs network for the model)', async ({ pa
     });
   });
   await openParent(page, /^Balls/);
+  await page.getByText('Advanced (optional): detector model speed test').click();
   await page.locator('select').selectOption('ballclip');
   await button(page, 'Run the detector test').click();
   await expect(page.locator('.note-box')).toContainText(/fps on the (GPU|CPU) delegate/, { timeout: 200_000 });
