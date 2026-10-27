@@ -9,7 +9,7 @@ import type { Foot, RoomProfile } from '../db/types';
 import { newProfile } from '../domain/room';
 import { saveRoomProfile } from '../app/room';
 import { RoomBasicsForm } from './parent/RoomProfiles';
-import { SpaceWizard, type WizardStep } from './space/SpaceWizard';
+import { previousStep, SpaceWizard, type WizardStep } from './space/SpaceWizard';
 import { Seg, todayISO } from '../ui/widgets';
 
 const STEPS = ['Player', 'Your space', 'Equipment', 'Priorities', 'Demonstrations', 'Backup and PIN'] as const;
@@ -230,7 +230,16 @@ export function Setup() {
         {error ? <div className="error-box">{error}</div> : null}
       </div>
       <div className="row spread" style={{ marginTop: 16 }}>
-        <button className="btn" disabled={step === 0} onClick={() => setStep(step - 1)}>
+        <button
+          className="btn"
+          disabled={step === 0}
+          onClick={() => {
+            // Inside "Your space", Back goes to the previous room step first.
+            const prev = step === 1 && !noTape ? previousStep(spaceStep) : null;
+            if (prev) setSpaceStep(prev);
+            else setStep(step - 1);
+          }}
+        >
           Back
         </button>
         {step === 1 && !noTape && spaceStep !== 'space' ? (

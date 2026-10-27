@@ -206,3 +206,4 @@ table.data th { color: var(--muted); font-weight: 600; }
 .cone-list li { margin-bottom: 6px; }
 .measure-steps { margin: 0; padding-left: 1.3em; line-height: 1.45; }
 .measure-steps li { margin-bottom: 4px; }
+.space-steps { flex-wrap: wrap; gap: 8px; }

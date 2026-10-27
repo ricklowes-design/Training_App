@@ -19,6 +19,12 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await button(page, 'Next: take a photo of the space').click();
   // 2: the Chromebook where it will stand, and a photo (Chromium's fake webcam).
   await expect(page.getByRole('heading', { name: 'Position the Chromebook and take a photo' })).toBeVisible();
+  // Going back: the set-up's own Back returns to the previous room step, and the step bar opens any step.
+  await page.getByRole('button', { name: 'Back', exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: "Let's start with measuring your space" })).toBeVisible();
+  await expect(page.getByLabel('Room length metres')).toHaveValue('4.3');
+  await button(page, '2 Photo').click();
+  await expect(page.getByRole('heading', { name: 'Position the Chromebook and take a photo' })).toBeVisible();
   await expect(button(page, 'Take the photo')).toBeEnabled({ timeout: 15_000 });
   await page.waitForTimeout(800);
   await button(page, 'Take the photo').click();

@@ -30,6 +30,9 @@ const TITLES: Record<WizardStep, string> = {
   items: 'Now measure these for me',
   space: 'Your training space',
 };
+const STEP_SHORT: Record<WizardStep, string> = { measure: 'Measure', photo: 'Photo', items: 'What to measure', space: 'Training space' };
+/** The room step before this one, for a Back button outside the steps (the set-up's own). */
+export const previousStep = (s: WizardStep): WizardStep | null => ORDER[ORDER.indexOf(s) - 1] ?? null;
 const PLACES: { value: ItemPlace; label: string }[] = [
   { value: 'left', label: 'Against the left wall' },
   { value: 'right', label: 'Against the right wall' },
@@ -73,6 +76,14 @@ export function SpaceWizard({ profile, onChange, step, setStep, onNoTape }: { pr
   const i = ORDER.indexOf(step);
   return (
     <div className="stack" data-testid={`space-step-${step}`}>
+      {/* Always at the top: any step can be reopened, so going back never needs scrolling. */}
+      <nav className="row space-steps" aria-label="Your space steps">
+        {ORDER.map((st, k) => (
+          <button key={st} className={`btn small${st === step ? ' primary' : ''}`} aria-current={st === step ? 'step' : undefined} onClick={() => setStep(st)}>
+            {k + 1} {STEP_SHORT[st]}
+          </button>
+        ))}
+      </nav>
       <div className="muted">
         Your space · step {i + 1} of {ORDER.length}
       </div>
