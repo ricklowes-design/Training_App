@@ -1,3 +1,4 @@
+import type { VoiceStyle } from '../content/types';
 import type { SoundSettings } from '../db/types';
 
 // Spoken cues (speechSynthesis) and tones (Web Audio). Everything that happens
@@ -6,8 +7,25 @@ import type { SoundSettings } from '../db/types';
 let ctx: AudioContext | null = null;
 let settings: SoundSettings = { tones: true, speech: true, endOfSessionLine: true, volume: 0.9, voiceRate: 0.95 };
 
-export function setSoundSettings(s: SoundSettings): void {
+let styles: Record<string, VoiceStyle> = {};
+
+export function setSoundSettings(s: SoundSettings, voiceStyles?: Record<string, VoiceStyle>): void {
   settings = s;
+  if (voiceStyles) styles = voiceStyles;
+}
+
+/** A line as the chosen style says it (the standard words when no rule matches). */
+export function styledLine(text: string, style: VoiceStyle | undefined): string {
+  for (const l of style?.lines ?? []) {
+    let re: RegExp;
+    try {
+      re = new RegExp(l.match);
+    } catch {
+      continue;
+    }
+    if (re.test(text)) return text.replace(re, l.say);
+  }
+  return text;
 }
 
 /** Call from a tap handler: browsers only allow audio after a user gesture. */
@@ -62,8 +80,10 @@ function pickVoice(): SpeechSynthesisVoice | undefined {
 export function say(text: string, opts: { interrupt?: boolean } = {}): void {
   if (!settings.speech || typeof window === 'undefined' || !window.speechSynthesis) return;
   if (opts.interrupt) window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = settings.voiceRate;
+  const style = settings.voiceStyle ? styles[settings.voiceStyle] : undefined;
+  const u = new SpeechSynthesisUtterance(styledLine(text, style));
+  u.rate = Math.min(2, settings.voiceRate * (style?.rate ?? 1));
+  u.pitch = style?.pitch ?? 1;
   u.volume = settings.volume;
   const v = pickVoice();
   if (v) u.voice = v;

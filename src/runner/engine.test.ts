@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadProgramme } from '../test/fixtures';
 import { evaluateCompletion } from '../domain/completion';
 import { findSession, standardPlan } from '../domain/plans';
-import { done, initRun, next, pause, repeat, resume, skip, startBlock, stop, tick, type Labels, type RunEvent, type RunState } from './engine';
+import { done, initRun, next, pause, repeat, restartWithInstructions, resume, skip, startBlock, stop, tick, type Labels, type RunEvent, type RunState } from './engine';
 
 const p = loadProgramme();
 const plan = standardPlan(p, findSession(p, 'feinting', 7)!);
@@ -50,6 +50,23 @@ describe('session runner', () => {
     expect(s.pauses).toEqual([{ startMs: 30_000, endMs: 6 * 60_000 + 30_000 }]);
     const out = run(s, 6 * 60_000 + 30_000, 3 * 60 * 60_000);
     expect(completion(out.s).status).toBe('partial');
+  });
+
+  it('↺ Instructions goes back to the block\'s demo view and the block starts again, nothing recorded', () => {
+    let s = initRun(plan, 0);
+    ({ s } = run(s, 0, 200_000)); // block 2 demo
+    s = startBlock(s, 200_000);
+    ({ s } = run(s, 200_000, 260_000)); // into block 2's run
+    expect(s.phase).toBe('active');
+    const results = s.results.length;
+    s = restartWithInstructions(s, 260_000);
+    expect(s.phase).toBe('demo');
+    expect(s.blockIdx).toBe(1);
+    expect(s.results).toHaveLength(results);
+    const out = run(s, 260_000, 3 * 60 * 60_000);
+    expect(completion(out.s).status).toBe('completed');
+    // Not from a rest or the warm-up.
+    expect(restartWithInstructions(initRun(plan, 0), 0).phase).toBe(initRun(plan, 0).phase);
   });
 
   it('a skipped core block gives partial', () => {

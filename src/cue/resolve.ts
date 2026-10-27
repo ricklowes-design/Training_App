@@ -2,6 +2,19 @@ import type { Programme } from '../content/types';
 import type { RunBlock } from '../domain/plans';
 import { parseDisplayS, type CueConfig } from './engine';
 
+/** The cue drill a block uses (its words or arrows), if any. */
+export function cueDrillFor(p: Programme, block: RunBlock): Programme['cueDrills'][number] | undefined {
+  let cueId: string | undefined;
+  if (block.kind === 'anchor') {
+    const an = p.anchors.find((a) => a.id === block.anchorId);
+    if (!an || an.id === 'A1' || an.id === 'A2') return undefined;
+    cueId = p.drills.find((d) => d.id === an.drillId)?.cueDrillId;
+  } else if (block.kind === 'benchmark') cueId = block.benchmarkId ? p.benchmarkCueDrills?.[block.benchmarkId] : undefined;
+  else if (block.kind === 'work') cueId = p.drills.find((d) => d.id === block.drillId)?.cueDrillId;
+  const drill = cueId ? p.cueDrills.find((c) => c.id === cueId) : undefined;
+  return drill?.values?.length ? drill : undefined;
+}
+
 /** The cue drill and settings for a block, or null when the block has no cues. */
 export function cueConfigFor(p: Programme, block: RunBlock, opts: { useTripwire: boolean; seed?: number }): CueConfig | null {
   let cueId: string | undefined;

@@ -16,7 +16,7 @@ export const blockLayout = (p: Programme, b: RunBlock | undefined): string | und
   b
     ? (p.drills.find((d) => d.id === b.drillId)?.layoutId ??
       (b.anchorId ? p.anchors.find((a) => a.id === b.anchorId)?.layoutId : undefined) ??
-      (b.benchmarkId ? p.benchmarks.find((x) => x.id === b.benchmarkId)?.layoutId : undefined))
+      (b.benchmarkId ? p.benchmarkLayouts?.[b.benchmarkId] : undefined))
     : undefined;
 
 /** True when this block needs a different cone layout from the last block that had one (or is the first). */

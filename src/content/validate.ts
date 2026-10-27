@@ -150,7 +150,7 @@ const programmeShape: Check = obj({
   ),
   areas: list(obj({ id: str, name: str, priorityTags: list(str), benchmarkId: str })),
   sessions: list(obj({ id: str, areaId: str, number: num, stageId: str, durationMinutes: posNum, blocks: list(block) })),
-  benchmarks: list(obj({ id: str, areaId: nullOr(str), name: str, metrics: list(str), cueLevels: list(str), protocol: str, layoutId: optional(str), rubric: optional(list(anyObj)) })),
+  benchmarks: list(obj({ id: str, areaId: nullOr(str), name: str, metrics: list(str), cueLevels: list(str), protocol: str, rubric: optional(list(anyObj)) })),
   advancement: record(record(str)),
   cueDrills: list(
     obj({
@@ -178,6 +178,7 @@ const programmeShape: Check = obj({
     }),
   ),
   feedbackTemplates: record(str),
+  voiceStyles: optional(record(obj({ name: str, note: optional(str), rate: posNum, pitch: posNum, lines: list(obj({ match: str, say: str })) }))),
   anchors: list(obj({ id: str, name: str, layoutId: str, drillId: str, conditions: anyObj, minutes: posNum, metrics: list(str) })),
   anchorCheck: obj({ everyDays: posNum, blocks: list(anyObj), recordType: oneOf('anchor'), unlocks: bool, countsTowardWeek: bool }),
   layoutGeometry: obj({

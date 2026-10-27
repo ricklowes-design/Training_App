@@ -15,6 +15,7 @@ import { fmtClock } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
 import { blockLayout, conesChanged } from './ConeSetup';
+import { cueRuleLine } from './CueRules';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
@@ -194,7 +195,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
 
   // Create the records as the run starts.
   useEffect(() => {
-    setSoundSettings(settings.sound);
+    setSoundSettings(settings.sound, p.voiceStyles);
     unlockAudio();
     createRun(plan, trial, { contentVersion: p.version, layoutVersion: layout?.version ?? 1, roomProfileId: data.roomProfile?.id, roomProfileVersion: data.roomProfile?.version }).then(setIds);
     return () => stopSpeech();
@@ -341,6 +342,12 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         PAUSE
       </button>
     );
+  // Back to the block's instructions (and its cone set-up); the block then starts again.
+  const instructionsBtn = E.isDrillBlock(block) ? (
+    <button className="btn" onClick={() => apply(E.restartWithInstructions)}>
+      ↺ Instructions
+    </button>
+  ) : null;
   // The warm-up can be skipped (one tap). A session without a finished warm-up is partial (plan/14.4).
   const skipWarmupBtn = (
     <button
@@ -504,7 +511,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         <div className="sub">{block.kind === 'warmup' ? 'Get ready' : startText(p, block)}</div>
         <div className="controls">
           {pauseBtn}
-          {block.kind === 'warmup' ? skipWarmupBtn : <span />}
+          {block.kind === 'warmup' ? skipWarmupBtn : instructionsBtn ?? <span />}
           {stopBtn}
         </div>
       </div>
@@ -630,6 +637,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
             {camera.recording ? <span style={{ color: '#ff3b3b' }}>● </span> : null}
             {blockName(block)} · {fmtClock(remaining)}
             {trial ? ' · trial' : ''}
+            {cueRuleLine(p, block) ? <span className="cue-rule-line"> · {cueRuleLine(p, block)}</span> : null}
           </span>
         }
         controls={
@@ -642,6 +650,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
             ) : (
               <span />
             )}
+            {instructionsBtn}
             {stopBtn}
           </>
         }
@@ -687,6 +696,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
             Runs by itself
           </span>
         )}
+        {instructionsBtn}
         {stopBtn}
       </div>
     </div>

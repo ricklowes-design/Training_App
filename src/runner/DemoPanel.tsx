@@ -13,6 +13,7 @@ import type { RunBlock } from '../domain/plans';
 import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
 import { blockLayout, ConeSetup } from './ConeSetup';
+import { CueRules } from './CueRules';
 
 export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
   if (!id) return '';
@@ -81,6 +82,7 @@ export function DemoPanel(props: {
           {block.cueLevel ? ` · level ${block.cueLevel}` : ''}
         </div>
         <h1 style={{ textTransform: 'uppercase' }}>{title}</h1>
+        <CueRules p={p} block={block} />
         {layoutId && conesChanged ? <ConeSetup layoutId={layoutId} changed /> : null}
         {layoutId && layout && !conesChanged ? (
           <details>

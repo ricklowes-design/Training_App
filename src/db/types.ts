@@ -60,6 +60,8 @@ export interface SoundSettings {
   volume: number; // 0..1
   voiceRate: number; // 0.5..1.5
   voiceURI?: string;
+  /** A spoken style from the content (e.g. 'touchline'); absent = the standard voice. */
+  voiceStyle?: string;
 }
 
 export interface Settings {

@@ -79,11 +79,17 @@ test('settings: sound, week, timings, cue engine, milestone cards and PIN', asyn
   await ready(page);
   await openParent(page, /^Settings/);
   await button(page, 'Test sound from the far end').click();
-  expect(await said()).toContain('Set two. Left exit. Go. Thirty seconds.');
+  expect(await said()).toContain('Half way.');
+  // The touchline coach: the same lines, said his way.
+  await page.getByLabel('Voice style').selectOption({ label: 'Touchline coach' });
+  await button(page, 'Test sound from the far end').click();
+  expect(await said()).toContain('Halfway! Keep it going!');
+  expect(await said()).toContain('Right! Slalom close control in 10. Get to your start, quick!');
   await page.getByLabel('Spoken cues').click();
   await expect(page.getByLabel('Spoken cues')).not.toBeChecked();
+  const n = (await said()).length;
   await button(page, 'Test sound from the far end').click();
-  expect((await said()).length).toBe(1); // speech off: nothing more said
+  expect((await said()).length).toBe(n); // speech off: nothing more said
   await page.getByLabel(/^Tones/).click();
   await page.locator('.stepper', { hasText: 'Weekly target' }).getByRole('button', { name: /up$/ }).click();
   await button(page, 'Sunday').click();

@@ -133,7 +133,7 @@ export function Summary({ runId }: { runId: string }) {
   useEffect(() => {
     if (spoken.current || !recs.length) return;
     spoken.current = true;
-    setSoundSettings(d.settings.sound);
+    setSoundSettings(d.settings.sound, d.programme.voiceStyles);
     if (d.settings.sound.endOfSessionLine) {
       const first = summaryLines(d, recs[0])[0];
       if (first) say(first);

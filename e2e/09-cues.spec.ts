@@ -68,10 +68,17 @@ test('word cues: the SB benchmark runs its 10 reps at the stage cue duration, th
   await button(page, 'Skip block').click(); // S2 again (S3 is now an optional diagnostic)
   await expect(page.getByRole('heading', { name: /Benchmark · Cue-behind decision test/i })).toBeVisible();
   // The test has its cone set-up too (receive box, the same as the drill before it), and the countdown says where the start is.
+  // What the screen will show, and what to do for each word.
+  await expect(page.getByTestId('cue-rules')).toContainText('LEFT FREE');
+  await expect(page.getByTestId('cue-rules')).toContainText('What to do: touch to the free side; both blocked = turn back');
   await page.getByText('Cones: same as the last block (tap to see)').click();
   await expect(page.getByTestId('cone-setup')).toContainText('Receive box');
   await button(page, '▶ Start block').click();
   await expect(page.locator('.practice .sub')).toContainText('Walk to the start. Stand between the cones and the Chromebook, with your back to the screen.');
+  // ↺ Instructions goes back to the test's instructions; Start begins it again.
+  await button(page, '↺ Instructions').click();
+  await expect(page.getByTestId('cue-rules')).toBeVisible();
+  await button(page, '▶ Start block').click();
   await advance(page, 10_500);
   const cue = await nextCue(page);
   expect(['LEFT FREE', 'RIGHT FREE', 'BOTH BLOCKED']).toContain(cue);

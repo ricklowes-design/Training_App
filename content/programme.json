@@ -1,5 +1,5 @@
 {
-  "version": "0.5.4",
+  "version": "0.5.5",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -3812,8 +3812,7 @@
         "1.5",
         "1"
       ],
-      "protocol": "10 reps of S2 at the stated cue duration; score correct decisions /10; scans counted on replay when recorded",
-      "layoutId": "L3"
+      "protocol": "10 reps of S2 at the stated cue duration; score correct decisions /10; scans counted on replay when recorded"
     },
     {
       "id": "FB",
@@ -3846,8 +3845,7 @@
           "1": "up late",
           "2": "up through the exit"
         }
-      ],
-      "layoutId": "L2"
+      ]
     },
     {
       "id": "DB",
@@ -3862,8 +3860,7 @@
         "std",
         "headup"
       ],
-      "protocol": "L1 down and back, both patterns; start on tone, finish by tapping the finish target; errors counted; head-up version adds digits /8",
-      "layoutId": "L1"
+      "protocol": "L1 down and back, both patterns; start on tone, finish by tapping the finish target; errors counted; head-up version adds digits /8"
     },
     {
       "id": "CB",
@@ -3876,8 +3873,7 @@
       "cueLevels": [
         "std"
       ],
-      "protocol": "CB-1: 30 s V-pulls per foot, correct count. CB-2: 10 reps of C2, 5 per foot, pass when the first touch settles in the gate and the second stops it",
-      "layoutId": "L4"
+      "protocol": "CB-1: 30 s V-pulls per foot, correct count. CB-2: 10 reps of C2, 5 per foot, pass when the first touch settles in the gate and the second stops it"
     },
     {
       "id": "CA",
@@ -5704,5 +5700,51 @@
         "procedure": "20 reps: mark whether the ball stayed under control through the gate; compare with ball tracking (part 17)."
       }
     ]
+  },
+  "voiceStyles": {
+    "touchline": {
+      "name": "Touchline coach",
+      "note": "Louder, quicker, lower; short shouted call-outs. Encouraging about effort, never insulting.",
+      "rate": 1.12,
+      "pitch": 0.72,
+      "lines": [
+        {
+          "match": "^Warm-up in (\\d+) seconds\\.$",
+          "say": "Warm-up in $1! Let's get moving!"
+        },
+        {
+          "match": "^(.+) in (\\d+) seconds\\. Walk to the start\\.(.*)$",
+          "say": "Right! $1 in $2. Get to your start, quick!$3"
+        },
+        {
+          "match": "^Half way\\.$",
+          "say": "Halfway! Keep it going!"
+        },
+        {
+          "match": "^Thirty seconds\\.$",
+          "say": "Thirty seconds! Come on, sharp now!"
+        },
+        {
+          "match": "^Rest\\.(.*)$",
+          "say": "Get your breath back.$1"
+        },
+        {
+          "match": "^Stopped\\.$",
+          "say": "Right, stop there."
+        },
+        {
+          "match": "^Warm-up skipped\\.$",
+          "say": "No warm-up? Straight in, then!"
+        },
+        {
+          "match": "^Go\\.?$",
+          "say": "GO!"
+        },
+        {
+          "match": "^Now the gate test\\.$",
+          "say": "Right, gate test now. Concentrate!"
+        }
+      ]
+    }
   }
 }

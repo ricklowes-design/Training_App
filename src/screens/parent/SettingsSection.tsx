@@ -27,7 +27,7 @@ export function SettingsSection() {
   const save = (patch: Partial<Settings>) => db.settings.update('main', patch);
   const saveSound = (patch: Partial<Settings['sound']>) => {
     const sound = { ...settings.sound, ...patch };
-    setSoundSettings(sound);
+    setSoundSettings(sound, programme.voiceStyles);
     return db.settings.update('main', { sound });
   };
 
@@ -51,6 +51,27 @@ export function SettingsSection() {
         <Stepper label="Volume %" value={Math.round(settings.sound.volume * 100)} min={10} max={100} step={10} onChange={(v) => saveSound({ volume: v / 100 })} />
         <Stepper label="Voice speed %" value={Math.round(settings.sound.voiceRate * 100)} min={50} max={150} step={5} onChange={(v) => saveSound({ voiceRate: v / 100 })} />
         <label className="field">
+          <span>Voice style</span>
+          <select
+            value={settings.sound.voiceStyle ?? ''}
+            aria-label="Voice style"
+            onChange={(e) => {
+              const voiceStyle = e.target.value || undefined;
+              // The touchline coach sounds best with a British voice: pick one when no voice was chosen.
+              const gb = voiceStyle === 'touchline' && !settings.sound.voiceURI ? voices.find((v) => v.lang === 'en-GB' && /male/i.test(v.name)) ?? voices.find((v) => v.lang === 'en-GB') : undefined;
+              void saveSound({ voiceStyle, ...(gb ? { voiceURI: gb.voiceURI } : {}) });
+            }}
+          >
+            <option value="">Standard</option>
+            {Object.entries(programme.voiceStyles ?? {}).map(([id, st]) => (
+              <option key={id} value={id}>
+                {st.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {settings.sound.voiceStyle && programme.voiceStyles?.[settings.sound.voiceStyle]?.note ? <p className="muted">{programme.voiceStyles[settings.sound.voiceStyle].note}</p> : null}
+        <label className="field">
           <span>Voice</span>
           <select value={settings.sound.voiceURI ?? ''} onChange={(e) => saveSound({ voiceURI: e.target.value || undefined })}>
             <option value="">Default English voice</option>
@@ -66,9 +87,11 @@ export function SettingsSection() {
             className="btn"
             onClick={() => {
               unlockAudio();
-              setSoundSettings(settings.sound);
+              setSoundSettings(settings.sound, programme.voiceStyles);
               tone('start');
-              say('Set two. Left exit. Go. Thirty seconds.');
+              say('Slalom close control in 10 seconds. Walk to the start.');
+              say('Half way.');
+              say('Thirty seconds.');
             }}
           >
             Test sound from the far end

@@ -3,6 +3,15 @@
 
 export type AreaId = string;
 
+export interface VoiceStyle {
+  name: string;
+  note?: string;
+  rate: number; // multiplies the parent's voice speed
+  pitch: number; // 0..2, 1 = normal
+  /** Regular expression on the standard line → what this style says instead ($1… for groups). */
+  lines: { match: string; say: string }[];
+}
+
 export interface Layout {
   name: string;
   setup: string;
@@ -147,8 +156,6 @@ export interface Benchmark {
   metrics: string[];
   cueLevels: string[];
   protocol: string;
-  /** The cone layout the test is run on (its cone set-up is shown before it). */
-  layoutId?: string;
   rubric?: RubricItem[];
 }
 
@@ -298,6 +305,8 @@ export interface Programme {
   advancement: Record<string, Record<string, string>>;
   cueDrills: CueDrill[];
   feedbackTemplates: Record<string, string>;
+  /** Spoken styles (e.g. the touchline coach): voice rate and pitch, and how each standard line is said. */
+  voiceStyles?: Record<string, VoiceStyle>;
   anchors: Anchor[];
   anchorCheck: AnchorCheck;
   layoutGeometry: LayoutGeometry;

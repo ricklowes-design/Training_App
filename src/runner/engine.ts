@@ -222,6 +222,13 @@ export function stop(s: RunState, now: number): RunState {
 }
 
 /** Repeat from the end-of-drill card: the same block again as the next attempt. */
+/** Back to this block's instructions (demo view), from its countdown or while it runs. Nothing is recorded
+ *  for the interrupted run; the block starts again from the beginning. */
+export function restartWithInstructions(s: RunState, now: number): RunState {
+  if ((s.phase !== 'countdown' && s.phase !== 'active') || !isDrillBlock(currentBlock(s))) return s;
+  return enterPhase({ ...s, activeMs: 0, segStartMs: null, pausedAtMs: null }, 'demo', now);
+}
+
 export function repeat(s: RunState, now: number): RunState {
   if (s.phase !== 'card') return s;
   return enterPhase({ ...s, attempt: s.attempt + 1, activeMs: 0, segStartMs: null }, 'countdown', now);
