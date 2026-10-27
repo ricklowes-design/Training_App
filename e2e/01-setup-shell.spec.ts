@@ -71,11 +71,8 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await page.getByLabel('Coach notes so far (optional; the first entry in the coach log)').fill('Work on the left foot');
   await button(page, 'Next').click();
 
-  // Demonstrations: choose an outside link for one core move.
-  const f3 = page.locator('.card.tight', { hasText: 'F3 ·' });
-  await button(f3, 'Use an outside video').click();
-  await f3.getByLabel(/YouTube link/).fill('https://www.youtube.com/watch?v=abcdefghijk');
-  await button(page, 'Next').click();
+  // No demonstrations step: the drills come with their videos and animations.
+  await expect(page.getByText('Use an outside video')).toHaveCount(0);
 
   await expect(button(page, 'Finish set-up')).toBeDisabled(); // PIN required
   await page.getByLabel('Parent PIN (4 digits)').fill('12');
@@ -98,8 +95,7 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   expect(settings.pinHash).toMatch(/^[0-9a-f]{64}$/);
   expect(settings.firstRunDone).toBe(true);
   expect((await table<{ body: string }>(page, 'coachNotes'))[0].body).toBe('Work on the left foot');
-  const overrides = await table<{ target: { id: string }; value: { ref: string } }>(page, 'overrides');
-  expect(overrides[0]).toMatchObject({ target: { id: 'F3' }, value: { ref: 'https://www.youtube.com/watch?v=abcdefghijk' } });
+  expect(await table(page, 'overrides')).toHaveLength(0);
 
   // Reload: set-up is not shown again.
   await page.reload();
@@ -128,7 +124,7 @@ test('parent can re-run the first-run set-up and change the player', async ({ pa
   await openParent(page);
   await button(page, 'Re-run first-run set-up').click();
   await page.getByLabel("Player's first name").fill('Alex');
-  for (let i = 0; i < 5; i++) await button(page, 'Next').click();
+  for (let i = 0; i < 4; i++) await button(page, 'Next').click();
   await expect(page.getByLabel(/New parent PIN/)).toBeVisible();
   await button(page, 'Finish set-up').click(); // keeps the PIN
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Alex · Week of/);

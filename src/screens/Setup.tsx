@@ -12,7 +12,8 @@ import { RoomBasicsForm } from './parent/RoomProfiles';
 import { previousStep, SpaceWizard, type WizardStep } from './space/SpaceWizard';
 import { Seg, todayISO } from '../ui/widgets';
 
-const STEPS = ['Player', 'Your space', 'Equipment', 'Priorities', 'Demonstrations', 'Backup and PIN'] as const;
+// Demonstrations are not a set-up step: approved videos and animations come with the drills (Parent → Demonstrations to change them).
+const STEPS = ['Player', 'Your space', 'Equipment', 'Priorities', 'Backup and PIN'] as const;
 
 export function Setup() {
   const { programme, settings, player, layout, roomProfile } = useData();
@@ -26,8 +27,6 @@ export function Setup() {
   const [equipment, setEquipment] = useState(settings.equipment);
   const [priorities, setPriorities] = useState<string[]>(settings.priorities.length ? settings.priorities : programme.priorities);
   const [coachNote, setCoachNote] = useState('');
-  const [demoChoice, setDemoChoice] = useState<Record<string, 'outside' | 'own'>>(settings.demoChoice);
-  const [demoLinks, setDemoLinks] = useState<Record<string, string>>({});
   const [backup, setBackup] = useState(settings.backupReminder);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -36,13 +35,12 @@ export function Setup() {
   const [spaceStep, setSpaceStep] = useState<WizardStep>(roomProfile?.space ? 'space' : 'measure');
   const [noTape, setNoTape] = useState(!!roomProfile && roomProfile.spaceSource === 'parentClass');
 
-  const coreMoves = programme.drills.filter((d) => programme.coreMoveDrills.includes(d.id));
   const allTags = [...new Set([...programme.priorities, ...programme.areas.flatMap((a) => a.priorityTags)])];
 
   const canNext = () => {
     if (step === 0) return name.trim().length > 0;
     if (step === 1) return room.spaceSource !== 'approxDims' || ((room.approxUsableM?.length ?? 0) >= 2 && (room.approxUsableM?.width ?? 0) >= 1);
-    if (step === 5) return settings.pinHash ? pin === '' || validPin(pin) : validPin(pin);
+    if (step === 4) return settings.pinHash ? pin === '' || validPin(pin) : validPin(pin);
     return true;
   };
 
@@ -57,7 +55,6 @@ export function Setup() {
         firstRunDone: true,
         equipment,
         priorities,
-        demoChoice,
         backupReminder: backup,
         pinHash,
         lastBackupAt: settings.lastBackupAt ?? new Date().toISOString(),
@@ -65,19 +62,6 @@ export function Setup() {
       await saveRoomProfile(room, programme, { ...DEFAULT_SETTINGS, ...settings, equipment });
       if (coachNote.trim()) {
         await db.coachNotes.add({ date: new Date().toISOString(), author: 'coach via parent', target: { kind: 'area', id: 'all' }, body: coachNote.trim() });
-      }
-      for (const [drillId, link] of Object.entries(demoLinks)) {
-        if (demoChoice[drillId] === 'outside' && link.trim()) {
-          const prev = programme.drills.find((d) => d.id === drillId)?.demo;
-          await db.overrides.add({
-            date: new Date().toISOString(),
-            author: 'parent',
-            target: { kind: 'drill', id: drillId },
-            field: 'demo',
-            value: { type: 'youtube', ref: link.trim() },
-            previousValue: prev ? { type: prev.type, ref: prev.ref } : undefined,
-          });
-        }
       }
       await logHistory('parent', 'first-run set-up', `Set-up completed ${todayISO()}`);
       go({ name: 'home' });
@@ -182,35 +166,6 @@ export function Setup() {
           </>
         )}
         {step === 4 && (
-          <>
-            <p className="muted">
-              For each core move: paste an outside video link, or record the player's own demo later (recommended). Check that a link plays inside the app before relying on it; uploaders can
-              disable embedding.
-            </p>
-            {coreMoves.map((d) => (
-              <div key={d.id} className="card tight stack">
-                <strong>
-                  {d.id} · {d.name}
-                </strong>
-                <Seg
-                  value={demoChoice[d.id] ?? 'own'}
-                  onChange={(v) => setDemoChoice({ ...demoChoice, [d.id]: v })}
-                  options={[
-                    { value: 'own', label: 'Record own demo later' },
-                    { value: 'outside', label: 'Use an outside video' },
-                  ]}
-                />
-                {demoChoice[d.id] === 'outside' && (
-                  <label className="field">
-                    <span>YouTube link{d.demo.outsideSearchPhrase ? ` (search: "${d.demo.outsideSearchPhrase}")` : ''}</span>
-                    <input type="url" value={demoLinks[d.id] ?? ''} onChange={(e) => setDemoLinks({ ...demoLinks, [d.id]: e.target.value })} placeholder="https://www.youtube.com/watch?v=…" />
-                  </label>
-                )}
-              </div>
-            ))}
-          </>
-        )}
-        {step === 5 && (
           <>
             <p>
               Everything lives only in this browser on this Chromebook. If Chrome's site data is cleared, it is gone unless there is a backup. A backup is one file you save to Downloads or Google
