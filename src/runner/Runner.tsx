@@ -338,6 +338,18 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         PAUSE
       </button>
     );
+  // The warm-up can be skipped (one tap). A session without a finished warm-up is partial (plan/14.4).
+  const skipWarmupBtn = (
+    <button
+      className="btn"
+      onClick={() => {
+        apply(E.skip);
+        say('Warm-up skipped.', { interrupt: true });
+      }}
+    >
+      Skip warm-up
+    </button>
+  );
   const stopBtn = (
     <button
       className="btn danger"
@@ -489,7 +501,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         <div className="sub">{block.kind === 'warmup' ? 'Get ready' : 'Walk to the start'}</div>
         <div className="controls">
           {pauseBtn}
-          <span />
+          {block.kind === 'warmup' ? skipWarmupBtn : <span />}
           {stopBtn}
         </div>
       </div>
@@ -661,7 +673,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       </div>
       <div className="controls">
         {pauseBtn}
-        {canDone ? (
+        {block.kind === 'warmup' ? (
+          skipWarmupBtn
+        ) : canDone ? (
           <button className="btn primary" onClick={() => apply(isRest || block.kind === 'log' || block.kind === 'mobility' || block.kind === 'cooldown' ? E.skip : E.done)}>
             {doneLabel}
           </button>

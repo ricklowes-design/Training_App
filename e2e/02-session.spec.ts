@@ -24,7 +24,7 @@ test('a 20-minute session runs to the end without a tap, counts, and unlocks the
   await advance(page, 11_000);
   await expect(page.locator('.practice .clock')).toHaveText(/^2:5\d$/);
   await expect(button(page, 'PAUSE')).toBeVisible();
-  await expect(page.getByText('Runs by itself')).toBeVisible(); // no DONE on timed blocks
+  await expect(button(page, 'Skip warm-up')).toBeVisible(); // the warm-up can be skipped; no DONE on timed blocks
   await runToEnd(page);
   await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible();
   const card = page.locator('.card', { hasText: 'Dribbling · Session 1' });
@@ -156,4 +156,20 @@ test("player's choice block: pick the drill at the demo view", async ({ page }) 
   await expect(page.getByText('Pick the drill for this block:')).toBeVisible();
   await button(page, 'D2 · Push-and-go').click();
   await expect(page.locator('.practice .drill')).toHaveText('Push-and-go');
+});
+
+test('the warm-up can be skipped with one tap; the session is then partial and stays next', async ({ page }) => {
+  await ready(page);
+  await start(page, 'Dribbling · Stage 1 · Session 1');
+  await expect(page.locator('.practice .drill')).toHaveText('Warm-up');
+  await button(page, 'Skip warm-up').click(); // from the countdown
+  await expect(button(page, '▶ Start block')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'SLALOM CLOSE CONTROL' })).toBeVisible();
+  await runToEnd(page);
+  const card = page.locator('.card', { hasText: 'Dribbling · Session 1' });
+  await expect(card).toContainText('partial');
+  const [rec] = await table<Rec>(page, 'sessionRecords');
+  expect(rec.status).toBe('partial');
+  expect(rec.reasons).toContain('warm-up not finished');
+  expect(rec.blocks[0]).toMatchObject({ skipped: true });
 });
