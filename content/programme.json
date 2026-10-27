@@ -1,5 +1,5 @@
 {
-  "version": "0.5.3",
+  "version": "0.5.4",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -8,19 +8,23 @@
       "setup": "5 cones in a line 1.0 m apart starting 0.8 m from the end wall; 1.0 m stop zone at the far end",
       "derivedFrom": [
         "roomLength"
-      ]
+      ],
+      "start": "Stand behind the first cone, at the back (start) end, facing the Chromebook."
     },
     "L2": {
       "name": "Feint lane",
-      "setup": "Start cone 0.5 m from the end wall; feint cone at 3.0 m; two 0.8 m gates 1.2 m past the feint cone, left and right; 0.8 m stop zone"
+      "setup": "Start cone 0.5 m from the end wall; feint cone at 3.0 m; two 0.8 m gates 1.2 m past the feint cone, left and right; 0.8 m stop zone",
+      "start": "Stand at the start cone at the back (or against the back wall if there is no start cone), facing the Chromebook."
     },
     "L3": {
       "name": "Receive box",
-      "setup": "1.5 m square mid-room; 1 m gate on each side; cue screen 1.5 m behind the box"
+      "setup": "1.5 m square mid-room; 1 m gate on each side; cue screen 1.5 m behind the box",
+      "start": "Stand between the cones and the Chromebook, with your back to the screen."
     },
     "L4": {
       "name": "Mastery square",
-      "setup": "1 m square at one end"
+      "setup": "1 m square at one end",
+      "start": "Stand in the middle of the square, facing the Chromebook."
     }
   },
   "stages": [
@@ -3808,7 +3812,8 @@
         "1.5",
         "1"
       ],
-      "protocol": "10 reps of S2 at the stated cue duration; score correct decisions /10; scans counted on replay when recorded"
+      "protocol": "10 reps of S2 at the stated cue duration; score correct decisions /10; scans counted on replay when recorded",
+      "layoutId": "L3"
     },
     {
       "id": "FB",
@@ -3841,7 +3846,8 @@
           "1": "up late",
           "2": "up through the exit"
         }
-      ]
+      ],
+      "layoutId": "L2"
     },
     {
       "id": "DB",
@@ -3856,7 +3862,8 @@
         "std",
         "headup"
       ],
-      "protocol": "L1 down and back, both patterns; start on tone, finish by tapping the finish target; errors counted; head-up version adds digits /8"
+      "protocol": "L1 down and back, both patterns; start on tone, finish by tapping the finish target; errors counted; head-up version adds digits /8",
+      "layoutId": "L1"
     },
     {
       "id": "CB",
@@ -3869,7 +3876,8 @@
       "cueLevels": [
         "std"
       ],
-      "protocol": "CB-1: 30 s V-pulls per foot, correct count. CB-2: 10 reps of C2, 5 per foot, pass when the first touch settles in the gate and the second stops it"
+      "protocol": "CB-1: 30 s V-pulls per foot, correct count. CB-2: 10 reps of C2, 5 per foot, pass when the first touch settles in the gate and the second stops it",
+      "layoutId": "L4"
     },
     {
       "id": "CA",

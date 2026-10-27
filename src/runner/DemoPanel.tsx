@@ -12,7 +12,7 @@ import { localiseText } from '../domain/units';
 import type { RunBlock } from '../domain/plans';
 import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
-import { ConeSetup } from './ConeSetup';
+import { blockLayout, ConeSetup } from './ConeSetup';
 
 export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
   if (!id) return '';
@@ -71,7 +71,7 @@ export function DemoPanel(props: {
   }, [left, playing, paused, isChoice, onStart]);
 
   const title = drill?.name ?? anchor?.name ?? (bench ? `Benchmark · ${bench.name}` : block.kind === 'quiz' ? 'Picture quiz' : 'Player’s choice');
-  const layoutId = drill?.layoutId ?? anchor?.layoutId;
+  const layoutId = blockLayout(p, block);
 
   return (
     <div className="demo">
@@ -82,6 +82,12 @@ export function DemoPanel(props: {
         </div>
         <h1 style={{ textTransform: 'uppercase' }}>{title}</h1>
         {layoutId && conesChanged ? <ConeSetup layoutId={layoutId} changed /> : null}
+        {layoutId && layout && !conesChanged ? (
+          <details>
+            <summary>Cones: same as the last block (tap to see)</summary>
+            <ConeSetup layoutId={layoutId} changed={false} />
+          </details>
+        ) : null}
         {drill ? (
           <>
             <p>
@@ -105,12 +111,6 @@ export function DemoPanel(props: {
             </div>
             <p className="muted">Common errors: {drill.commonErrors.join(' · ')}</p>
             <p className="muted">Safety: {drill.safety}</p>
-            {layoutId && layout && !conesChanged ? (
-              <details>
-                <summary>Cones (same as the last block)</summary>
-                <ConeSetup layoutId={layoutId} changed={false} />
-              </details>
-            ) : null}
             {layoutId ? <RoomOverlay layoutId={layoutId} /> : null}
           </>
         ) : null}

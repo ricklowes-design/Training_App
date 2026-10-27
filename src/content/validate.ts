@@ -112,7 +112,7 @@ const programmeShape: Check = obj({
   version: str,
   generated: str,
   note: str,
-  layouts: record(obj({ name: str, setup: str, derivedFrom: optional(list(str)) })),
+  layouts: record(obj({ name: str, setup: str, start: optional(str), derivedFrom: optional(list(str)) })),
   stages: list(obj({ id: str, order: num, name: str, sessions: list(num) })),
   warmup: obj({ minutes20: posNum, minutes30: posNum, minutes45: posNum, minutes60: posNum, steps: list(str), basis: str }),
   drills: list(
@@ -150,7 +150,7 @@ const programmeShape: Check = obj({
   ),
   areas: list(obj({ id: str, name: str, priorityTags: list(str), benchmarkId: str })),
   sessions: list(obj({ id: str, areaId: str, number: num, stageId: str, durationMinutes: posNum, blocks: list(block) })),
-  benchmarks: list(obj({ id: str, areaId: nullOr(str), name: str, metrics: list(str), cueLevels: list(str), protocol: str, rubric: optional(list(anyObj)) })),
+  benchmarks: list(obj({ id: str, areaId: nullOr(str), name: str, metrics: list(str), cueLevels: list(str), protocol: str, layoutId: optional(str), rubric: optional(list(anyObj)) })),
   advancement: record(record(str)),
   cueDrills: list(
     obj({

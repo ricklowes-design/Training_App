@@ -6,6 +6,8 @@ export type AreaId = string;
 export interface Layout {
   name: string;
   setup: string;
+  /** Where the player stands to start, said at the countdown ("Walk to the start"). */
+  start?: string;
   derivedFrom?: string[];
 }
 
@@ -145,6 +147,8 @@ export interface Benchmark {
   metrics: string[];
   cueLevels: string[];
   protocol: string;
+  /** The cone layout the test is run on (its cone set-up is shown before it). */
+  layoutId?: string;
   rubric?: RubricItem[];
 }
 

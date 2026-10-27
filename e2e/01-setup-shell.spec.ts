@@ -161,7 +161,7 @@ test('Parent → Content lists every drill by area', async ({ page }) => {
   await boot(page);
   await setup(page);
   await openParent(page, /^Content/);
-  await expect(page.getByText(/version 0\.5\.3 .* loaded and valid: 26 drills, 64 sessions/)).toBeVisible();
+  await expect(page.getByText(/version 0\.5\.4 .* loaded and valid: 26 drills, 64 sessions/)).toBeVisible();
   for (const id of ['S1', 'S6', 'F1', 'F8', 'D1', 'D6', 'C1', 'C6']) await expect(page.getByRole('cell', { name: id, exact: true })).toBeVisible();
   await page.locator('tr', { hasText: 'F3' }).getByRole('button', { name: 'Adjust' }).click();
   await expect(page.getByRole('heading', { name: /F3 · Scissors/ })).toBeVisible();

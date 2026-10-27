@@ -14,7 +14,7 @@ import type { RunBlock, RunPlan } from '../domain/plans';
 import { fmtClock } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
-import { conesChanged } from './ConeSetup';
+import { blockLayout, conesChanged } from './ConeSetup';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
@@ -106,7 +106,10 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     [p],
   );
   const setsFor = useCallback((b: RunBlock) => (b.drillId ? p.drills.find((d) => d.id === b.drillId)?.sets : undefined), [p]);
-  const labels: E.Labels = useMemo(() => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor }), [blockName, p, setsFor]);
+  const labels: E.Labels = useMemo(
+    () => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor, startFor: (b: RunBlock) => { const id = blockLayout(p, b); return id ? p.layouts[id]?.start : undefined; } }),
+    [blockName, p, setsFor],
+  );
   const setWindows = (b: RunBlock, label: string) => setWindowsFor(setsFor(b), b.minutes, label);
   // Mastery-set windows the camera can measure: V-pull sets, and the tap sets for rapid-touch estimates.
   const controlWindows = (b: RunBlock) => {
@@ -498,7 +501,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       <div className={`practice countdown ${s.pausedAtMs !== null ? 'paused' : ''}`}>
         <div className="drill">{blockName(block)}</div>
         <div className="clock">{left}</div>
-        <div className="sub">{block.kind === 'warmup' ? 'Get ready' : 'Walk to the start'}</div>
+        <div className="sub">{block.kind === 'warmup' ? 'Get ready' : startText(p, block)}</div>
         <div className="controls">
           {pauseBtn}
           {block.kind === 'warmup' ? skipWarmupBtn : <span />}
@@ -689,3 +692,11 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     </div>
   );
 }
+
+/** "Walk to the start", with where the start is for this block's layout (content: layouts[id].start). */
+function startText(p: import('../content/types').Programme, block: RunBlock | undefined): string {
+  const id = blockLayout(p, block);
+  const where = id ? p.layouts[id]?.start : undefined;
+  return where ? `Walk to the start. ${where}` : 'Walk to the start';
+}
+

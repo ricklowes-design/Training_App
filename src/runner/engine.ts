@@ -35,6 +35,8 @@ export interface Labels {
   countdownS: number;
   /** The drill's sets, when its content gives them. */
   setsFor?: (b: RunBlock) => { count: number; labels?: string[] } | undefined;
+  /** Where the player starts for this block, said with "Walk to the start". */
+  startFor?: (b: RunBlock) => string | undefined;
 }
 
 const ORDINAL = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
@@ -143,7 +145,7 @@ export function tick(s: RunState, now: number, labels: Labels): { state: RunStat
 
   if (s.phase === 'countdown') {
     const left = countdownLeftS(s, now, labels.countdownS);
-    once('intro', { type: 'say', text: b.kind === 'warmup' ? `Warm-up in ${labels.countdownS} seconds.` : `${labels.blockName(b)} in ${labels.countdownS} seconds. Walk to the start.` });
+    once('intro', { type: 'say', text: b.kind === 'warmup' ? `Warm-up in ${labels.countdownS} seconds.` : `${labels.blockName(b)} in ${labels.countdownS} seconds. Walk to the start.${labels.startFor?.(b) ? ` ${labels.startFor(b)}` : ''}` });
     for (const n of [3, 2, 1]) if (left <= n && left > n - 1) once(`c${n}`, { type: 'tone', kind: 'tick' });
     if (left <= 0) {
       s = startActive(s, now);
