@@ -31,6 +31,7 @@ test('a drill starts with its cone set-up, placed against the measured fixed poi
   await expect(cones.locator('.cone-list li').first()).toHaveText('Slalom cone 1: 0.8 m from the back wall, in the middle, 1.5 m from each side wall');
   await expect(cones.locator('.cone-list li').nth(1)).toHaveText('Slalom cone 2: 1.8 m from the back wall, in the middle, 1.5 m from each side wall, level with the door frame (right)');
   await expect(cones.getByTestId('landmark')).toContainText('door frame');
+  await expect(cones.getByTestId('start-position')).toContainText('Start (yellow circle): Stand behind the first cone');
   await expect(page.getByText(/Starts by itself in (5\d|60) s/)).toBeVisible();
   await advance(page, 25_000);
   await expect(button(page, '▶ Start block')).toBeVisible(); // still waiting after the usual 20 s

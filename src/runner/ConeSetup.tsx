@@ -75,13 +75,20 @@ export function ConeSetup({ layoutId, changed }: { layoutId: string; changed: bo
           numbered
           maxHeight={340}
         />
-        <ol className="cone-list">
-          {guide.map((c) => (
-            <li key={c.n}>
-              <strong>{c.name}:</strong> {c.text}
-            </li>
-          ))}
-        </ol>
+        <div className="stack" style={{ gap: 8 }}>
+          <ol className="cone-list">
+            {guide.map((c) => (
+              <li key={c.n}>
+                <strong>{c.name}:</strong> {c.text}
+              </li>
+            ))}
+          </ol>
+          {p.layouts[layoutId]?.start ? (
+            <p className="cone-list" data-testid="start-position">
+              <strong>Start (yellow circle):</strong> {p.layouts[layoutId].start}
+            </p>
+          ) : null}
+        </div>
       </div>
       {variantNote(layoutId, layout.derived) ? (
         <p className="pill info" data-testid="layout-variant">
