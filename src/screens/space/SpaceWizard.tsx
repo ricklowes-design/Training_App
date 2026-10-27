@@ -5,6 +5,7 @@ import type { FromWorker } from '../../analysis/worker';
 import { roomPhotoFields } from '../../camera/roomPhoto';
 import { listCameras, openStream, preferredCamera } from '../../camera/session';
 import { renderTopDown } from '../../camera/topDown';
+import { db } from '../../db/db';
 import type { ItemPlace, Pt, RoomProfile, Space, SpaceItem } from '../../db/types';
 import { fitError, fitHomography, type P2 } from '../../domain/homography';
 import { layoutFit, roomInputFor, scaledLayout } from '../../domain/room';
@@ -167,13 +168,23 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
   const [level, setLevel] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [taken, setTaken] = useState<{ fields: Awaited<ReturnType<typeof roomPhotoFields>>; url: string } | null>(null);
+  const [cams, setCams] = useState<{ id: string; label: string }[]>([]);
+  const [camId, setCamId] = useState('');
   useEffect(() => {
     let s: MediaStream | null = null;
     let stop = false;
+    setStarted(0);
+    setLevel(0);
     (async () => {
       try {
         const cam = preferredCamera(await listCameras(), settings.camera.deviceId);
         s = await openStream(cam?.deviceId);
+        // Labels are only readable once the camera is allowed: list them now, for the camera choice.
+        const all = await listCameras();
+        if (!stop) {
+          setCams(all.map((d, k) => ({ id: d.deviceId, label: d.label || `Camera ${k + 1}` })));
+          setCamId(s.getVideoTracks()[0]?.getSettings().deviceId ?? cam?.deviceId ?? '');
+        }
         if (stop) return s.getTracks().forEach((t) => t.stop());
         if (video.current) {
           video.current.srcObject = s;
@@ -240,6 +251,27 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
           <span style={{ position: 'absolute', left: 8, top: '26%', color: '#ffd23f', fontWeight: 700, fontSize: 14, textShadow: '0 0 3px #000' }}>bottom of the back wall about here</span>
         </div>
       )}
+      {!err && !taken && cams.length > 1 ? (
+        <label className="row">
+          <span className="muted">Camera</span>
+          <select value={camId} aria-label="Camera" onChange={(e) => db.settings.update('main', { camera: { ...settings.camera, deviceId: e.target.value } })}>
+            {cams.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <span className="muted">(use the webcam that will film the training)</span>
+        </label>
+      ) : null}
+      {!err && !taken && started ? (
+        <div className="row muted" data-testid="photo-light">
+          Picture: {level < DARK ? 'too dark' : level < 60 ? 'dim but usable' : 'good'}
+          <span style={{ display: 'inline-block', width: 120, height: 8, borderRadius: 4, background: 'var(--line)', overflow: 'hidden' }}>
+            <span style={{ display: 'block', height: '100%', width: `${Math.min(100, (level / 120) * 100)}%`, background: level < DARK ? 'var(--stop)' : 'var(--go)' }} />
+          </span>
+        </div>
+      ) : null}
       {taken ? (
         <div className="stack" style={{ maxWidth: 640 }}>
           <img src={taken.url} alt="The photo just taken" style={{ width: '100%', borderRadius: 12, display: 'block' }} data-testid="photo-taken" />
