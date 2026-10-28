@@ -198,7 +198,8 @@ test('cones, then instructions with the game purpose, then "Try it": 3 slow reps
   await advance(page, 10_500 + 3 * 15_000 + 2_000);
   const card = page.getByTestId('practice-card');
   await expect(card).toBeVisible({ timeout: 15_000 });
-  await expect(card).toContainText('The camera did not record this round'); // camera off in this test
+  await expect(card).toContainText('Recording is off in the app'); // camera off in this test
+  await expect(card.getByRole('button', { name: 'Turn recording on, then Try again' })).toBeVisible();
   await expect(card.locator('tbody tr')).toHaveCount(3);
   // Back to the instructions skips the cones step (they are out), then the real drill.
   await button(card, 'Back to the instructions').click();
