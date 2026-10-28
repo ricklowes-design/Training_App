@@ -15,7 +15,7 @@ import { fmtClock } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
 import { blockLayout, conesChanged } from './ConeSetup';
-import { cueRuleLine } from './CueRules';
+import { cueRuleLine, cueSayLine } from './CueRules';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
@@ -108,7 +108,10 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   );
   const setsFor = useCallback((b: RunBlock) => (b.drillId ? p.drills.find((d) => d.id === b.drillId)?.sets : undefined), [p]);
   const labels: E.Labels = useMemo(
-    () => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor, startFor: (b: RunBlock) => { const id = blockLayout(p, b); return id ? p.layouts[id]?.start : undefined; } }),
+    () => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor, startFor: (b: RunBlock) => {
+        const id = blockLayout(p, b);
+        return [id ? p.layouts[id]?.start : undefined, cueSayLine(p, b)].filter(Boolean).join(' ') || undefined;
+      } }),
     [blockName, p, setsFor],
   );
   const setWindows = (b: RunBlock, label: string) => setWindowsFor(setsFor(b), b.minutes, label);

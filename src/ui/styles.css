@@ -208,3 +208,6 @@ table.data th { color: var(--muted); font-weight: 600; }
 .measure-steps li { margin-bottom: 4px; }
 .space-steps { flex-wrap: wrap; gap: 8px; }
 .cue-rule-line { font-size: 0.85em; opacity: 0.85; }
+.cue-steps { margin: 0; padding-left: 1.4em; line-height: 1.5; font-size: 1.05rem; }
+.cue-steps li { margin-bottom: 4px; }
+.cue-words td { vertical-align: middle; }

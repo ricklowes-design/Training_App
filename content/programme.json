@@ -1,5 +1,5 @@
 {
-  "version": "0.5.5",
+  "version": "0.5.6",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -130,7 +130,13 @@
       "sets": {
         "count": 3
       },
-      "cueDrillId": "cue-colour"
+      "cueDrillId": "cue-colour",
+      "steps": [
+        "Stand in the middle of the square, ball under your sole; the screen is behind you.",
+        "Roll the ball side to side with your sole.",
+        "On every second roll, turn your head, read the colour on the screen and say it out loud.",
+        "3 sets of 45 seconds, 20 seconds rest."
+      ]
     },
     {
       "id": "S2",
@@ -182,6 +188,13 @@
       "scanModes": [
         "stationarySimulation",
         "rebound"
+      ],
+      "steps": [
+        "Stand at the start: between the cones and the Chromebook, back to the screen, ball at your feet.",
+        "Push the ball about 2 m away from you (away from the screen) into the space between the cones, and follow it.",
+        "While it rolls, look over your shoulder at the screen and read the word.",
+        "Take your first touch the way the word says (see below), then stop and walk back to the start.",
+        "Next rep about every 9 seconds; alternate feet. 10 reps."
       ]
     },
     {
@@ -213,7 +226,13 @@
       },
       "mode": "reps",
       "cueDrillId": "cue-scan-number",
-      "routine": false
+      "routine": false,
+      "steps": [
+        "Same as Cue-behind self-receive: push the ball away from the screen and follow it.",
+        "Look over your shoulder while it rolls: a word and a number show.",
+        "Call the number out loud, then take your first touch the way the word says.",
+        "Walk back to the start. 10 reps."
+      ]
     },
     {
       "id": "S4",
@@ -267,7 +286,13 @@
       "sets": {
         "count": 2
       },
-      "cueDrillId": "cue-scan"
+      "cueDrillId": "cue-scan",
+      "steps": [
+        "A parent stands about 3 m in front of you with the ball; the screen is behind you.",
+        "The parent passes to you. While the ball travels, look over your shoulder at the screen.",
+        "First touch the way the word says (see below).",
+        "Pass back to the parent with your second touch. 2 sets of 8."
+      ]
     },
     {
       "id": "S5",
@@ -313,7 +338,13 @@
         "partner": null
       },
       "mode": "reps",
-      "cueDrillId": "cue-scan"
+      "cueDrillId": "cue-scan",
+      "steps": [
+        "Start with your back to the screen, ball at your feet; the target is at the far end.",
+        "Push the ball away and follow it; look over your shoulder while it rolls.",
+        "First touch the way the word says, then two dribble touches.",
+        "Short pass into the target with the foot on that side (no shooting indoors). 10 reps, 5 each side."
+      ]
     },
     {
       "id": "S6",
@@ -561,7 +592,13 @@
       },
       "mode": "reps",
       "cueDrillId": "cue-second-feint",
-      "defenderDrillId": "def-second"
+      "defenderDrillId": "def-second",
+      "steps": [
+        "Start at the back (start cone), facing the Chromebook, ball at your feet.",
+        "Dribble toward the feint cone and do a scissors at it.",
+        "Read the word on the screen in front of you as you finish the scissors.",
+        "GO or HELD (see below), then dribble into the stop zone. Walk back. 10 reps."
+      ]
     },
     {
       "id": "F5",
@@ -613,7 +650,13 @@
         "count": 2
       },
       "cueDrillId": "cue-exit",
-      "defenderDrillId": "def-read"
+      "defenderDrillId": "def-read",
+      "steps": [
+        "Start at the back (start cone), facing the Chromebook.",
+        "Dribble toward the feint cone; the arrow shows about 1 m before it.",
+        "Feint AWAY from the arrow, then exit on the arrow side.",
+        "Dribble into the stop zone, walk back. 2 sets of 8."
+      ]
     },
     {
       "id": "F6",
@@ -646,7 +689,13 @@
       },
       "mode": "reps",
       "cueDrillId": "cue-defender",
-      "defenderDrillId": "def-read"
+      "defenderDrillId": "def-read",
+      "steps": [
+        "Start at the back (start cone), facing the Chromebook.",
+        "Dribble at the feint cone and do your feint.",
+        "Just after the feint, read the word: what the defender did.",
+        "React the way the word says (see below), finish in the stop zone. 2 sets of 8."
+      ]
     },
     {
       "id": "F7",
@@ -841,7 +890,13 @@
       "sets": {
         "count": 2
       },
-      "cueDrillId": "cue-gate"
+      "cueDrillId": "cue-gate",
+      "steps": [
+        "Start at the back (start cone), facing the Chromebook.",
+        "Dribble toward the feint cone; the cue shows about 1 m before it.",
+        "Cut through the gate it shows, or stop the ball dead on UP.",
+        "Walk back. 2 sets of 8."
+      ]
     },
     {
       "id": "D4",
@@ -951,7 +1006,13 @@
       "sets": {
         "count": 2
       },
-      "cueDrillId": "cue-escape"
+      "cueDrillId": "cue-escape",
+      "steps": [
+        "Start at the back, facing the Chromebook.",
+        "Dribble forward; watch the screen in front of you.",
+        "GO: keep going. BLOCKED: drag-back or hook turn into space.",
+        "Walk back. 2 sets of 8."
+      ]
     },
     {
       "id": "C1",
@@ -1113,7 +1174,13 @@
       "sets": {
         "count": 2
       },
-      "cueDrillId": "cue-dragback"
+      "cueDrillId": "cue-dragback",
+      "steps": [
+        "Start with your back to the screen, ball at your feet.",
+        "Push the ball away from you (a self-pass) and follow it; look over your shoulder while it rolls.",
+        "First touch the way the word says (see below).",
+        "Walk back to the start. 2 sets of 8."
+      ]
     },
     {
       "id": "C4",
@@ -3944,7 +4011,15 @@
         "blockedShaping",
         "lateCue"
       ],
-      "displayS": 1.5
+      "displayS": 1.5,
+      "howTo": {
+        "expect": "An arrow appears on the screen in front of you about 1 m before you reach the feint cone. Left and right are YOUR left and right as you run toward the Chromebook.",
+        "words": {
+          "LEFT": "Feint to the right, then exit LEFT past the feint cone.",
+          "RIGHT": "Feint to the left, then exit RIGHT past the feint cone."
+        },
+        "say": "Feint away from the arrow, exit on the arrow side."
+      }
     },
     {
       "id": "cue-defender",
@@ -3985,6 +4060,15 @@
           "BIT",
           "BLOCKED"
         ]
+      },
+      "howTo": {
+        "expect": "Just after your feint, a word on the screen in front of you says what the defender did. Left and right are YOUR left and right as you run toward the Chromebook.",
+        "words": {
+          "BIT": "The defender fell for it: go straight out the side you chose.",
+          "HELD": "The defender didn't move: push-and-go past them, or do a second feint the other way.",
+          "BLOCKED": "The defender is in your way: protect the ball (shield and turn away, or drag it back)."
+        },
+        "say": "Bit, go. Held, change. Blocked, protect the ball."
       }
     },
     {
@@ -4021,6 +4105,15 @@
           "RIGHT FREE",
           "BOTH BLOCKED"
         ]
+      },
+      "howTo": {
+        "expect": "A word appears on the screen BEHIND you for about 3 seconds while the ball is rolling: LEFT FREE, RIGHT FREE or BOTH BLOCKED. You only see it if you look over your shoulder. Stand between the cones and the Chromebook with your back to the screen. Left and right are YOUR left and right as you face away from the screen.",
+        "words": {
+          "LEFT FREE": "Space on your left: first touch to your left, out past the cones on that side.",
+          "RIGHT FREE": "Space on your right: first touch to your right, out past the cones on that side.",
+          "BOTH BLOCKED": "No space either side: stop the ball and turn back toward the screen (where you started)."
+        },
+        "say": "Look behind while the ball rolls. Left free, touch left. Right free, touch right. Both blocked, turn back."
       }
     },
     {
@@ -4077,6 +4170,15 @@
           "RIGHT FREE",
           "BOTH BLOCKED"
         ]
+      },
+      "howTo": {
+        "expect": "A word and a number appear on the screen BEHIND you while the ball is rolling. Stand between the cones and the Chromebook with your back to the screen. Left and right are YOUR left and right as you face away from the screen.",
+        "words": {
+          "LEFT FREE": "First touch to your left, and call the number before the touch.",
+          "RIGHT FREE": "First touch to your right, and call the number before the touch.",
+          "BOTH BLOCKED": "Turn back, and call the number before the touch."
+        },
+        "say": "Look behind. Go to the free side and call the number before your touch."
       }
     },
     {
@@ -4098,7 +4200,17 @@
       "soccerMeaning": "look-then-touch habit",
       "trigger": "interval",
       "catchFraction": 0,
-      "catchTypes": []
+      "catchTypes": [],
+      "howTo": {
+        "expect": "A colour shows on the screen behind you and changes every few seconds.",
+        "words": {
+          "RED": "Say RED out loud.",
+          "BLUE": "Say BLUE out loud.",
+          "YELLOW": "Say YELLOW out loud.",
+          "GREEN": "Say GREEN out loud."
+        },
+        "say": "Every second roll, look behind and say the colour."
+      }
     },
     {
       "id": "cue-second-feint",
@@ -4122,7 +4234,15 @@
       "tripwireDelayMaxMs": 400,
       "catchFraction": 0,
       "catchTypes": [],
-      "displayS": 1.5
+      "displayS": 1.5,
+      "howTo": {
+        "expect": "As you finish the scissors at the feint cone, GO or HELD appears on the screen in front of you. Left and right are YOUR left and right as you run toward the Chromebook.",
+        "words": {
+          "GO": "Exit straight away on the side you were going.",
+          "HELD": "Do a body feint the other way, then exit."
+        },
+        "say": "Go, exit now. Held, body feint the other way, then exit."
+      }
     },
     {
       "id": "cue-gate",
@@ -4147,7 +4267,16 @@
       "tripwireDelayMaxMs": 400,
       "catchFraction": 0,
       "catchTypes": [],
-      "displayS": 1.5
+      "displayS": 1.5,
+      "howTo": {
+        "expect": "About 1 m before the feint cone an arrow (or UP) appears on the screen in front of you. Left and right are YOUR left and right as you run toward the Chromebook.",
+        "words": {
+          "LEFT": "Cut through the LEFT gate.",
+          "RIGHT": "Cut through the RIGHT gate.",
+          "UP": "Stop the ball dead with your sole, right there."
+        },
+        "say": "Arrow left, left gate. Arrow right, right gate. Up, stop the ball dead."
+      }
     },
     {
       "id": "cue-escape",
@@ -4171,7 +4300,15 @@
       "tripwireDelayMaxMs": 400,
       "catchFraction": 0,
       "catchTypes": [],
-      "displayS": 1.5
+      "displayS": 1.5,
+      "howTo": {
+        "expect": "While you dribble toward the Chromebook, GO or BLOCKED appears on the screen in front of you. Left and right are YOUR left and right as you run toward the Chromebook.",
+        "words": {
+          "GO": "Keep dribbling forward.",
+          "BLOCKED": "Your path is blocked: drag-back or hook turn, into the open space, away from the cone."
+        },
+        "say": "Go, keep going. Blocked, turn away into space."
+      }
     },
     {
       "id": "cue-dragback",
@@ -4193,7 +4330,15 @@
       "startToCueMaxS": 1.2,
       "catchFraction": 0,
       "catchTypes": [],
-      "displayS": 2
+      "displayS": 2,
+      "howTo": {
+        "expect": "A word appears on the screen BEHIND you while the ball is rolling to you. Stand between the cones and the Chromebook with your back to the screen. Left and right are YOUR left and right as you face away from the screen.",
+        "words": {
+          "BEHIND BLOCKED": "Pressure behind you: take your first touch FORWARD, away from the screen.",
+          "FRONT BLOCKED": "Pressure in front: drag the ball back and turn away."
+        },
+        "say": "Behind blocked, touch forward. Front blocked, drag back and turn."
+      }
     }
   ],
   "feedbackTemplates": {

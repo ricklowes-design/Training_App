@@ -82,7 +82,6 @@ export function DemoPanel(props: {
           {block.cueLevel ? ` · level ${block.cueLevel}` : ''}
         </div>
         <h1 style={{ textTransform: 'uppercase' }}>{title}</h1>
-        <CueRules p={p} block={block} />
         {layoutId && conesChanged ? <ConeSetup layoutId={layoutId} changed /> : null}
         {layoutId && layout && !conesChanged ? (
           <details>
@@ -90,6 +89,7 @@ export function DemoPanel(props: {
             <ConeSetup layoutId={layoutId} changed={false} />
           </details>
         ) : null}
+        <CueRules p={p} block={block} />
         {drill ? (
           <>
             <p>

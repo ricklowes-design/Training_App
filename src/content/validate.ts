@@ -124,6 +124,7 @@ const programmeShape: Check = obj({
       purpose: str,
       setupText: str,
       prescription: str,
+      steps: optional(list(str)),
       cues: list(str),
       commonErrors: list(str),
       demo: obj({
@@ -158,6 +159,7 @@ const programmeShape: Check = obj({
       name: str,
       cueTypes: list(str),
       rule: str,
+      howTo: optional(obj({ expect: str, words: record(str), say: optional(str) })),
       durationS: posNum,
       soccerMeaning: str,
       values: optional(list(str)),

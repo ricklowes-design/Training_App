@@ -13,28 +13,47 @@ export function cueRuleLine(p: Programme, block: RunBlock): string | null {
 export function CueRules({ p, block }: { p: Programme; block: RunBlock }) {
   const c = cueDrillFor(p, block);
   if (!c) return null;
-  // The drill that teaches this cue, for its step-by-step "Do" (benchmarks and anchors name only the cue drill).
-  const teaching = p.drills.find((d) => d.cueDrillId === c.id && d.id === block.drillId) ?? p.drills.find((d) => d.cueDrillId === c.id);
+  // The drill this block runs, or (for tests and anchors) the drill that teaches this cue.
+  const own = p.drills.find((d) => d.id === block.drillId && d.cueDrillId === c.id);
+  const anchorDrill = block.anchorId ? p.drills.find((d) => d.id === p.anchors.find((a) => a.id === block.anchorId)?.drillId) : undefined;
+  const teaching = own ?? anchorDrill ?? p.drills.find((d) => d.cueDrillId === c.id);
+  const how = c.howTo;
   return (
-    <div className="note-box stack" data-testid="cue-rules" style={{ gap: 6 }}>
-      <strong>What the screen will show</strong>
-      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-        {c.values!.map((v) => (
-          <span key={v} className="pill info" style={{ fontSize: '1.1rem' }}>
-            {v}
-          </span>
-        ))}
-      </div>
-      {c.rule ? (
-        <div>
-          <strong>What to do:</strong> {c.rule}
-        </div>
+    <div className="note-box stack" data-testid="cue-rules" style={{ gap: 10 }}>
+      <h2 style={{ margin: 0 }}>How to do it</h2>
+      {teaching?.steps?.length ? (
+        <ol className="cue-steps" data-testid="cue-steps">
+          {teaching.steps.map((st) => (
+            <li key={st}>{st}</li>
+          ))}
+        </ol>
+      ) : teaching ? (
+        <p>{teaching.prescription}</p>
       ) : null}
-      {teaching && teaching.id !== block.drillId ? (
-        <div className="muted">
-          How ({teaching.id} · {teaching.name}): {teaching.prescription}
-        </div>
+      {how?.expect ? (
+        <p>
+          <strong>What you will see:</strong> {how.expect}
+        </p>
       ) : null}
+      <table className="data cue-words">
+        <tbody>
+          {c.values!.map((v) => (
+            <tr key={v}>
+              <td>
+                <span className="pill info" style={{ fontSize: '1.1rem', whiteSpace: 'nowrap' }}>
+                  {v}
+                </span>
+              </td>
+              <td>{how?.words[v] ?? c.rule}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
+}
+
+/** The short spoken version, said with the countdown ("Walk to the start …"). */
+export function cueSayLine(p: Programme, block: RunBlock): string | undefined {
+  return cueDrillFor(p, block)?.howTo?.say;
 }
