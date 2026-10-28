@@ -36,13 +36,19 @@ export function DemoPanel(props: {
   roomCheck?: import('../camera/roomCheck').RoomCheck | null;
   /** The cones must be moved for this block: the set-up comes first and the block waits longer. */
   conesChanged?: boolean;
+  /** "Try it": a slow practice round of this block, checked by the camera (cue blocks only). */
+  onPractice?: () => void;
 }) {
-  const { block, blockNo, blockCount, phaseStartMs, paused, onStart, onSkip, onStop, framing, cameraError, roomCheck, conesChanged } = props;
+  const { block, blockNo, blockCount, phaseStartMs, paused, onStart, onSkip, onStop, framing, cameraError, roomCheck, conesChanged, onPractice } = props;
   const { programme: p, notes, layout, demoClipIds, roomProfile, settings } = useData();
   const units = settings.units ?? 'metric';
   const [playing, setPlaying] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const [heldMs, setHeldMs] = useState(0); // time the auto-start was held by a playing video
+  const [heldMs, setHeldMs] = useState(0); // time the auto-start was held (video playing, paused, or Hold)
+  const [holding, setHolding] = useState(false);
+  // Two steps when the cones move: set them out (and confirm), then the instructions.
+  const [stage, setStage] = useState<'cones' | 'instructions'>(conesChanged && blockLayout(p, block) ? 'cones' : 'instructions');
+  const [stageStartMs, setStageStartMs] = useState(phaseStartMs);
   const onPlayingChange = useCallback((v: boolean) => setPlaying(v), []);
 
   const isChoice = block.drillId === 'choice';
@@ -54,25 +60,71 @@ export function DemoPanel(props: {
   const sets = layout ? layoutSummary(layout.derived, units) : {};
   const scanMode = scanModeFor(p, drill, block.params, roomProfile);
 
-  const autoStartS = conesChanged ? Math.max(props.autoStartS, settings.coneSetupS ?? 60) : props.autoStartS;
+  const autoStartS = stage === 'cones' ? (settings.coneSetupS ?? 60) : props.autoStartS;
   const lastTick = useRef(Date.now());
   useEffect(() => {
     const t = setInterval(() => {
       const n = Date.now();
-      if (playing || paused) setHeldMs((h) => h + (n - lastTick.current));
+      if (playing || paused || holding) setHeldMs((h) => h + (n - lastTick.current));
       lastTick.current = n;
       setNow(n);
     }, 250);
     return () => clearInterval(t);
-  }, [playing, paused]);
+  }, [playing, paused, holding]);
 
-  const left = Math.max(0, Math.ceil(autoStartS - (now - phaseStartMs - heldMs) / 1000));
+  const left = Math.max(0, Math.ceil(autoStartS - (now - stageStartMs - heldMs) / 1000));
+  const toInstructions = useCallback(() => {
+    setStage('instructions');
+    setStageStartMs(Date.now());
+    setHeldMs(0);
+    setHolding(false);
+    lastTick.current = Date.now();
+  }, []);
   useEffect(() => {
-    if (!isChoice && left <= 0 && !playing && !paused) onStart();
-  }, [left, playing, paused, isChoice, onStart]);
+    if (left > 0 || playing || paused || holding) return;
+    if (stage === 'cones') toInstructions();
+    else if (!isChoice) onStart();
+  }, [left, playing, paused, holding, isChoice, onStart, stage, toInstructions]);
+  const holdBtn = (
+    <button className="btn" aria-pressed={holding} onClick={() => setHolding(!holding)}>
+      {holding ? '▶ Resume the countdown' : '⏸ Hold'}
+    </button>
+  );
 
   const title = drill?.name ?? anchor?.name ?? (bench ? `Benchmark · ${bench.name}` : block.kind === 'quiz' ? 'Picture quiz' : 'Player’s choice');
   const layoutId = blockLayout(p, block);
+
+  // Step 1 (when the cones move): set them out, then confirm. Nothing starts from here.
+  if (stage === 'cones' && layoutId) {
+    return (
+      <div className="demo demo-cones" data-testid="cones-step">
+        <div className="card stack" style={{ overflow: 'auto' }}>
+          <div className="muted">
+            Block {blockNo} of {blockCount} · step 1 of 2: cones
+          </div>
+          <h1 style={{ textTransform: 'uppercase', margin: 0 }}>{title}</h1>
+          <ConeSetup layoutId={layoutId} changed />
+        </div>
+        <div className="col">
+          <button className="btn go huge" onClick={toInstructions}>
+            ✓ Cones are out: show the instructions
+          </button>
+          <div className="row spread">
+            <span className="muted">{holding ? 'On hold' : `Shows the instructions by itself in ${left} s`}</span>
+            <div className="row">
+              {holdBtn}
+              <button className="btn" onClick={onSkip}>
+                Skip block
+              </button>
+              <button className="btn danger" onClick={onStop}>
+                STOP
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="demo">
@@ -82,10 +134,9 @@ export function DemoPanel(props: {
           {block.cueLevel ? ` · level ${block.cueLevel}` : ''}
         </div>
         <h1 style={{ textTransform: 'uppercase' }}>{title}</h1>
-        {layoutId && conesChanged ? <ConeSetup layoutId={layoutId} changed /> : null}
-        {layoutId && layout && !conesChanged ? (
+        {layoutId && layout ? (
           <details>
-            <summary>Cones: same as the last block (tap to see)</summary>
+            <summary>{conesChanged ? 'Cones (tap to see the plan again)' : 'Cones: same as the last block (tap to see)'}</summary>
             <ConeSetup layoutId={layoutId} changed={false} />
           </details>
         ) : null}
@@ -169,14 +220,20 @@ export function DemoPanel(props: {
             Coach note ({fmtDate(n.date)}): “{n.body}”
           </div>
         ))}
+        {!isChoice && onPractice ? (
+          <button className="btn xl" onClick={onPractice} data-testid="try-it">
+            Try it first: 3 slow reps, checked by the camera
+          </button>
+        ) : null}
         {!isChoice ? (
           <button className="btn go huge" onClick={() => onStart()}>
             ▶ Start block
           </button>
         ) : null}
         <div className="row spread">
-          <span className="muted">{isChoice ? '' : playing ? 'Starts when the video is paused' : paused ? 'Paused' : `Starts by itself in ${left} s`}</span>
+          <span className="muted">{isChoice ? '' : holding ? 'On hold' : playing ? 'Starts when the video is paused' : paused ? 'Paused' : `Starts by itself in ${left} s`}</span>
           <div className="row">
+            {!isChoice ? holdBtn : null}
             <button className="btn" onClick={onSkip}>
               Skip block
             </button>

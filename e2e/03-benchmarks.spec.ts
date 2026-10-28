@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { advance, boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, slalom, start, startCard, table } from './helpers';
+import { advance, boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, slalom, start, startBlockNow, startCard, table } from './helpers';
 
 type Result = { benchmarkId: string; conditions: { layoutVersion: number; cueLevel: string; timing?: string }; values: Record<string, unknown> };
 
@@ -33,7 +33,7 @@ test('baseline: slalom timed by the app, parent questions, proposal and override
   await start(page, 'Dribbling · Baseline');
   await advance(page, 10_000 + 180_000 + 1_000); // warm-up
   await expect(page.getByRole('heading', { name: /Benchmark · Slalom time and control/i })).toBeVisible();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await page.clock.runFor(10_500);
   await slalom(page, 9.8, 11.2);
   // The form has this run's measured times (an estimate from the current block); errors start blank.

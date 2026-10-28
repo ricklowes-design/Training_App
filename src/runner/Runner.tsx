@@ -16,6 +16,8 @@ import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
 import { blockLayout, conesChanged } from './ConeSetup';
 import { cueRuleLine, cueSayLine } from './CueRules';
+import { PracticeCard } from './PracticeCard';
+import { cueDrillFor } from '../cue/resolve';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
@@ -155,8 +157,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   const cueCfgs = useRef(new Map<string, CueConfig | null>());
   const cueConfigFor_ = (b: RunBlock): CueConfig | null => {
     if (!settings.cueEngine) return null;
-    const key = `${s.blockIdx}:${s.attempt}`;
-    if (!cueCfgs.current.has(key)) cueCfgs.current.set(key, cueConfigFor(p, b, { useTripwire: camera.tripwireAvailable, seed: Date.now() }));
+    // Each practice round gets its own (slow) configuration.
+    const key = s.practice ? `${s.blockIdx}:p${s.results.length}` : `${s.blockIdx}:${s.attempt}`;
+    if (!cueCfgs.current.has(key)) cueCfgs.current.set(key, cueConfigFor(p, b, { useTripwire: camera.tripwireAvailable, seed: Date.now(), practice: s.practice }));
     return cueCfgs.current.get(key) ?? null;
   };
 
@@ -380,7 +383,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return (
       <DemoPanel
         key={s.blockIdx}
-        conesChanged={conesChanged(s.plan.blocks, s.blockIdx, p)}
+        // After a "Try it" round the cones are already out: straight to the instructions.
+        conesChanged={conesChanged(s.plan.blocks, s.blockIdx, p) && !s.results.some((r) => r.index === s.blockIdx && r.practice)}
+        onPractice={cueDrillFor(p, block) && settings.cueEngine ? () => apply(E.startPractice) : undefined}
         block={block}
         blockNo={s.blockIdx + 1}
         blockCount={s.plan.blocks.length}
@@ -398,6 +403,21 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   }
 
   // ----- End-of-drill card -----
+  if (s.phase === 'card' && s.practice) {
+    return (
+      <PracticeCard
+        p={p}
+        block={block}
+        recordId={ids ? recordIdForBlock(s.plan, ids, s.blockIdx) : undefined}
+        blockIndex={s.blockIdx}
+        log={extras.current.get(`${s.blockIdx}:0`)?.cueLog ?? []}
+        onAgain={() => apply(E.repeat)}
+        onInstructions={() => apply(E.next)}
+        onReal={() => apply((st, t) => E.startBlock(E.next(st, t), t))}
+      />
+    );
+  }
+
   if (s.phase === 'card') {
     const attempts = s.results.filter((r) => r.index === s.blockIdx);
     const blockSaved = saved.filter((r) => r.blockIndex === s.blockIdx);
@@ -615,7 +635,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         input={defCfg.trigger === 'cameraOnset' && camera.live ? camera.defenderInput : undefined}
         onFps={(fps) => void db.settings.update('main', { capabilities: { ...(settings.capabilities ?? { checkedAt: new Date().toISOString(), webgl: true, webgl2: false }), defenderFps: fps, defenderFpsAt: new Date().toISOString() } })}
         onRepsDone={() => {
-          if (block.mode === 'reps') apply(E.done);
+          if (block.mode === 'reps' || s.practice) apply(E.done);
         }}
         header={practiceHeader}
         controls={practiceControls}
@@ -633,11 +653,12 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         onLog={(log) => setExtras(`${s.blockIdx}:${s.attempt}`, { cueLog: log, cueLevel: engineCueLevel(cueCfg) })}
         input={camera.cueInput}
         onRepsDone={() => {
-          if (block.mode === 'reps') apply(E.done);
+          if (block.mode === 'reps' || s.practice) apply(E.done);
         }}
         header={
           <span>
             {camera.recording ? <span style={{ color: '#ff3b3b' }}>● </span> : null}
+            {s.practice ? 'Try it (slow) · ' : ''}
             {blockName(block)} · {fmtClock(remaining)}
             {trial ? ' · trial' : ''}
             {cueRuleLine(p, block) ? <span className="cue-rule-line"> · {cueRuleLine(p, block)}</span> : null}
@@ -664,7 +685,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   return (
     <div className={`practice ${s.pausedAtMs !== null ? 'paused' : isRest ? 'rest' : ''}`}>
       <div>
-        <div className="drill">{blockName(block)}</div>
+        <div className="drill">{s.practice ? 'Try it: ' : ''}{blockName(block)}</div>
         <div className="meta">
           {camera.recording ? <span style={{ color: '#ff3b3b' }}>● rec · </span> : null}
           Block {s.blockIdx + 1} of {s.plan.blocks.length}

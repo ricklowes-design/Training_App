@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, fillForm, home, patchSettings, place, runToEnd, setup, start, table } from './helpers';
+import { advance, boot, button, fillForm, home, patchSettings, place, runToEnd, setup, start, startBlockNow, table } from './helpers';
 
 // The 3D defender in scored reactive drills (part 15 D3, tasks 2.2–2.4).
 
@@ -10,7 +10,7 @@ async function toDefenderBlock(page: Page) {
   await place(page, 'Feinting', 9);
   await start(page, 'Feinting · Stage 3 · Session 9');
   await advance(page, 191_000); // countdown + warm-up
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500); // countdown
 }
 

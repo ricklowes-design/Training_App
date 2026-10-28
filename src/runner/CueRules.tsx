@@ -20,6 +20,12 @@ export function CueRules({ p, block }: { p: Programme; block: RunBlock }) {
   const how = c.howTo;
   return (
     <div className="note-box stack" data-testid="cue-rules" style={{ gap: 10 }}>
+      {how?.why ? (
+        <div data-testid="cue-why">
+          <h2 style={{ margin: 0 }}>What this teaches for a game</h2>
+          <p style={{ marginBottom: 0 }}>{how.why}</p>
+        </div>
+      ) : null}
       <h2 style={{ margin: 0 }}>How to do it</h2>
       {teaching?.steps?.length ? (
         <ol className="cue-steps" data-testid="cue-steps">

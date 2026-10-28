@@ -170,7 +170,7 @@ export interface CueDrill {
   values?: string[];
   rule: string;
   /** For the player: what they will see and when, what to do for each word, and a short spoken version. */
-  howTo?: { expect: string; words: Record<string, string>; say?: string };
+  howTo?: { why?: string; expect: string; words: Record<string, string>; say?: string };
   intervalMinS?: number;
   intervalMaxS?: number;
   delayAfterStartMinS?: number;

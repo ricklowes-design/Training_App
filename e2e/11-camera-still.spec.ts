@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { cameraSetup } from './camera-helpers';
 import { stillVideo } from './fake-video';
-import { advance, boot, button, closeParent, openParent, parentMenu, place, runToEnd, setup, start, table } from './helpers';
+import { advance, boot, button, closeParent, openParent, parentMenu, place, runToEnd, setup, start, startBlockNow, table } from './helpers';
 
 const baseArgs = ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required'];
 
@@ -30,7 +30,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await advance(page, 191_000);
     await page.clock.runFor(2_000);
     await expect(page.getByText('Camera set up as before.')).toBeVisible();
-    await button(page, '▶ Start block').click();
+    await startBlockNow(page);
     await page.clock.resume();
     await expect(page.locator('.endcard')).toBeVisible({ timeout: 100_000 }); // 10 s countdown + 1 minute, real time
     await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);

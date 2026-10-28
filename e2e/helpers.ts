@@ -215,3 +215,15 @@ export async function textOf(l: Locator): Promise<string> {
 export async function arrowCues(page: Page): Promise<void> {
   await patchSettings(page, { flags: { defender3d: false, liveOnsetDetector: false, speechDiagnostic: false, notifications: false, ballTracking: false, learning: false } });
 }
+
+/** From a block's demo view: confirm the cones when that step shows, then Start block. */
+export async function startBlockNow(page: Page): Promise<void> {
+  const cones = page.getByRole('button', { name: '✓ Cones are out: show the instructions' });
+  const start = page.getByRole('button', { name: '▶ Start block' });
+  await expect(cones.or(start).first()).toBeVisible();
+  if (await cones.isVisible().catch(() => false)) await cones.click();
+  await start.click();
+}
+
+/** The demo view of a block is showing (its cones step or its instructions). */
+export const demoShowing = (page: Page) => page.getByRole('button', { name: '✓ Cones are out: show the instructions' }).or(page.getByRole('button', { name: '▶ Start block' })).first();

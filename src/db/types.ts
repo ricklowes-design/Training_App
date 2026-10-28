@@ -156,7 +156,9 @@ export interface BlockResult {
   windows?: { label: string; startMs: number; endMs?: number }[];
   index: number; // index in the run plan
   kind: RunBlockKind;
-  attempt: number; // 1 for the first run of a block, 2 for a Repeat, …
+  attempt: number; // 1 for the first run of a block, 2 for a Repeat, …; 0 for a practice try
+  /** "Try it": a few slow reps before the real block, to check the player understands. Never counts. */
+  practice?: boolean;
   drillId?: string;
   benchmarkId?: string;
   anchorId?: string;

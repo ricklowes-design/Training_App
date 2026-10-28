@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadProgramme } from '../test/fixtures';
 import { evaluateCompletion } from '../domain/completion';
 import { findSession, standardPlan } from '../domain/plans';
-import { done, initRun, next, pause, repeat, restartWithInstructions, resume, skip, startBlock, stop, tick, type Labels, type RunEvent, type RunState } from './engine';
+import { done, endPractice, initRun, next, pause, repeat, restartWithInstructions, startPractice, resume, skip, startBlock, stop, tick, type Labels, type RunEvent, type RunState } from './engine';
 
 const p = loadProgramme();
 const plan = standardPlan(p, findSession(p, 'feinting', 7)!);
@@ -67,6 +67,29 @@ describe('session runner', () => {
     expect(completion(out.s).status).toBe('completed');
     // Not from a rest or the warm-up.
     expect(restartWithInstructions(initRun(plan, 0), 0).phase).toBe(initRun(plan, 0).phase);
+  });
+
+  it('Try it: a practice round (attempt 0) before the block never counts, then back to the instructions', () => {
+    let s = initRun(plan, 0);
+    ({ s } = run(s, 0, 200_000)); // block 2 demo
+    s = startPractice(s, 200_000);
+    expect(s).toMatchObject({ practice: true, attempt: 0, phase: 'countdown', blockIdx: 1 });
+    ({ s } = run(s, 200_000, 215_000)); // into the practice run
+    s = done(s, 215_000).state;
+    expect(s.phase).toBe('card');
+    expect(s.results[s.results.length - 1]).toMatchObject({ index: 1, attempt: 0, practice: true });
+    s = repeat(s, 216_000); // another practice round
+    expect(s).toMatchObject({ practice: true, attempt: 0, phase: 'countdown' });
+    ({ s } = run(s, 216_000, 230_000));
+    s = done(s, 230_000).state;
+    s = next(s, 231_000); // from the practice card: back to the instructions
+    expect(s).toMatchObject({ practice: false, attempt: 1, phase: 'demo', blockIdx: 1 });
+    expect(endPractice(s, 231_000)).toBe(s);
+    // Practice rounds alone never complete a block.
+    const out = run(s, 231_000, 3 * 60 * 60_000);
+    expect(completion(out.s).status).toBe('completed');
+    const practiceOnly = { ...out.s, results: out.s.results.filter((r) => r.index !== 1 || r.practice) };
+    expect(completion(practiceOnly).status).toBe('partial');
   });
 
   it('a skipped core block gives partial', () => {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, closeParent, home, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startCard, table } from './helpers';
+import { advance, boot, button, closeParent, home, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startBlockNow, startCard, table } from './helpers';
 
 async function ready(page: Page) {
   await boot(page);
@@ -274,7 +274,7 @@ test('demonstrations: own clip loops in the demo view; a link that cannot play s
   await start(page, 'Dribbling · Stage 1 · Session 2');
   await advance(page, 191_000);
   await expect(page.locator('.demo video')).toHaveAttribute('loop', '');
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_000 + 360_000 + 21_000 + 61_000); // D1, card, rest
   await expect(page.getByText('The uploader does not allow this video to play inside other apps.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open on YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=abcdefghijk');

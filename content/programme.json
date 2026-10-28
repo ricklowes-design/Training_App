@@ -1,5 +1,5 @@
 {
-  "version": "0.5.6",
+  "version": "0.5.7",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -4018,7 +4018,8 @@
           "LEFT": "Feint to the right, then exit LEFT past the feint cone.",
           "RIGHT": "Feint to the left, then exit RIGHT past the feint cone."
         },
-        "say": "Feint away from the arrow, exit on the arrow side."
+        "say": "Feint away from the arrow, exit on the arrow side.",
+        "why": "In a game you feint to make the defender lean one way, then go the other. The arrow plays the defender's weak side: you practise selling the fake away from it and exiting fast on the side that's open."
       }
     },
     {
@@ -4068,7 +4069,8 @@
           "HELD": "The defender didn't move: push-and-go past them, or do a second feint the other way.",
           "BLOCKED": "The defender is in your way: protect the ball (shield and turn away, or drag it back)."
         },
-        "say": "Bit, go. Held, change. Blocked, protect the ball."
+        "say": "Bit, go. Held, change. Blocked, protect the ball.",
+        "why": "A feint only works if you watch what the defender does with it. If they bite, go; if they hold their ground, change your move; if they block you, protect the ball. This drill trains reading the defender instead of doing the same move every time."
       }
     },
     {
@@ -4113,7 +4115,8 @@
           "RIGHT FREE": "Space on your right: first touch to your right, out past the cones on that side.",
           "BOTH BLOCKED": "No space either side: stop the ball and turn back toward the screen (where you started)."
         },
-        "say": "Look behind while the ball rolls. Left free, touch left. Right free, touch right. Both blocked, turn back."
+        "say": "Look behind while the ball rolls. Left free, touch left. Right free, touch right. Both blocked, turn back.",
+        "why": "In a game, the best players look over their shoulder BEFORE the ball reaches them, so they already know where the space is and where the defenders are. Then their first touch can take them away from pressure instead of into it. In this drill the screen behind you plays the part of the pitch behind you: LEFT FREE means no defender on your left, so you can turn that way; BOTH BLOCKED means defenders close on both sides, so turning would lose the ball: you keep it safe and go back the way you came (in a game: play it back or shield it). Pushing the ball away and following it gives you a rolling ball to receive on the move, like a pass, and the time while it rolls is your chance to look."
       }
     },
     {
@@ -4178,7 +4181,8 @@
           "RIGHT FREE": "First touch to your right, and call the number before the touch.",
           "BOTH BLOCKED": "Turn back, and call the number before the touch."
         },
-        "say": "Look behind. Go to the free side and call the number before your touch."
+        "say": "Look behind. Go to the free side and call the number before your touch.",
+        "why": "The same game habit as Space behind (look before the ball arrives, so the first touch goes into space), with a number to call so you can prove you really read the screen and didn't guess."
       }
     },
     {
@@ -4209,7 +4213,8 @@
           "YELLOW": "Say YELLOW out loud.",
           "GREEN": "Say GREEN out loud."
         },
-        "say": "Every second roll, look behind and say the colour."
+        "say": "Every second roll, look behind and say the colour.",
+        "why": "Looking around while you have the ball is a habit: the more often you check, the more you see in a game. Saying the colour proves you looked."
       }
     },
     {
@@ -4241,7 +4246,8 @@
           "GO": "Exit straight away on the side you were going.",
           "HELD": "Do a body feint the other way, then exit."
         },
-        "say": "Go, exit now. Held, body feint the other way, then exit."
+        "say": "Go, exit now. Held, body feint the other way, then exit.",
+        "why": "Good defenders don't always fall for the first feint. This drill trains you to check after your scissors: if the defender bit, go now; if they held, a second move takes you past."
       }
     },
     {
@@ -4275,7 +4281,8 @@
           "RIGHT": "Cut through the RIGHT gate.",
           "UP": "Stop the ball dead with your sole, right there."
         },
-        "say": "Arrow left, left gate. Arrow right, right gate. Up, stop the ball dead."
+        "say": "Arrow left, left gate. Arrow right, right gate. Up, stop the ball dead.",
+        "why": "In a game the space you want can open left, right or not at all. Reading the cue early and cutting late trains you to look up while dribbling and choose the open space, or stop and keep the ball when there's none."
       }
     },
     {
@@ -4307,7 +4314,8 @@
           "GO": "Keep dribbling forward.",
           "BLOCKED": "Your path is blocked: drag-back or hook turn, into the open space, away from the cone."
         },
-        "say": "Go, keep going. Blocked, turn away into space."
+        "say": "Go, keep going. Blocked, turn away into space.",
+        "why": "When a defender steps into your dribbling path you need a quick turn away into space instead of running into them. This drill trains spotting the block and turning out of it."
       }
     },
     {
@@ -4337,7 +4345,8 @@
           "BEHIND BLOCKED": "Pressure behind you: take your first touch FORWARD, away from the screen.",
           "FRONT BLOCKED": "Pressure in front: drag the ball back and turn away."
         },
-        "say": "Behind blocked, touch forward. Front blocked, drag back and turn."
+        "say": "Behind blocked, touch forward. Front blocked, drag back and turn.",
+        "why": "In a game, when you receive with a defender close, you need to know where the pressure is BEFORE your first touch. Pressure behind you: touch forward, away from it. Pressure in front: the drag-back keeps the ball away from the defender and turns you out of trouble."
       }
     }
   ],

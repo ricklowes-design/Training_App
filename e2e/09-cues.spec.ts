@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, arrowCues, boot, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, table } from './helpers';
+import { advance, arrowCues, boot, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table } from './helpers';
 
 type Block = { index: number; drillId?: string; cueLevel?: string; cueLog?: { cueMs?: number; repStartMs: number; value?: string }[] };
 
 async function toFirstWorkBlock(page: Page) {
   await advance(page, 191_000); // countdown + warm-up
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500); // countdown
 }
 
@@ -75,12 +75,12 @@ test('word cues: the SB benchmark runs its 10 reps at the stage cue duration, th
   await expect(how.locator('tr', { hasText: 'BOTH BLOCKED' })).toContainText('No space either side: stop the ball and turn back');
   await page.getByText('Cones: same as the last block (tap to see)').click();
   await expect(page.getByTestId('cone-setup')).toContainText('Receive box');
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await expect(page.locator('.practice .sub')).toContainText('Walk to the start. Stand between the cones and the Chromebook, with your back to the screen.');
   // ↺ Instructions goes back to the test's instructions; Start begins it again.
   await button(page, '↺ Instructions').click();
   await expect(page.getByTestId('cue-rules')).toBeVisible();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   const cue = await nextCue(page);
   expect(['LEFT FREE', 'RIGHT FREE', 'BOTH BLOCKED']).toContain(cue);
@@ -173,7 +173,7 @@ test('a camera estimate from this block starts the SB card when every rep was ju
       }),
   );
   await button(page, 'Skip block').click();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   await advance(page, 95_000, 1_000);
   await expect(page.locator('.count', { hasText: 'Correct decisions /10' })).toBeVisible();
@@ -182,4 +182,29 @@ test('a camera estimate from this block starts the SB card when every rep was ju
   await button(page, 'Confirm').click();
   const res = await table<{ benchmarkId: string; values: { correct: number }; prefilledFrom?: string }>(page, 'benchmarkResults');
   expect(res.find((x) => x.benchmarkId === 'SB')).toMatchObject({ values: { correct: 6 }, prefilledFrom: 'camera' });
+});
+
+test('cones, then instructions with the game purpose, then "Try it": 3 slow reps, a check card, then the real drill', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await place(page, 'Scanning', 3);
+  await start(page, 'Scanning · Stage 1 · Session 3');
+  await advance(page, 191_000); // warm-up, then the first cue drill's demo view
+  await button(page, '✓ Cones are out: show the instructions').click();
+  await expect(page.getByTestId('cue-why')).toContainText('look over their shoulder BEFORE the ball reaches them');
+  await button(page, 'Try it first: 3 slow reps, checked by the camera').click();
+  await expect(page.locator('.practice .drill, .cue-header').first()).toBeVisible();
+  await advance(page, 10_500 + 3 * 15_000 + 2_000);
+  const card = page.getByTestId('practice-card');
+  await expect(card).toBeVisible({ timeout: 15_000 });
+  await expect(card).toContainText('The camera did not record this round'); // camera off in this test
+  await expect(card.locator('tbody tr')).toHaveCount(3);
+  // Back to the instructions skips the cones step (they are out), then the real drill.
+  await button(card, 'Back to the instructions').click();
+  await expect(page.getByTestId('cones-step')).toHaveCount(0);
+  await expect(page.getByTestId('try-it')).toBeVisible();
+  await startBlockNow(page);
+  await expect(page.getByText('Try it')).toHaveCount(0);
+  const recs = await table<{ blocks: { attempt: number; practice?: boolean }[] }>(page, 'sessionRecords');
+  expect(recs.length === 0 || recs[0].blocks.every((b) => b.attempt > 0 || b.practice)).toBe(true);
 });

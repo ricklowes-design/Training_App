@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, captureSpeech, home, place, runToEnd, setup, start, startCard, table } from './helpers';
+import { advance, boot, button, captureSpeech, demoShowing, home, place, runToEnd, setup, start, startBlockNow, startCard, table } from './helpers';
 
 type Rec = { areaId: string; sessionNumber: number; status: string; reasons: string[]; trial: boolean; blocks: { index: number; attempt: number; note?: string; doneEarly: boolean; skipped: boolean }[] };
 
@@ -12,7 +12,7 @@ async function ready(page: Page) {
 /** Warm-up: 10 s countdown + 3 min. Then block 2's demo view. */
 async function toBlock2Demo(page: Page) {
   await advance(page, 10_000 + 180_000 + 1_000);
-  await expect(button(page, '▶ Start block')).toBeVisible();
+  await expect(demoShowing(page)).toBeVisible();
 }
 
 test('a 20-minute session runs to the end without a tap, counts, and unlocks the next', async ({ page }) => {
@@ -101,6 +101,7 @@ test('demo view starts by itself; Start block, DONE after 80%, Repeat and notes 
   await toBlock2Demo(page);
   // Demo view content.
   await expect(page.getByRole('heading', { name: 'SLALOM CLOSE CONTROL' })).toBeVisible();
+  await button(page, '✓ Cones are out: show the instructions').click();
   await expect(page.getByText(/Set-up:.*L1 Slalom — 5 cones 1 m apart/)).toBeVisible();
   // The slalom's approved YouTube demonstration plays when YouTube can be reached (CI); otherwise the fallback shows.
   await expect(
@@ -111,7 +112,7 @@ test('demo view starts by itself; Start block, DONE after 80%, Repeat and notes 
       .first(),
   ).toBeVisible();
   await expect(page.getByText(/Starts by itself in \d+ s/)).toBeVisible();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await expect(page.locator('.practice .drill')).toHaveText('Slalom close control');
   await advance(page, 10_000 + 0.85 * 360_000);
   await button(page, 'DONE').click();
@@ -144,7 +145,7 @@ test("the end-of-drill card shows last time's block from an earlier session", as
   await home(page);
   await start(page, 'Dribbling · Stage 1 · Session 2');
   await toBlock2Demo(page);
-  await advance(page, 65_000 + 10_000 + 360_000); // the slalom's cones are set out first: 60 s
+  await advance(page, 85_000 + 10_000 + 360_000); // the slalom's cones step (60 s) and its instructions (20 s) first
   await expect(page.locator('.endcard')).toContainText(/Last time \(Nov 3\): 3:00 of 3:00/);
 });
 
@@ -163,7 +164,7 @@ test('the warm-up can be skipped with one tap; the session is then partial and s
   await start(page, 'Dribbling · Stage 1 · Session 1');
   await expect(page.locator('.practice .drill')).toHaveText('Warm-up');
   await button(page, 'Skip warm-up').click(); // from the countdown
-  await expect(button(page, '▶ Start block')).toBeVisible();
+  await expect(demoShowing(page)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'SLALOM CLOSE CONTROL' })).toBeVisible();
   await runToEnd(page);
   const card = page.locator('.card', { hasText: 'Dribbling · Session 1' });

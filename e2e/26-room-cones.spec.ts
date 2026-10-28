@@ -32,9 +32,16 @@ test('a drill starts with its cone set-up, placed against the measured fixed poi
   await expect(cones.locator('.cone-list li').nth(1)).toHaveText('Slalom cone 2: 1.8 m from the back wall, in the middle, 1.5 m from each side wall, level with the door frame (right)');
   await expect(cones.getByTestId('landmark')).toContainText('door frame');
   await expect(cones.getByTestId('start-position')).toContainText('Start (yellow circle): Stand behind the first cone');
-  await expect(page.getByText(/Starts by itself in (5\d|60) s/)).toBeVisible();
-  await advance(page, 25_000);
-  await expect(button(page, '▶ Start block')).toBeVisible(); // still waiting after the usual 20 s
+  // Step 1 of 2: the cones. Hold stops the countdown; nothing starts from here.
+  await expect(page.getByTestId('cones-step')).toContainText('Shows the instructions by itself in');
+  await button(page, '⏸ Hold').click();
+  await advance(page, 120_000);
+  await expect(page.getByTestId('cones-step')).toContainText('On hold');
+  await button(page, '✓ Cones are out: show the instructions').click();
+  // Step 2 of 2: the instructions; Start block (or it starts by itself in 20 s unless held).
+  await expect(page.getByTestId('cones-step')).toHaveCount(0);
+  await expect(button(page, '▶ Start block')).toBeVisible();
+  await expect(page.getByText(/Starts by itself in (1\d|20) s/)).toBeVisible();
 });
 
 test('home asks for the ball check once; "Not now" puts it away', async ({ page }) => {

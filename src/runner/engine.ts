@@ -25,6 +25,8 @@ export interface RunState {
   stopped: boolean;
   fired: string[]; // announcements already made in this phase
   sessionStartMs: number;
+  /** Running a "Try it" round of the current block (attempt 0), not the block itself. */
+  practice?: boolean;
 }
 
 export type RunEvent = { type: 'say'; text: string } | { type: 'tone'; kind: 'start' | 'end' | 'tick' | 'warn' | 'cue' } | { type: 'blockEnded'; result: BlockResult };
@@ -120,6 +122,7 @@ function makeResult(s: RunState, now: number, how: 'end' | 'done' | 'skip'): Blo
     doneEarly: how === 'done',
     skipped: how === 'skip',
     mode: b.mode,
+    ...(s.practice ? { practice: true } : {}),
   };
 }
 
@@ -183,6 +186,18 @@ export function tick(s: RunState, now: number, labels: Labels): { state: RunStat
   return { state: s, events };
 }
 
+/** "Try it" from the demo view: a slow practice round of this block (attempt 0) that never counts. */
+export function startPractice(s: RunState, now: number): RunState {
+  if (s.phase !== 'demo' || !isDrillBlock(currentBlock(s))) return s;
+  return enterPhase({ ...s, practice: true, attempt: 0, activeMs: 0, segStartMs: null }, 'countdown', now);
+}
+
+/** After the practice round: back to the block's instructions, ready for the real thing (attempt 1). */
+export function endPractice(s: RunState, now: number): RunState {
+  if (!s.practice) return s;
+  return enterPhase({ ...s, practice: false, attempt: 1, activeMs: 0, segStartMs: null }, 'demo', now);
+}
+
 /** One tap on the demo view: start the countdown. */
 export function startBlock(s: RunState, now: number): RunState {
   if (s.phase !== 'demo') return s;
@@ -231,11 +246,14 @@ export function restartWithInstructions(s: RunState, now: number): RunState {
 
 export function repeat(s: RunState, now: number): RunState {
   if (s.phase !== 'card') return s;
+  // Another practice round stays a practice round.
+  if (s.practice) return enterPhase({ ...s, activeMs: 0, segStartMs: null }, 'countdown', now);
   return enterPhase({ ...s, attempt: s.attempt + 1, activeMs: 0, segStartMs: null }, 'countdown', now);
 }
 
 /** Next from the end-of-drill card. */
 export function next(s: RunState, now: number): RunState {
   if (s.phase !== 'card') return s;
+  if (s.practice) return endPractice(s, now);
   return gotoBlock(s, s.blockIdx + 1, now);
 }

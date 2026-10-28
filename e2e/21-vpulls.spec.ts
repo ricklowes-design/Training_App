@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, place, setup, start, table } from './helpers';
+import { advance, boot, button, place, setup, start, startBlockNow, table } from './helpers';
 
 // CB-1: 30 s of V-pulls per foot on the tone, recorded as windows for the camera; then the gate test.
 
@@ -14,7 +14,7 @@ test('the V-pull test runs a timed window per foot, then the gate test continues
   await advance(page, 61_000); // rest
   await button(page, 'Skip block').click(); // C2
   await expect(page.getByRole('heading', { name: /Benchmark · V-pulls and outside-touch gate/i })).toBeVisible();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   const view = page.getByTestId('vpull-windows');
   await expect(view).toContainText('V-pulls · Right foot');

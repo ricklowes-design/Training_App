@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, home, openFocus, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startCard } from './helpers';
+import { advance, boot, button, home, openFocus, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startBlockNow, startCard } from './helpers';
 
 const TILES: [RegExp, string | RegExp][] = [
   [/^Coach notes/, 'New note'],
@@ -67,7 +67,7 @@ test('head-up slalom: digits flash during the timed run and are listed for scori
   await start(page, 'Dribbling · Stage 2 · Session 7');
   // Block 2 is D4: the practice view shows a big digit.
   await advance(page, 191_000);
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   await expect(page.locator('.practice')).toContainText(/^.*\d/);
   const digit = page.locator('.practice > div').filter({ hasText: /^\d$/ });
@@ -78,7 +78,7 @@ test('head-up slalom: digits flash during the timed run and are listed for scori
   await advance(page, 61_000);
   await button(page, 'Skip block').click(); // D5
   await expect(page.getByRole('heading', { name: /Slalom time and control/i })).toBeVisible();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   for (const _ of [0, 1]) {
     await page.clock.runFor(8_100);

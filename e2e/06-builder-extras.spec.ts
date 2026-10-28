@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, fillForm, home, openFocus, patchSettings, place, runToEnd, setup, startCard, table } from './helpers';
+import { advance, boot, button, fillForm, home, openFocus, patchSettings, place, runToEnd, setup, startBlockNow, startCard, table } from './helpers';
 
 async function ready(page: Page) {
   await boot(page);
@@ -93,7 +93,7 @@ test('no-ball picture quiz: an extra with its score; never unlocks', async ({ pa
   await page.getByRole('checkbox').uncheck();
   await button(page, 'Start').click();
   await expect(page.getByText('Picture quiz', { exact: false }).first()).toBeVisible();
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   await expect(page.getByText(/Picture 1 of 20/)).toBeVisible();
   for (let i = 0; i < 15; i++) await answer(page); // 15 right, then let 5 time out

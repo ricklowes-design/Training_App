@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openParent, patchSettings, place, setup, start, table } from './helpers';
+import { advance, boot, button, openParent, patchSettings, place, setup, start, startBlockNow, table } from './helpers';
 
 // The realistic defender (recorded human movement), off by default.
 
@@ -33,7 +33,7 @@ test('when on, a reactive drill uses it and records the renderer with each rep',
   await place(page, 'Feinting', 9);
   await start(page, 'Feinting · Stage 3 · Session 9');
   await advance(page, 191_000);
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   await expect(page.locator('[data-testid="defender-3d"], [data-testid="defender-2d"]')).toBeVisible();
   await page.waitForTimeout(2000); // the 3D module and the clips load in real time

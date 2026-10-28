@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { advance, boot, button, openParent, place, setup, start } from './helpers';
+import { advance, boot, button, openParent, place, setup, start, startBlockNow } from './helpers';
 
 // Screenshots of the 3D defender in a block (docs/screens 60 and docs/screens/defender). Runs only with SHOTS=1:
 //   SHOTS=1 npx playwright test e2e/shots-defender.spec.ts
@@ -12,7 +12,7 @@ test('defender block screenshots', async ({ page }) => {
   await place(page, 'Feinting', 9);
   await start(page, 'Feinting · Stage 3 · Session 9');
   await advance(page, 191_000);
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   await page.waitForTimeout(3000); // real time for the 3D module to load
   await page.clock.runFor(3000);

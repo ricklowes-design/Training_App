@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openFocus, openParent, patchSettings, runToEnd, setup, table } from './helpers';
+import { advance, boot, button, openFocus, openParent, patchSettings, runToEnd, setup, startBlockNow, table } from './helpers';
 
 // Experimental features, each off by default: the digit diagnostic by voice and the ball detector
 // model (network only). Cone detection is in 16-cone-detection.spec.ts.
@@ -37,7 +37,7 @@ test('digit diagnostic by voice: off by default; when on, what is heard becomes 
   await page.getByRole('checkbox').uncheck();
   await button(page, 'Start').click();
   await advance(page, 10_000 + 180_000 + 1_000); // countdown and warm-up
-  await button(page, '▶ Start block').click();
+  await startBlockNow(page);
   await advance(page, 10_500);
   // Call out each number as it appears; get two wrong on purpose.
   let said = 0;

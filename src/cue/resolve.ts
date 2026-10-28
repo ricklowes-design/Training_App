@@ -16,7 +16,10 @@ export function cueDrillFor(p: Programme, block: RunBlock): Programme['cueDrills
 }
 
 /** The cue drill and settings for a block, or null when the block has no cues. */
-export function cueConfigFor(p: Programme, block: RunBlock, opts: { useTripwire: boolean; seed?: number }): CueConfig | null {
+/** "Try it" rounds: this many reps, each cue shown at least this long, reps this much further apart. */
+export const PRACTICE = { reps: 3, minDisplayS: 5, periodFactor: 1.6 };
+
+export function cueConfigFor(p: Programme, block: RunBlock, opts: { useTripwire: boolean; seed?: number; practice?: boolean }): CueConfig | null {
   let cueId: string | undefined;
   let reps: number | null = null;
   let fixedTripwireDelayMs: number | undefined;
@@ -39,9 +42,17 @@ export function cueConfigFor(p: Programme, block: RunBlock, opts: { useTripwire:
   } else if (block.kind === 'work') {
     cueId = p.drills.find((d) => d.id === block.drillId)?.cueDrillId;
   }
-  const drill = cueId ? p.cueDrills.find((c) => c.id === cueId) : undefined;
-  if (!drill || !drill.values?.length) return null;
-  if (block.kind === 'benchmark') reps = drill.reps ?? 10;
+  const found = cueId ? p.cueDrills.find((c) => c.id === cueId) : undefined;
+  if (!found || !found.values?.length) return null;
+  if (block.kind === 'benchmark') reps = found.reps ?? 10;
+  // A practice round is slow: a few reps, the word up longer, more time between reps, no tricks.
+  const drill = opts.practice ? { ...found, repPeriodS: Math.round((found.repPeriodS ?? 8) * PRACTICE.periodFactor) } : found;
+  if (opts.practice) {
+    reps = PRACTICE.reps;
+    const d = displayOverride ?? parseDisplayS(block.params, block.cueLevel, found.displayS);
+    displayOverride = [Math.max(PRACTICE.minDisplayS, d[0]), Math.max(PRACTICE.minDisplayS, d[1])];
+    catchOverride = 0;
+  }
   return {
     drill,
     displayS: displayOverride ?? parseDisplayS(block.params, block.cueLevel, drill.displayS),
@@ -51,9 +62,9 @@ export function cueConfigFor(p: Programme, block: RunBlock, opts: { useTripwire:
     catchFraction: catchOverride ?? drill.catchFraction ?? 0,
     catchTypes: drill.catchTypes ?? [],
     // Advanced scanning: the open side can change once after the first cue (part 16 §5 mode C).
-    secondCueFraction: /second information change/i.test(block.params ?? '') && drill.secondCue ? Math.max(0.3, drill.secondCue.fraction) : drill.secondCue?.fraction ?? 0,
+    secondCueFraction: opts.practice ? 0 : /second information change/i.test(block.params ?? '') && drill.secondCue ? Math.max(0.3, drill.secondCue.fraction) : drill.secondCue?.fraction ?? 0,
     seed: opts.seed,
-    hidden: /no information/i.test(block.params ?? ''),
+    hidden: !opts.practice && /no information/i.test(block.params ?? ''),
   };
 }
 

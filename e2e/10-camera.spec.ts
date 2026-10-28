@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { cameraSetup } from './camera-helpers';
 import { movingVideo } from './fake-video';
-import { advance, arrowCues, boot, button, home, openParent, place, setup, start, table } from './helpers';
+import { advance, arrowCues, boot, button, home, openParent, place, setup, start, startBlockNow, table } from './helpers';
 
 // Fake webcam: a moving picture with a tripwire flash every 4 s.
 const baseArgs = [
@@ -43,7 +43,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     // The test video has a bar that flashes for half a second every 4 s; the check runs every second.
     for (let i = 0; i < 15 && !(await page.getByText('Camera set up as before.').count()); i++) await page.clock.runFor(1_000);
     await expect(page.getByText('Camera set up as before.')).toBeVisible();
-    await button(page, '▶ Start block').click();
+    await startBlockNow(page);
     await page.clock.resume(); // recording and the tripwire run in real time
     await expect(page.locator('.practice.cue')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('.overlay-top')).toContainText('●'); // recording dot

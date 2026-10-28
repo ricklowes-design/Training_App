@@ -27,7 +27,7 @@ export interface CompletionOutcome {
 export const MIN_PRESENCE_FRACTION = 0.7;
 
 export function blockRanFully(r: BlockResult): boolean {
-  if (r.skipped) return false;
+  if (r.skipped || r.practice) return false;
   if (r.presenceFrac !== undefined && r.presenceFrac < MIN_PRESENCE_FRACTION) return false;
   if (r.ranToEnd) return true;
   return r.mode === 'reps' && r.doneEarly && r.elapsedS >= REPS_DONE_MIN_FRACTION * r.plannedS;

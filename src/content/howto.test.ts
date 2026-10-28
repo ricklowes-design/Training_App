@@ -17,3 +17,10 @@ describe('player instructions for cue drills', () => {
     for (const d of p.drills.filter((x) => x.cueDrillId)) expect(d.steps?.length ?? 0, d.id).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe('what each cue drill teaches', () => {
+  it('every cue drill in use explains its game purpose', () => {
+    const used = new Set([...p.drills.map((d) => d.cueDrillId), ...Object.values(p.benchmarkCueDrills ?? {})].filter(Boolean));
+    for (const c of p.cueDrills.filter((x) => used.has(x.id))) expect(c.howTo?.why?.length ?? 0, c.id).toBeGreaterThan(60);
+  });
+});
