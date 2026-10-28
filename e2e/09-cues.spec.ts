@@ -70,9 +70,10 @@ test('word cues: the SB benchmark runs its 10 reps at the stage cue duration, th
   // The test has its cone set-up too (receive box, the same as the drill before it), and the countdown says where the start is.
   // What the screen will show, and what to do for each word.
   const how = page.getByTestId('cue-rules');
-  await expect(how.getByTestId('cue-steps')).toContainText('Push the ball about 2 m away from you');
-  await expect(how).toContainText('What you will see: A word appears on the screen BEHIND you');
-  await expect(how.locator('tr', { hasText: 'BOTH BLOCKED' })).toContainText('No space either side: stop the ball and turn back');
+  await expect(how.getByTestId('cue-steps')).toContainText('Push the ball forward. Follow it.'); // no wall in this room
+  await expect(how.getByTestId('cue-steps')).toContainText('Check your shoulder.');
+  await expect(how.locator('.howto-word', { hasText: 'BOTH BLOCKED' })).toContainText('Stop it. Go back.');
+  await expect(how.locator('.howto-word', { hasText: 'LEFT FREE' })).toContainText('Touch and turn LEFT.');
   await page.getByText('Cones: same as the last block (tap to see)').click();
   await expect(page.getByTestId('cone-setup')).toContainText('Receive box');
   await startBlockNow(page);
@@ -191,7 +192,7 @@ test('cones, then instructions with the game purpose, then "Try it": 3 slow reps
   await start(page, 'Scanning · Stage 1 · Session 3');
   await advance(page, 191_000); // warm-up, then the first cue drill's demo view
   await button(page, '✓ Cones are out: show the instructions').click();
-  await expect(page.getByTestId('cue-why')).toContainText('look over their shoulder BEFORE the ball reaches them');
+  await expect(page.getByTestId('cue-why')).toContainText('Look before the ball comes.');
   await button(page, 'Try it first: 3 slow reps, checked by the camera').click();
   await expect(page.locator('.practice .drill, .cue-header').first()).toBeVisible();
   await advance(page, 10_500 + 3 * 15_000 + 2_000);
@@ -207,4 +208,33 @@ test('cones, then instructions with the game purpose, then "Try it": 3 slow reps
   await expect(page.getByText('Try it')).toHaveCount(0);
   const recs = await table<{ blocks: { attempt: number; practice?: boolean }[] }>(page, 'sessionRecords');
   expect(recs.length === 0 || recs[0].blocks.every((b) => b.attempt > 0 || b.practice)).toBe(true);
+});
+
+test('with a wall: the wall version of the steps (kick at the wall, check your shoulder, receive the bounce)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const r = indexedDB.open('home-training');
+        r.onsuccess = () => {
+          const tx = r.result.transaction('roomProfiles', 'readwrite');
+          const st = tx.objectStore('roomProfiles');
+          const g = st.get('room-1');
+          g.onsuccess = () => st.put({ ...g.result, wallUsable: true });
+          tx.oncomplete = () => resolve();
+        };
+      }),
+  );
+  await page.reload();
+  await patchSettings(page, { sound: { tones: true, speech: true, endOfSessionLine: true, volume: 0.9, voiceRate: 0.95, wallMic: false } });
+  await page.reload();
+  await place(page, 'Scanning', 3);
+  await start(page, 'Scanning · Stage 1 · Session 3');
+  await advance(page, 191_000);
+  await button(page, '✓ Cones are out: show the instructions').click();
+  const steps = page.getByTestId('cue-steps');
+  await expect(steps).toContainText('Face the back wall. Screen behind you.');
+  await expect(steps).toContainText('Kick the ball at the wall.');
+  await expect(steps).toContainText('Ball comes back: touch the way the word says.');
 });

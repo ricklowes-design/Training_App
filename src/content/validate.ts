@@ -125,6 +125,7 @@ const programmeShape: Check = obj({
       setupText: str,
       prescription: str,
       steps: optional(list(str)),
+      stepsWall: optional(list(str)),
       cues: list(str),
       commonErrors: list(str),
       demo: obj({

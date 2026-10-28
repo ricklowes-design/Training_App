@@ -62,6 +62,8 @@ export interface Drill {
   prescription: string;
   /** One rep, step by step, for the player (shown before the block). */
   steps?: string[];
+  /** The same rep when a wall can be used: kick at the wall, the cue comes on the bounce. */
+  stepsWall?: string[];
   cues: string[];
   commonErrors: string[];
   demo: DemoRef;

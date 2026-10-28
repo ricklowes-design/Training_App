@@ -211,3 +211,12 @@ table.data th { color: var(--muted); font-weight: 600; }
 .cue-steps { margin: 0; padding-left: 1.4em; line-height: 1.5; font-size: 1.05rem; }
 .cue-steps li { margin-bottom: 4px; }
 .cue-words td { vertical-align: middle; }
+
+/* Drill instructions, readable from across the room. */
+.howto { display: flex; flex-direction: column; gap: 14px; background: var(--panel); border: 2px solid var(--accent); border-radius: var(--radius); padding: 18px; }
+.howto-why { font-size: 1.35rem; margin: 0; }
+.howto-steps { margin: 0; padding-left: 1.6em; font-size: 1.7rem; line-height: 1.35; font-weight: 600; }
+.howto-steps li { margin-bottom: 6px; }
+.howto-words { display: flex; flex-direction: column; gap: 10px; }
+.howto-word { display: flex; align-items: center; gap: 14px; font-size: 1.6rem; font-weight: 600; }
+.howto-word .pill { font-size: 1.3rem; min-width: 9.5em; text-align: center; }

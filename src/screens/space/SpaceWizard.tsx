@@ -123,9 +123,18 @@ function MeasureStep({ profile, space, setSpace, onChange, units, onNext, onNoTa
               ]}
             />
           </div>
-          <label className="check">
-            <input type="checkbox" checked={profile.wallUsable} onChange={(e) => onChange({ ...withSpace(profile, space), wallUsable: e.target.checked })} />A wall can be used for passing and rebounds
-          </label>
+          <div className="card tight stack" data-testid="wall-question">
+            <strong style={{ fontSize: '1.2rem' }}>Can she kick the ball against the back wall?</strong>
+            <span className="muted">A bare wall at the start end, and the household is fine with it. Some drills then use the wall: kick, check your shoulder, receive the bounce.</span>
+            <Seg
+              value={profile.wallUsable ? 'yes' : 'no'}
+              onChange={(v) => onChange({ ...withSpace(profile, space), wallUsable: v === 'yes' })}
+              options={[
+                { value: 'yes', label: 'Yes, the wall can be used' },
+                { value: 'no', label: 'No wall' },
+              ]}
+            />
+          </div>
         </div>
         <SpacePlan profile={profile} space={space} units={units} />
       </div>

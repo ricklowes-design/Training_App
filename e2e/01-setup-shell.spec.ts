@@ -23,6 +23,8 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await page.getByRole('button', { name: 'Back', exact: true }).last().click();
   await expect(page.getByRole('heading', { name: "Let's start with measuring your space" })).toBeVisible();
   await expect(page.getByLabel('Room length metres')).toHaveValue('4.3');
+  await expect(page.getByTestId('wall-question')).toContainText('Can she kick the ball against the back wall?');
+  await button(page, 'Yes, the wall can be used').click();
   await button(page, '2 Photo').click();
   await expect(page.getByRole('heading', { name: 'Position the Chromebook and take a photo' })).toBeVisible();
   await expect(button(page, 'Take the photo')).toBeEnabled({ timeout: 15_000 });
@@ -72,6 +74,10 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await expect(page.getByRole('heading', { name: 'Set-up · Your ball' })).toBeVisible();
   await expect(page.getByTestId('ball-check')).toContainText('Which ball works best?');
   await button(page, 'Next').click();
+  // Recording: a plain yes/no.
+  await expect(page.getByTestId('recording-question')).toContainText('Record the drills with the webcam?');
+  await button(page, 'Yes, record the drills').click();
+  await button(page, 'Next').click();
   await page.getByLabel('Coach notes so far (optional; the first entry in the coach log)').fill('Work on the left foot');
   await button(page, 'Next').click();
 
@@ -91,13 +97,14 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   expect(layouts).toHaveLength(1);
   expect(layouts[0]).toMatchObject({ version: 1, roomLengthM: 4.3, roomWidthM: 1.6, roomProfileId: 'room-1' });
   const [room] = await table<{ name: string; spaceSource: string; measured: boolean; approxUsableM: object; space: { items: { label: string }[] }; floorMap: { covers: string }; backgroundFrame: unknown }>(page, 'roomProfiles');
-  expect(room).toMatchObject({ name: 'Main room', spaceSource: 'approxDims', measured: true, approxUsableM: { length: 4.3, width: 1.6 }, floorMap: { covers: 'room' } });
+  expect(room).toMatchObject({ name: 'Main room', wallUsable: true, spaceSource: 'approxDims', measured: true, approxUsableM: { length: 4.3, width: 1.6 }, floorMap: { covers: 'room' } });
   expect(room.space.items.map((x) => x.label)).toEqual(expect.arrayContaining(['Couch', 'Bookcase']));
   expect(room.backgroundFrame).toBeTruthy();
   const [settings] = await table<{ equipment: { sparePhone: boolean }; pinHash: string; priorities: string[]; firstRunDone: boolean }>(page, 'settings');
   expect(settings.equipment.sparePhone).toBe(true);
   expect(settings.pinHash).toMatch(/^[0-9a-f]{64}$/);
   expect(settings.firstRunDone).toBe(true);
+  expect((settings as unknown as { camera: { enabled: boolean } }).camera.enabled).toBe(true);
   expect((await table<{ body: string }>(page, 'coachNotes'))[0].body).toBe('Work on the left foot');
   expect(await table(page, 'overrides')).toHaveLength(0);
 
@@ -128,7 +135,7 @@ test('parent can re-run the first-run set-up and change the player', async ({ pa
   await openParent(page);
   await button(page, 'Re-run first-run set-up').click();
   await page.getByLabel("Player's first name").fill('Alex');
-  for (let i = 0; i < 5; i++) await button(page, 'Next').click();
+  for (let i = 0; i < 6; i++) await button(page, 'Next').click();
   await expect(page.getByLabel(/New parent PIN/)).toBeVisible();
   await button(page, 'Finish set-up').click(); // keeps the PIN
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Alex · Week of/);
@@ -161,7 +168,7 @@ test('Parent → Content lists every drill by area', async ({ page }) => {
   await boot(page);
   await setup(page);
   await openParent(page, /^Content/);
-  await expect(page.getByText(/version 0\.5\.7 .* loaded and valid: 26 drills, 64 sessions/)).toBeVisible();
+  await expect(page.getByText(/version 0\.5\.8 .* loaded and valid: 26 drills, 64 sessions/)).toBeVisible();
   for (const id of ['S1', 'S6', 'F1', 'F8', 'D1', 'D6', 'C1', 'C6']) await expect(page.getByRole('cell', { name: id, exact: true })).toBeVisible();
   await page.locator('tr', { hasText: 'F3' }).getByRole('button', { name: 'Adjust' }).click();
   await expect(page.getByRole('heading', { name: /F3 · Scissors/ })).toBeVisible();

@@ -114,3 +114,28 @@ describe('cue engine', () => {
     expect(parseDisplayS('pace', 'std', 1.5)).toEqual([1.5, 1.5]);
   });
 });
+
+describe('wall drills: the cue comes on the bang', () => {
+  const cfg = base('cue-scan', { reps: 3, useTripwire: true, soundTrigger: true });
+  it('shows the word just after the ball hits the wall, and logs the trigger as sound', () => {
+    let s = initCue(cfg);
+    // The ball hits the wall 2.5 s into each rep.
+    const out = runFor(s, 0, 40_000, (t) => {
+      const repStart = Math.floor(t / 9000) * 9000;
+      return t >= repStart + 2500 ? { tripwireMs: repStart + 2500 } : {};
+    });
+    s = out.s;
+    expect(s.log.map((e) => e.trigger)).toEqual(['sound', 'sound', 'sound']);
+    for (const e of s.log) {
+      expect(e.tripwireMs).toBe(e.repStartMs + 2500);
+      expect(e.cueMs! - e.tripwireMs!).toBeLessThanOrEqual(400);
+      expect(e.noBang).toBeUndefined();
+    }
+  });
+  it('no bang heard: the word still shows, logged as timed without a bang', () => {
+    const out = runFor(initCue(cfg), 0, 40_000);
+    expect(out.s.log).toHaveLength(3);
+    for (const e of out.s.log) expect(e).toMatchObject({ trigger: 'timed', noBang: true });
+    expect(out.s.log.every((e) => e.cueMs !== undefined)).toBe(true);
+  });
+});

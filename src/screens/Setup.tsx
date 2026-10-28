@@ -16,7 +16,7 @@ import { previousStep, SpaceWizard, type WizardStep } from './space/SpaceWizard'
 import { Seg, todayISO } from '../ui/widgets';
 
 // Demonstrations are not a set-up step: approved videos and animations come with the drills (Parent → Demonstrations to change them).
-const STEPS = ['Player', 'Your space', 'Equipment', 'Your ball', 'Priorities', 'Backup and PIN'] as const;
+const STEPS = ['Player', 'Your space', 'Equipment', 'Your ball', 'Recording', 'Priorities', 'Backup and PIN'] as const;
 
 export function Setup() {
   const { programme, settings, player, layout, roomProfile } = useData();
@@ -28,6 +28,7 @@ export function Setup() {
   // A new room starts on "Measure it": measured once here, every drill places its cones against it later.
   const [room, setRoom] = useState<RoomProfile>(roomProfile ?? { ...newProfile('room-1', 'Main room', new Date().toISOString()), spaceSource: 'approxDims', measured: true, approxUsableM: { length: 6.1, width: 3.0 } });
   const [equipment, setEquipment] = useState(settings.equipment);
+  const [record, setRecord] = useState(settings.camera.enabled);
   const [priorities, setPriorities] = useState<string[]>(settings.priorities.length ? settings.priorities : programme.priorities);
   const [coachNote, setCoachNote] = useState('');
   const [backup, setBackup] = useState(settings.backupReminder);
@@ -46,7 +47,7 @@ export function Setup() {
   const canNext = () => {
     if (step === 0) return name.trim().length > 0;
     if (step === 1) return room.spaceSource !== 'approxDims' || ((room.approxUsableM?.length ?? 0) >= 2 && (room.approxUsableM?.width ?? 0) >= 1);
-    if (step === 5) return settings.pinHash ? pin === '' || validPin(pin) : validPin(pin);
+    if (step === 6) return settings.pinHash ? pin === '' || validPin(pin) : validPin(pin);
     return true;
   };
 
@@ -60,6 +61,7 @@ export function Setup() {
         ...settings,
         firstRunDone: true,
         equipment,
+        camera: { ...settings.camera, enabled: record },
         priorities,
         backupReminder: backup,
         pinHash,
@@ -177,6 +179,24 @@ export function Setup() {
           </>
         )}
         {step === 4 && (
+          <div className="stack" data-testid="recording-question">
+            <h2 style={{ margin: 0 }}>Record the drills with the webcam?</h2>
+            <p>
+              Each drill is filmed so you or the coach can watch it back (Parent → Clips), and the app can check the reps. Clips stay on this Chromebook and are deleted after {settings.camera.retentionDays}{' '}
+              days unless you keep one. Nothing is uploaded.
+            </p>
+            <Seg
+              value={record ? 'yes' : 'no'}
+              onChange={(v) => setRecord(v === 'yes')}
+              options={[
+                { value: 'yes', label: 'Yes, record the drills' },
+                { value: 'no', label: 'No recording' },
+              ]}
+            />
+            <p className="muted">For the rep-by-rep checks too, set the camera up once for each drill area in Parent → Camera set-up (about 2 minutes each). Recording works without it.</p>
+          </div>
+        )}
+        {step === 5 && (
           <>
             <p className="muted">Tick the priority skills. They show on the Skills tab and break ties in the next-session suggestion.</p>
             {allTags.map((t) => (
@@ -191,7 +211,7 @@ export function Setup() {
             </label>
           </>
         )}
-        {step === 5 && (
+        {step === 6 && (
           <>
             <p>
               Everything lives only in this browser on this Chromebook. If Chrome's site data is cleared, it is gone unless there is a backup. A backup is one file you save to Downloads or Google

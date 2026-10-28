@@ -48,7 +48,15 @@ const TONES: Record<ToneKind, { freq: number; ms: number; repeat?: number }> = {
   cue: { freq: 1046, ms: 250 },
 };
 
+let lastToneAt = -Infinity;
+
+/** The app's own sound is playing (speech, or a tone just now): the wall-bang listener ignores it. */
+export function isOutputBusy(): boolean {
+  return (typeof window !== 'undefined' && !!window.speechSynthesis?.speaking) || performance.now() - lastToneAt < 450;
+}
+
 export function tone(kind: ToneKind): void {
+  lastToneAt = performance.now();
   if (!settings.tones || !ctx) return;
   const t = TONES[kind];
   const reps = t.repeat ?? 1;

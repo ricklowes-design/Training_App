@@ -10,7 +10,7 @@ export function cueRuleLine(p: Programme, block: RunBlock): string | null {
   return c?.rule ? `${c.values!.join(' · ')}: ${c.rule}` : null;
 }
 
-export function CueRules({ p, block }: { p: Programme; block: RunBlock }) {
+export function CueRules({ p, block, wall }: { p: Programme; block: RunBlock; wall?: boolean }) {
   const c = cueDrillFor(p, block);
   if (!c) return null;
   // The drill this block runs, or (for tests and anchors) the drill that teaches this cue.
@@ -18,43 +18,33 @@ export function CueRules({ p, block }: { p: Programme; block: RunBlock }) {
   const anchorDrill = block.anchorId ? p.drills.find((d) => d.id === p.anchors.find((a) => a.id === block.anchorId)?.drillId) : undefined;
   const teaching = own ?? anchorDrill ?? p.drills.find((d) => d.cueDrillId === c.id);
   const how = c.howTo;
+  // With a wall: kick at the wall, the cue comes on the bounce.
+  const steps = (wall && teaching?.stepsWall) || teaching?.steps;
   return (
-    <div className="note-box stack" data-testid="cue-rules" style={{ gap: 10 }}>
+    <div className="howto" data-testid="cue-rules">
       {how?.why ? (
-        <div data-testid="cue-why">
-          <h2 style={{ margin: 0 }}>What this teaches for a game</h2>
-          <p style={{ marginBottom: 0 }}>{how.why}</p>
-        </div>
+        <p className="howto-why" data-testid="cue-why">
+          <strong>Why:</strong> {how.why}
+        </p>
       ) : null}
-      <h2 style={{ margin: 0 }}>How to do it</h2>
-      {teaching?.steps?.length ? (
-        <ol className="cue-steps" data-testid="cue-steps">
-          {teaching.steps.map((st) => (
+      {steps?.length ? (
+        <ol className="howto-steps" data-testid="cue-steps">
+          {steps.map((st) => (
             <li key={st}>{st}</li>
           ))}
         </ol>
       ) : teaching ? (
-        <p>{teaching.prescription}</p>
+        <p className="howto-why">{teaching.prescription}</p>
       ) : null}
-      {how?.expect ? (
-        <p>
-          <strong>What you will see:</strong> {how.expect}
-        </p>
-      ) : null}
-      <table className="data cue-words">
-        <tbody>
-          {c.values!.map((v) => (
-            <tr key={v}>
-              <td>
-                <span className="pill info" style={{ fontSize: '1.1rem', whiteSpace: 'nowrap' }}>
-                  {v}
-                </span>
-              </td>
-              <td>{how?.words[v] ?? c.rule}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="howto-words">
+        {c.values!.map((v) => (
+          <div key={v} className="howto-word">
+            <span className="pill info">{v}</span>
+            <span>{how?.words[v] ?? c.rule}</span>
+          </div>
+        ))}
+      </div>
+      {how?.expect ? <p className="muted">{how.expect}</p> : null}
     </div>
   );
 }

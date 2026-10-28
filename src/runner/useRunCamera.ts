@@ -15,6 +15,9 @@ export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'pre
 
 const flip = (s: Side): Side => (s === 'left' ? 'right' : 'left');
 
+/** Recording without a camera set-up: no zones or tripwire, so nothing is measured, only the clip kept. */
+const REVIEW_ONLY: CameraSetup = { drillFamily: 'L1', deviceId: '', deviceLabel: '', referenceFrame: new Blob(), width: 0, height: 0, zones: [], floorPoints: [], mirror: false, createdAt: '' };
+
 const recordable = (b: RunBlock) => b.kind === 'work' || b.kind === 'benchmark' || b.kind === 'anchor';
 
 /** The camera during a run: framing check in the demo view, a clip per drill block,
@@ -40,12 +43,14 @@ export function useRunCamera(args: {
   const [live, setLive] = useState(false);
   const [error, setError] = useState('');
   const [framing, setFraming] = useState<FramingResult | null>(null);
-  const recording = useRef<{ key: string; block: RunBlock; setup: CameraSetup; blockIdx: number; attempt: number } | null>(null);
+  const recording = useRef<{ key: string; block: RunBlock; setup?: CameraSetup; blockIdx: number; attempt: number } | null>(null);
   const pending = useRef<Promise<unknown>>(Promise.resolve());
   const cb = useRef({ onClip, setExtras, recordId });
   cb.current = { onClip, setExtras, recordId };
 
-  const enabled = settings.camera.enabled && s.plan.blocks.some((b) => !!currentSetup(setups, familyForBlock(p, b)));
+  // Camera on: every drill block is recorded for watching back. Where the drill area has its camera
+  // set-up (zones, floor points), the clip is also analysed and presence is measured.
+  const enabled = settings.camera.enabled;
   const block = s.plan.blocks[s.blockIdx];
   const setup = block ? currentSetup(setups, familyForBlock(p, block)) : undefined;
 
@@ -111,13 +116,13 @@ export function useRunCamera(args: {
   useEffect(() => {
     const cs = session.current;
     if (!cs) return;
-    const active = s.phase === 'active' && block && recordable(block) && setup;
+    const active = s.phase === 'active' && block && recordable(block);
     const rec = recording.current;
     if (rec && (rec.key !== key || s.phase !== 'active')) {
       recording.current = null;
       const done = cs.endBlock().then(async ({ blob, mime, presenceFrac }) => {
         const extras: BlockExtras = {};
-        if (rec.block.kind === 'work' && presenceFrac !== undefined && !unverified.current) extras.presenceFrac = Math.round(presenceFrac * 100) / 100;
+        if (rec.setup && rec.block.kind === 'work' && presenceFrac !== undefined && !unverified.current) extras.presenceFrac = Math.round(presenceFrac * 100) / 100;
         const sessionRecordId = cb.current.recordId(rec.blockIdx);
         if (blob.size && sessionRecordId) {
           const result = stateRef.current.results.find((r) => r.index === rec.blockIdx && r.attempt === rec.attempt);
@@ -132,12 +137,12 @@ export function useRunCamera(args: {
             attempt: rec.attempt,
             date: new Date().toISOString(),
             durationS: result?.elapsedS ?? 0,
-            cameraSetupId: rec.setup.id,
+            cameraSetupId: rec.setup?.id,
             startActiveMs: 0,
           };
           await db.clips.put(clip);
           extras.clipId = clip.id;
-          cb.current.onClip?.(clip, rec.block, rec.setup);
+          if (rec.setup) cb.current.onClip?.(clip, rec.block, rec.setup);
         }
         cb.current.setExtras(rec.key, extras);
       });
@@ -145,7 +150,7 @@ export function useRunCamera(args: {
     }
     if (active && !recording.current) {
       recording.current = { key, block, setup, blockIdx: s.blockIdx, attempt: s.attempt };
-      cs.startBlock(setup, activeMs);
+      cs.startBlock(setup ?? REVIEW_ONLY, activeMs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.phase, key, live]);

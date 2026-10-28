@@ -17,6 +17,9 @@ export interface CueConfig {
   seed?: number;
   /** No-information comparison block (part 16 §5): the value is drawn and logged but never shown. */
   hidden?: boolean;
+  /** Wall drills: the cue comes on the sound of the ball hitting the wall (input.tripwireMs carries the bang).
+   *  No bang heard in time: the cue shows on its own and the rep is logged as timed, without a bang. */
+  soundTrigger?: boolean;
 }
 
 export interface PlannedRep {
@@ -32,7 +35,9 @@ export interface PlannedRep {
 export interface CueLogEntry {
   rep: number;
   repStartMs: number;
-  trigger: 'tripwire' | 'timed' | 'interval';
+  trigger: 'tripwire' | 'timed' | 'interval' | 'sound';
+  /** Sound-triggered rep where no bang was heard: the cue was shown on its own. */
+  noBang?: boolean;
   tripwireMs?: number;
   missedTripwire?: boolean;
   cueMs?: number; // absent on a no-cue catch trial
@@ -192,7 +197,7 @@ export function tickCue(s: CueState, now: number, input: CueInput = {}): { state
     const idx = s.repIdx + 1;
     if (s.config.reps !== null && idx >= s.config.reps) return { state: { ...s, done: true, view: null }, actions };
     const rep = s.plan[idx % s.plan.length];
-    const entry: CueLogEntry = { rep: idx, repStartMs: now, trigger: s.config.useTripwire ? 'tripwire' : 'timed', catchType: rep.catchType, plannedDelayMs: rep.delayMs };
+    const entry: CueLogEntry = { rep: idx, repStartMs: now, trigger: s.config.soundTrigger ? 'sound' : s.config.useTripwire ? 'tripwire' : 'timed', catchType: rep.catchType, plannedDelayMs: rep.delayMs };
     let side: Side | undefined;
     if (rep.catchType === 'blockedShaping' && !s.config.useTripwire) {
       // No camera: pre-announce the side to shape toward; BLOCKED will show on that side.
@@ -224,7 +229,9 @@ export function tickCue(s: CueState, now: number, input: CueInput = {}): { state
     if (input.tripwireMs !== undefined && input.tripwireMs >= s.repStartMs && !last.missedTripwire) {
       const side = rep.catchType === 'blockedShaping' ? input.shapingSide ?? 'left' : undefined;
       s = { ...s, cueAtMs: input.tripwireMs + rep.delayMs, log: patchLast(s.log, { tripwireMs: input.tripwireMs, side }) };
-    } else if (now >= s.repStartMs + periodMs - 2000 && !last.missedTripwire) {
+    } else if (s.config.soundTrigger && now >= s.repStartMs + Math.max(3000, periodMs - rep.displayMs - 1000)) {
+      s = { ...s, cueAtMs: now, log: patchLast(s.log, { trigger: 'timed', noBang: true }) };
+    } else if (!s.config.soundTrigger && now >= s.repStartMs + periodMs - 2000 && !last.missedTripwire) {
       s = { ...s, log: patchLast(s.log, { missedTripwire: true }) };
     }
   }

@@ -27,6 +27,7 @@ test('plan/06 §6.6: a coach note and a cue change show in the drill’s demo vi
   // Feinting S6 starts with F3: its demo view shows the amended cue and the dated note.
   await start(page, 'Feinting · Stage 2 · Session 6');
   await advance(page, 191_000);
+  await button(page, '✓ Cones are out: show the instructions').click();
   await expect(page.getByText('Half-size circle, exit touch before the plant foot lands')).toBeVisible();
   await expect(page.getByText('Coach note (Nov 3): “Smaller scissors, faster exit touch.”')).toBeVisible();
   await button(page, 'STOP').click();
@@ -273,9 +274,11 @@ test('demonstrations: own clip loops in the demo view; a link that cannot play s
   await place(page, 'Dribbling', 2);
   await start(page, 'Dribbling · Stage 1 · Session 2');
   await advance(page, 191_000);
+  await button(page, '✓ Cones are out: show the instructions').click();
   await expect(page.locator('.demo video')).toHaveAttribute('loop', '');
   await startBlockNow(page);
   await advance(page, 10_000 + 360_000 + 21_000 + 61_000); // D1, card, rest
+  await button(page, '✓ Cones are out: show the instructions').click(); // D2 moves to the feint lane
   await expect(page.getByText('The uploader does not allow this video to play inside other apps.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open on YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=abcdefghijk');
 });

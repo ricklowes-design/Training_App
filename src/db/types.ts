@@ -62,6 +62,8 @@ export interface SoundSettings {
   voiceURI?: string;
   /** A spoken style from the content (e.g. 'touchline'); absent = the standard voice. */
   voiceStyle?: string;
+  /** Wall drills: listen for the ball hitting the wall (microphone, nothing recorded). Absent = on. */
+  wallMic?: boolean;
 }
 
 export interface Settings {

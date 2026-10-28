@@ -45,6 +45,10 @@ export function SettingsSection() {
           Tones (start, 30-second warning, end of block)
         </label>
         <label className="check">
+          <input type="checkbox" checked={settings.sound.wallMic !== false} onChange={(e) => saveSound({ wallMic: e.target.checked })} />
+          Wall drills: the word shows when the ball hits the wall (uses the microphone to hear the bang; nothing is recorded or sent)
+        </label>
+        <label className="check">
           <input type="checkbox" checked={settings.sound.endOfSessionLine} onChange={(e) => saveSound({ endOfSessionLine: e.target.checked })} />
           Speak the end-of-session line
         </label>

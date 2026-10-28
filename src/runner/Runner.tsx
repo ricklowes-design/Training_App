@@ -3,7 +3,8 @@ import { modelVersionLabel, personalisedThresholds } from '../learning/service';
 import { useBlockAnalysis } from '../analysis/Scorecard';
 import { cameraPrefill, PREFILL_KINDS, type PrefillKind } from '../analysis/prefill';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { say, setSoundSettings, stopSpeech, tone, unlockAudio } from '../audio/audio';
+import { isOutputBusy, say, setSoundSettings, stopSpeech, tone, unlockAudio } from '../audio/audio';
+import { listenForBangs } from '../audio/bang';
 import { APP_VERSION, useData } from '../app/data';
 import { useNav } from '../app/nav';
 import { db } from '../db/db';
@@ -17,7 +18,7 @@ import { DemoPanel } from './DemoPanel';
 import { blockLayout, conesChanged } from './ConeSetup';
 import { cueRuleLine, cueSayLine } from './CueRules';
 import { PracticeCard } from './PracticeCard';
-import { cueDrillFor } from '../cue/resolve';
+import { cueDrillFor, usesWall } from '../cue/resolve';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
@@ -125,6 +126,32 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
 
   const benchmarksLogged = useMemo(() => new Set(saved.map((r) => r.blockIndex)), [saved]);
   const activeMs = useCallback(() => E.activeElapsedMs(sRef.current, Date.now()), []);
+
+  // Wall drills: the cue comes when the ball hits the wall, heard through the microphone.
+  const curBlock = s.plan.blocks[s.blockIdx];
+  const wallSound = !!curBlock && settings.sound.wallMic !== false && usesWall(p, curBlock, data.roomProfile?.wallUsable);
+  const bangAt = useRef<number | undefined>(undefined);
+  const [mic, setMic] = useState<'off' | 'listening' | 'blocked'>('off');
+  useEffect(() => {
+    if (!wallSound || s.phase !== 'active') return;
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    bangAt.current = undefined;
+    listenForBangs(() => (bangAt.current = activeMs()), isOutputBusy)
+      .then((f) => {
+        if (cancelled) f();
+        else {
+          stop = f;
+          setMic('listening');
+        }
+      })
+      .catch(() => setMic('blocked'));
+    return () => {
+      cancelled = true;
+      stop?.();
+      setMic('off');
+    };
+  }, [wallSound, s.phase, s.blockIdx, s.attempt, activeMs]);
   const idsRef = useRef<RunIds | null>(null);
   idsRef.current = ids;
   const camera = useRunCamera({
@@ -159,7 +186,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     if (!settings.cueEngine) return null;
     // Each practice round gets its own (slow) configuration.
     const key = s.practice ? `${s.blockIdx}:p${s.results.length}` : `${s.blockIdx}:${s.attempt}`;
-    if (!cueCfgs.current.has(key)) cueCfgs.current.set(key, cueConfigFor(p, b, { useTripwire: camera.tripwireAvailable, seed: Date.now(), practice: s.practice }));
+    if (!cueCfgs.current.has(key)) cueCfgs.current.set(key, cueConfigFor(p, b, { useTripwire: camera.tripwireAvailable, seed: Date.now(), practice: s.practice, sound: wallSound }));
     return cueCfgs.current.get(key) ?? null;
   };
 
@@ -651,7 +678,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         activeMs={activeMs}
         paused={s.pausedAtMs !== null}
         onLog={(log) => setExtras(`${s.blockIdx}:${s.attempt}`, { cueLog: log, cueLevel: engineCueLevel(cueCfg) })}
-        input={camera.cueInput}
+        input={wallSound ? () => ({ tripwireMs: bangAt.current }) : camera.cueInput}
         onRepsDone={() => {
           if (block.mode === 'reps' || s.practice) apply(E.done);
         }}
@@ -659,6 +686,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
           <span>
             {camera.recording ? <span style={{ color: '#ff3b3b' }}>● </span> : null}
             {s.practice ? 'Try it (slow) · ' : ''}
+            {wallSound ? (mic === 'listening' ? '🎤 kick at the wall · ' : mic === 'blocked' ? 'microphone off: words on a timer · ' : '') : ''}
             {blockName(block)} · {fmtClock(remaining)}
             {trial ? ' · trial' : ''}
             {cueRuleLine(p, block) ? <span className="cue-rule-line"> · {cueRuleLine(p, block)}</span> : null}

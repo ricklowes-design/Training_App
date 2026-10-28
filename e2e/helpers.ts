@@ -20,7 +20,7 @@ export async function setup(page: Page, opts: { name?: string; length?: string; 
   await button(page, 'Next: take a photo of the space').click();
   await button(page, 'Skip the photo').click();
   await button(page, 'Next: your training space').click();
-  for (let i = 0; i < 4; i++) await button(page, 'Next').click();
+  for (let i = 0; i < 5; i++) await button(page, 'Next').click();
   await page.getByLabel('Parent PIN (4 digits)').fill(PIN);
   await button(page, 'Finish set-up').click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(`${opts.name ?? 'Sam'} · Week of`);

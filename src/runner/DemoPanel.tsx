@@ -4,7 +4,7 @@ import { scanModeFor } from '../domain/scan';
 import { tryFill } from '../domain/templates';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useData } from '../app/data';
 import type { Drill } from '../content/types';
 import { layoutSummary } from '../domain/layout';
@@ -13,6 +13,7 @@ import type { RunBlock } from '../domain/plans';
 import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
 import { blockLayout, ConeSetup } from './ConeSetup';
+import { cueDrillFor } from '../cue/resolve';
 import { CueRules } from './CueRules';
 
 export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
@@ -140,9 +141,9 @@ export function DemoPanel(props: {
             <ConeSetup layoutId={layoutId} changed={false} />
           </details>
         ) : null}
-        <CueRules p={p} block={block} />
+        <CueRules p={p} block={block} wall={roomProfile?.wallUsable} />
         {drill ? (
-          <>
+          <DetailFold folded={!!cueDrillFor(p, block)}>
             <p>
               <strong>Purpose:</strong> {drill.purpose}
             </p>
@@ -165,7 +166,7 @@ export function DemoPanel(props: {
             <p className="muted">Common errors: {drill.commonErrors.join(' · ')}</p>
             <p className="muted">Safety: {drill.safety}</p>
             {layoutId ? <RoomOverlay layoutId={layoutId} /> : null}
-          </>
+          </DetailFold>
         ) : null}
         {anchor ? (
           <p>
@@ -274,3 +275,15 @@ function RoomOverlay({ layoutId }: { layoutId: string }) {
     </div>
   );
 }
+
+/** For cue drills the plain "How to do it" box is what to read; the full drill text folds away for the parent or coach. */
+function DetailFold({ folded, children }: { folded: boolean; children: ReactNode }) {
+  if (!folded) return <>{children}</>;
+  return (
+    <details>
+      <summary>More detail (for the parent or coach)</summary>
+      {children}
+    </details>
+  );
+}
+
