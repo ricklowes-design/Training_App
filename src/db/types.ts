@@ -91,6 +91,10 @@ export interface Settings {
   demoAutoStartS: number;
   /** Demo view when the cones have to be moved for this block: start after this many seconds. */
   coneSetupS?: number;
+  /** Drills (or tests) whose instructions the voice no longer reads out: the player knows them. */
+  talkThroughSkip?: string[];
+  /** The voice reads each drill's instructions before it starts (unless skipped for that drill). Absent = on. */
+  talkThrough?: boolean;
   /** The ball check before the first drills: which ball the camera tells apart from the room best. */
   ballCheck?: { date: string; skipped?: boolean; recommended?: string; results: { name: string; verdict: string; backgroundMatchShare?: number }[] };
   persistGranted?: boolean;

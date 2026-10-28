@@ -14,7 +14,8 @@ import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
 import { blockLayout, ConeSetup } from './ConeSetup';
 import { cueDrillFor } from '../cue/resolve';
-import { CueRules } from './CueRules';
+import { CueRules, talkThrough } from './CueRules';
+import { say, stopSpeech } from '../audio/audio';
 
 export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
   if (!id) return '';
@@ -47,6 +48,9 @@ export function DemoPanel(props: {
   const [now, setNow] = useState(Date.now());
   const [heldMs, setHeldMs] = useState(0); // time the auto-start was held (video playing, paused, or Hold)
   const [holding, setHolding] = useState(false);
+  const [talking, setTalking] = useState(false); // the voice is reading the instructions
+  const talkingRef = useRef(false);
+  talkingRef.current = talking;
   // Two steps when the cones move: set them out (and confirm), then the instructions.
   const [stage, setStage] = useState<'cones' | 'instructions'>(conesChanged && blockLayout(p, block) ? 'cones' : 'instructions');
   const [stageStartMs, setStageStartMs] = useState(phaseStartMs);
@@ -56,6 +60,7 @@ export function DemoPanel(props: {
   const drill: Drill | undefined = p.drills.find((d) => d.id === block.drillId);
   const anchor = block.anchorId ? p.anchors.find((a) => a.id === block.anchorId) : undefined;
   const bench = block.benchmarkId ? p.benchmarks.find((b) => b.id === block.benchmarkId) : undefined;
+  const title = drill?.name ?? anchor?.name ?? (bench ? `Benchmark · ${bench.name}` : block.kind === 'quiz' ? 'Picture quiz' : 'Player’s choice');
   const shownDrill = drill;
   const drillNotes = notes.filter((n) => !n.resolvedAt && n.target.kind === 'drill' && n.target.id === (shownDrill?.id ?? '')).sort((a, b) => b.date.localeCompare(a.date));
   const sets = layout ? layoutSummary(layout.derived, units) : {};
@@ -66,7 +71,7 @@ export function DemoPanel(props: {
   useEffect(() => {
     const t = setInterval(() => {
       const n = Date.now();
-      if (playing || paused || holding) setHeldMs((h) => h + (n - lastTick.current));
+      if (playing || paused || holding || talkingRef.current) setHeldMs((h) => h + (n - lastTick.current));
       lastTick.current = n;
       setNow(n);
     }, 250);
@@ -82,17 +87,66 @@ export function DemoPanel(props: {
     lastTick.current = Date.now();
   }, []);
   useEffect(() => {
-    if (left > 0 || playing || paused || holding) return;
+    if (left > 0 || playing || paused || holding || talking) return;
     if (stage === 'cones') toInstructions();
     else if (!isChoice) onStart();
   }, [left, playing, paused, holding, isChoice, onStart, stage, toInstructions]);
+  // The voice talks through the instructions (once per showing), unless she knows this drill.
+  const talkKey = block.drillId ?? block.benchmarkId ?? block.anchorId ?? block.kind;
+  const knows = (settings.talkThroughSkip ?? []).includes(talkKey);
+  const talkText = talkThrough(p, block, title, roomProfile?.wallUsable);
+  const readOut = useCallback(() => {
+    if (!settings.sound.speech) return;
+    setTalking(true);
+    say(talkText, { interrupt: true });
+  }, [talkText, settings.sound.speech]);
+  useEffect(() => {
+    if (stage !== 'instructions' || isChoice || knows || settings.talkThrough === false) return;
+    readOut();
+    return () => stopSpeech();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
+  useEffect(() => {
+    if (!talking) return;
+    const t = setInterval(() => {
+      if (!window.speechSynthesis?.speaking) setTalking(false);
+    }, 400);
+    return () => clearInterval(t);
+  }, [talking]);
+  const skipTalk = () => {
+    stopSpeech();
+    setTalking(false);
+  };
+  const setKnows = (v: boolean) => {
+    const cur = new Set(settings.talkThroughSkip ?? []);
+    if (v) cur.add(talkKey);
+    else cur.delete(talkKey);
+    void db.settings.update('main', { talkThroughSkip: [...cur] });
+    if (v) skipTalk();
+  };
+  const talkControls = isChoice ? null : (
+    <div className="row" style={{ flexWrap: 'wrap' }} data-testid="talk-controls">
+      {talking ? (
+        <button className="btn" onClick={skipTalk}>
+          ⏭ Skip the talk-through
+        </button>
+      ) : (
+        <button className="btn" onClick={readOut}>
+          🔊 Read it out
+        </button>
+      )}
+      <label className="check">
+        <input type="checkbox" checked={knows} onChange={(e) => setKnows(e.target.checked)} />
+        She knows this one: don't read it out next time
+      </label>
+    </div>
+  );
   const holdBtn = (
     <button className="btn" aria-pressed={holding} onClick={() => setHolding(!holding)}>
       {holding ? '▶ Resume the countdown' : '⏸ Hold'}
     </button>
   );
 
-  const title = drill?.name ?? anchor?.name ?? (bench ? `Benchmark · ${bench.name}` : block.kind === 'quiz' ? 'Picture quiz' : 'Player’s choice');
   const layoutId = blockLayout(p, block);
 
   // Step 1 (when the cones move): set them out, then confirm. Nothing starts from here.
@@ -141,6 +195,7 @@ export function DemoPanel(props: {
             <ConeSetup layoutId={layoutId} changed={false} />
           </details>
         ) : null}
+        {talkControls}
         <CueRules p={p} block={block} wall={roomProfile?.wallUsable} />
         {drill ? (
           <DetailFold folded={!!cueDrillFor(p, block)}>
@@ -232,7 +287,7 @@ export function DemoPanel(props: {
           </button>
         ) : null}
         <div className="row spread">
-          <span className="muted">{isChoice ? '' : holding ? 'On hold' : playing ? 'Starts when the video is paused' : paused ? 'Paused' : `Starts by itself in ${left} s`}</span>
+          <span className="muted">{isChoice ? '' : holding ? 'On hold' : talking ? 'Starts after the talk-through' : playing ? 'Starts when the video is paused' : paused ? 'Paused' : `Starts by itself in ${left} s`}</span>
           <div className="row">
             {!isChoice ? holdBtn : null}
             <button className="btn" onClick={onSkip}>

@@ -53,3 +53,24 @@ export function CueRules({ p, block, wall }: { p: Programme; block: RunBlock; wa
 export function cueSayLine(p: Programme, block: RunBlock): string | undefined {
   return cueDrillFor(p, block)?.howTo?.say;
 }
+
+/** What the voice reads out before a drill: why, the steps, and what each word means (or, for drills
+ *  without cues, the purpose and what to do). */
+export function talkThrough(p: Programme, block: RunBlock, title: string, wall?: boolean): string {
+  const c = cueDrillFor(p, block);
+  const drill = p.drills.find((d) => d.id === block.drillId);
+  const parts: string[] = [`${title}.`];
+  if (c) {
+    const anchorDrill = block.anchorId ? p.drills.find((d) => d.id === p.anchors.find((a) => a.id === block.anchorId)?.drillId) : undefined;
+    const teaching = (drill?.cueDrillId === c.id ? drill : undefined) ?? anchorDrill ?? p.drills.find((d) => d.cueDrillId === c.id);
+    const steps = (wall && teaching?.stepsWall) || teaching?.steps || [];
+    if (c.howTo?.why) parts.push(`Why: ${c.howTo.why}`);
+    parts.push(...steps.map((st, i) => `${i + 1}. ${st}`));
+    for (const v of c.values ?? []) if (c.howTo?.words[v]) parts.push(`${v}: ${c.howTo.words[v]}`);
+  } else if (drill) {
+    parts.push(drill.purpose.endsWith('.') ? drill.purpose : `${drill.purpose}.`);
+    parts.push(...(drill.steps ?? [drill.prescription]));
+  }
+  return parts.join(' ');
+}
+

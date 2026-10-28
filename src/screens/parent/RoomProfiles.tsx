@@ -527,6 +527,10 @@ export function RoomProfilesSection() {
                   <strong>{r.name}</strong> v{r.version} · {r.usableSpaceClass} · {r.backgroundFrame ? `photo, ${r.anchors.length} anchors` : 'no photo (camera-unverified)'}
                   {r.safePolygonNormalized.length >= 3 ? ' · safe floor drawn' : ''}
                   {r.id === active ? ' · in use' : ''}
+                  <label className="check" style={{ marginTop: 6 }}>
+                    <input type="checkbox" checked={r.wallUsable} aria-label={`${r.name}: back wall can be used`} onChange={(e) => void saveRoomProfile({ ...r, wallUsable: e.target.checked }, programme, settings)} />
+                    Back wall can be used (kick the ball against it in wall drills)
+                  </label>
                 </span>
                 <span className="row">
                   {r.id !== active ? (

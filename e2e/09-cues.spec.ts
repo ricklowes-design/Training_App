@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, arrowCues, boot, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table } from './helpers';
+import { advance, arrowCues, boot, captureSpeech, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table } from './helpers';
 
 type Block = { index: number; drillId?: string; cueLevel?: string; cueLog?: { cueMs?: number; repStartMs: number; value?: string }[] };
 
@@ -237,4 +237,24 @@ test('with a wall: the wall version of the steps (kick at the wall, check your s
   await expect(steps).toContainText('Face the back wall. Screen behind you.');
   await expect(steps).toContainText('Kick the ball at the wall.');
   await expect(steps).toContainText('Ball comes back: touch the way the word says.');
+});
+
+test('the voice talks through the instructions; skip it, or mark the drill as known so it is not read next time', async ({ page }) => {
+  const said = await captureSpeech(page);
+  await boot(page);
+  await setup(page);
+  await place(page, 'Scanning', 3);
+  await start(page, 'Scanning · Stage 1 · Session 3');
+  await advance(page, 191_000);
+  await button(page, '✓ Cones are out: show the instructions').click();
+  await expect.poll(async () => (await said()).join(' | ')).toContain('Why: Look before the ball comes.');
+  const text = (await said()).find((t) => t.startsWith('Cue-behind self-receive.'))!;
+  expect(text).toContain('1. Back to the screen. Ball at your feet.');
+  expect(text).toContain('LEFT FREE: Touch and turn LEFT.');
+  const talk = page.getByTestId('talk-controls');
+  const knows = talk.getByLabel("She knows this one: don't read it out next time");
+  await knows.click();
+  await expect(knows).toBeChecked();
+  await expect.poll(async () => (await table<{ talkThroughSkip?: string[] }>(page, 'settings'))[0].talkThroughSkip ?? []).toContain('S2');
+  await expect(button(talk, '🔊 Read it out')).toBeVisible();
 });

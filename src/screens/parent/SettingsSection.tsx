@@ -45,6 +45,18 @@ export function SettingsSection() {
           Tones (start, 30-second warning, end of block)
         </label>
         <label className="check">
+          <input type="checkbox" checked={settings.talkThrough !== false} onChange={(e) => save({ talkThrough: e.target.checked })} />
+          Read each drill's instructions out before it starts
+        </label>
+        {(settings.talkThroughSkip ?? []).length ? (
+          <div className="row">
+            <span className="muted">Not read out (she knows them): {(settings.talkThroughSkip ?? []).join(', ')}</span>
+            <button className="btn small" onClick={() => save({ talkThroughSkip: [] })}>
+              Read them all out again
+            </button>
+          </div>
+        ) : null}
+        <label className="check">
           <input type="checkbox" checked={settings.sound.wallMic !== false} onChange={(e) => saveSound({ wallMic: e.target.checked })} />
           Wall drills: the word shows when the ball hits the wall (uses the microphone to hear the bang; nothing is recorded or sent)
         </label>
