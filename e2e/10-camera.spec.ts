@@ -40,6 +40,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await place(page, 'Feinting', 9);
     await start(page, 'Feinting · Stage 3 · Session 9');
     await advance(page, 191_000);
+    await button(page, '✓ Cones are out: show the instructions').click();
     // The test video has a bar that flashes for half a second every 4 s; the check runs every second.
     for (let i = 0; i < 15 && !(await page.getByText('Camera set up as before.').count()); i++) await page.clock.runFor(1_000);
     await expect(page.getByText('Camera set up as before.')).toBeVisible();
@@ -127,6 +128,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await place(page, 'Feinting', 9);
     await start(page, 'Feinting · Stage 3 · Session 9');
     await advance(page, 191_000);
+    await button(page, '✓ Cones are out: show the instructions').click();
     await page.clock.runFor(2_000);
     await expect(page.getByText(/^Camera (has moved|picture does not match)/)).toBeVisible();
   });
