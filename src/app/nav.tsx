@@ -27,7 +27,8 @@ export type ParentSection =
   | 'validation'
   | 'balls'
   | 'learning'
-  | 'results';
+  | 'results'
+  | 'systest';
 
 export type Route =
   | { name: 'home' }

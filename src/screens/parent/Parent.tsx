@@ -14,8 +14,10 @@ import { DefenderTestSection } from './DefenderTest';
 import { ValidationSection } from './Validation';
 import { BallsSection } from './Balls';
 import { LearningSection } from './Learning';
+import { SystemTestSection } from './SystemTest';
 
 const TILES: { section: ParentSection; title: string; detail: string }[] = [
+  { section: 'systest', title: 'System test', detail: 'Every feature switched on, one run through; what worked and why not' },
   { section: 'notes', title: 'Coach notes', detail: 'Note on a drill, session or area' },
   { section: 'drills', title: 'Adjust drills', detail: 'Cues, reps, demo link; new drills' },
   { section: 'sessions', title: 'Session blocks', detail: 'Add, replace or remove a drill' },
@@ -192,6 +194,9 @@ export function Parent({ section, arg }: { section: ParentSection; arg?: string 
       break;
     case 'balls':
       body = <BallsSection />;
+      break;
+    case 'systest':
+      body = <SystemTestSection runId={arg} />;
       break;
     case 'learning':
       body = <LearningSection />;

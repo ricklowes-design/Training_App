@@ -137,7 +137,7 @@ export function TrialsSection() {
   const [reason, setReason] = useState('');
   const [until, setUntil] = useState(settings.trialUntil ?? '');
   const now = new Date();
-  const trials = records.filter((r) => r.trial && !r.promotedAt).sort((a, b) => b.date.localeCompare(a.date));
+  const trials = records.filter((r) => r.trial && !r.promotedAt && r.kind !== 'systemTest').sort((a, b) => b.date.localeCompare(a.date));
   const recent = records.filter((r) => canDemote(r, now).ok).sort((a, b) => b.date.localeCompare(a.date));
   const label = (r: SessionRecord) => `${fmtDate(r.date)} · ${r.areaId ? `${areaName(p, r.areaId)} S${r.sessionNumber ?? ''}` : r.kind}${r.kind === 'baseline' ? ' baseline' : ''}`;
 

@@ -1,3 +1,4 @@
+import { CHECK_IDS } from '../domain/systemTest';
 import type { Programme } from './types';
 
 // A small hand-written schema checker. Each problem is reported as
@@ -220,6 +221,7 @@ const programmeShape: Check = obj({
   coreMoveDrills: list(str),
   benchmarkCueDrills: optional(record(str)),
   benchmarkLayouts: optional(record(str)),
+  systemTest: optional(obj({ title: str, note: optional(str), blocks: list(obj({ layoutId: str, drillId: str, minutes: posNum, tests: str, checks: list(str) })), parentChecks: list(obj({ id: str, question: str })) })),
   focusMetricConfig: record(
     obj({ primary: list(str), supporting: list(str), experimental: list(str), progressionEligible: list(str), qualityGuardrails: optional(list(str)) }),
   ),
@@ -305,6 +307,19 @@ function crossCheck(p: Programme, errs: string[]): void {
   for (const x of p.defenderDrills) for (const m of x.allowedModes ?? []) if (!p.reactionModesProgression.includes(m)) errs.push(`defender drill ${x.id}: "${m}" is not one of the reaction modes`);
   const modeIds = new Set(p.scanModes.map((m) => m.id));
   for (const d of p.drills) for (const m of d.scanModes ?? []) if (!modeIds.has(m)) errs.push(`drill ${d.id}: scan mode "${m}" is not one of the scan modes`);
+  const st = p.systemTest;
+  if (st) {
+    const seen: string[] = [];
+    for (const b of st.blocks) {
+      const d = p.drills.find((x) => x.id === b.drillId);
+      if (!d) errs.push(`system test: drill "${b.drillId}" does not exist`);
+      else if (d.layoutId !== b.layoutId) errs.push(`system test ${b.drillId}: drill uses ${d.layoutId}, not ${b.layoutId}`);
+      for (const c of b.checks) if (!(CHECK_IDS as readonly string[]).includes(c)) errs.push(`system test ${b.drillId}: unknown check "${c}"`);
+      // Each layout once, so the cones move as few times as possible.
+      if (seen.includes(b.layoutId) && seen[seen.length - 1] !== b.layoutId) errs.push(`system test ${b.drillId}: layout ${b.layoutId} comes back after another layout (extra cone moves)`);
+      if (!seen.includes(b.layoutId) || seen[seen.length - 1] !== b.layoutId) seen.push(b.layoutId);
+    }
+  }
   for (const r of p.advancementRules) {
     if (!areaIds.has(r.areaId)) errs.push(`advancement rule ${r.areaId} ${r.from}->${r.to}: unknown area`);
     if (r.benchmarkId && !benchIds.has(r.benchmarkId)) errs.push(`advancement rule ${r.areaId} ${r.from}->${r.to}: benchmark "${r.benchmarkId}" does not exist`);

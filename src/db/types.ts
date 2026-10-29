@@ -4,7 +4,8 @@ export type SessionStatus = 'completed' | 'completedBenchmarkSkipped' | 'partial
 
 /** programme: a numbered session in an area. baseline: an area's placement session.
  *  extra: a repeat of a completed session or the no-ball quiz. anchor: the fortnightly anchor check. */
-export type RecordKind = 'programme' | 'baseline' | 'extra' | 'anchor';
+/** systemTest: Parent → System test; never counts, never unlocks, never feeds progress or learning. */
+export type RecordKind = 'programme' | 'baseline' | 'extra' | 'anchor' | 'systemTest';
 
 export type Foot = 'left' | 'right';
 
@@ -101,6 +102,8 @@ export interface Settings {
   cueEngine: boolean;
   camera: CameraSettings;
   flags: FeatureFlags;
+  /** While a system test has everything switched on: the settings to put back afterwards. */
+  systemTestRestore?: { savedAt: string; flags: FeatureFlags; cueEngine: boolean; cameraEnabled: boolean; wallMic?: boolean; speech: boolean; tones: boolean };
   capabilities?: Capabilities;
   /** Parent validation of camera measures against a blind frame reading (plan/10), per component. */
   validations?: Record<string, { date: string; reps: number; agreed: number; falsePositives?: number; note?: string }>;
@@ -215,6 +218,8 @@ export interface SessionRecord {
   roomProfileId?: string;
   roomProfileVersion?: number;
   roomCheck?: { status: 'matched' | 'partial' | 'moved' | 'unusable' | 'noPhoto'; matched: number; total: number };
+  /** System test: the parent's answers to the checks only a person can make (heard the voice…). */
+  parentChecks?: Record<string, boolean>;
 }
 
 export interface Conditions {

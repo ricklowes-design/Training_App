@@ -31,7 +31,7 @@ function WeekTab() {
   const minutes = Math.round([...runMinutes.values()].reduce((a, b) => a + b, 0));
   const extras = weekRecs.filter((r) => (r.kind === 'extra' || r.kind === 'anchor') && isRecorded(r));
   const notCounted = weekRecs.filter((r) => r.kind === 'programme' && isRecorded(r) && !countsForWeek(r));
-  const trials = weekRecs.filter((r) => r.trial && !r.promotedAt);
+  const trials = weekRecs.filter((r) => r.trial && !r.promotedAt && r.kind !== 'systemTest');
   const counted = countedResults(results, records);
   const anchorsInWeek = counted.filter((r) => /^A\d$/.test(r.benchmarkId) && inWeek(r.date));
 

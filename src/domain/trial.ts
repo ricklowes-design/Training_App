@@ -40,7 +40,7 @@ export function trialSuggestion(input: TrialSuggestionInput): TrialSuggestion {
 
 /** "Keep this": promote a trial. It keeps its date; its status was set by the completion rules when saved. */
 export function promote(rec: SessionRecord, now: Date): SessionRecord {
-  if (!rec.trial || rec.promotedAt) return rec;
+  if (!rec.trial || rec.promotedAt || rec.kind === 'systemTest') return rec;
   return { ...rec, promotedAt: now.toISOString() };
 }
 

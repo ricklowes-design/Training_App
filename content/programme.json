@@ -1,5 +1,5 @@
 {
-  "version": "0.5.8",
+  "version": "0.5.9",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -5926,5 +5926,135 @@
         }
       ]
     }
+  },
+  "systemTest": {
+    "title": "System test",
+    "note": "Runs every feature once, grouped by cone layout so the cones are moved only three times. Never counts, never unlocks, never feeds learning or progress.",
+    "blocks": [
+      {
+        "layoutId": "L4",
+        "drillId": "C1",
+        "minutes": 3,
+        "tests": "Recording, presence, ball tracking in the square, V-pulls and rapid touches.",
+        "checks": [
+          "recording",
+          "presence",
+          "analysis",
+          "ballTracking",
+          "vPulls",
+          "rapidTouches"
+        ]
+      },
+      {
+        "layoutId": "L4",
+        "drillId": "S1",
+        "minutes": 3,
+        "tests": "Colour cues on a timer, and whether the camera sees the head turn to look.",
+        "checks": [
+          "recording",
+          "cueEngine",
+          "analysis",
+          "looks"
+        ]
+      },
+      {
+        "layoutId": "L3",
+        "drillId": "S2",
+        "minutes": 4,
+        "tests": "Cues triggered by the ball hitting the wall (microphone), looks before the touch, and the decision read.",
+        "checks": [
+          "recording",
+          "cueEngine",
+          "wallBang",
+          "analysis",
+          "looks",
+          "decision"
+        ]
+      },
+      {
+        "layoutId": "L3",
+        "drillId": "C3",
+        "minutes": 3,
+        "tests": "Cues triggered by the tripwire, and the decision read.",
+        "checks": [
+          "recording",
+          "cueEngine",
+          "tripwire",
+          "analysis",
+          "decision"
+        ]
+      },
+      {
+        "layoutId": "L2",
+        "drillId": "F5",
+        "minutes": 4,
+        "tests": "The 3D defender, the live feint detector that triggers it, and the exit read.",
+        "checks": [
+          "recording",
+          "defender3d",
+          "feintDetector",
+          "analysis",
+          "decision"
+        ]
+      },
+      {
+        "layoutId": "L2",
+        "drillId": "F4",
+        "minutes": 3,
+        "tests": "The defender that recovers, the feint detector again, and the second move.",
+        "checks": [
+          "recording",
+          "defender3d",
+          "feintDetector",
+          "analysis",
+          "decision"
+        ]
+      },
+      {
+        "layoutId": "L2",
+        "drillId": "D3",
+        "minutes": 3,
+        "tests": "Gate cues and the ball crossing the gates.",
+        "checks": [
+          "recording",
+          "cueEngine",
+          "tripwire",
+          "ballTracking",
+          "gateEvents",
+          "analysis"
+        ]
+      },
+      {
+        "layoutId": "L1",
+        "drillId": "D1",
+        "minutes": 3,
+        "tests": "Slalom run timing and ball tracking through the cones.",
+        "checks": [
+          "recording",
+          "presence",
+          "slalom",
+          "ballTracking",
+          "analysis"
+        ]
+      }
+    ],
+    "parentChecks": [
+      {
+        "id": "voice",
+        "question": "Did you hear the voice call each drill and the countdowns?"
+      },
+      {
+        "id": "readable",
+        "question": "Could the player read the words and colours from the far end?"
+      },
+      {
+        "id": "cones",
+        "question": "Did the cone diagram match where the cones fitted in the room?"
+      },
+      {
+        "id": "defenderSmooth",
+        "question": "Did the 3D defender move smoothly (no stutter or freeze)?"
+      }
+    ]
   }
 }

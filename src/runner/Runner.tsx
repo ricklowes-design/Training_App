@@ -55,6 +55,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   const { go } = useNav();
   const [s, setS] = useState<E.RunState>(() => E.initRun(plan, Date.now()));
   const [ids, setIds] = useState<RunIds | null>(null);
+  // Parent → System test: never counts; its defender reps and tallies stay out of learning and progress.
+  const systemTest = plan.parts[0]?.kind === 'systemTest';
   const [saved, setSaved] = useState<BenchmarkResult[]>([]);
   const [times, setTimes] = useState<Record<number, { right: number; left: number }>>({});
   const [digitsShown, setDigitsShown] = useState<Record<number, number[]>>({});
@@ -222,7 +224,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   }, [s.phase, s.blockIdx, s.attempt, s.pausedAtMs]);
   useEffect(() => () => listener.current?.l.stop(), []);
   const modeObs = useLiveQuery(() => db.metricObservations.where('metricId').equals('correctResponseByDefenderAction').toArray(), []);
-  const seenFakes = useLiveQuery(() => db.defenderScenarios.filter((x) => !!x.feintDirection).reverse().limit(40).toArray(), []);
+  const testRecordIds = new Set(data.records.filter((r) => r.kind === 'systemTest').map((r) => r.id));
+  const seenFakes = useLiveQuery(() => db.defenderScenarios.filter((x) => !!x.feintDirection).reverse().limit(60).toArray(), [])?.filter((x) => !x.sessionRecordId || !testRecordIds.has(x.sessionRecordId)).slice(0, 40);
   const tendency = seenFakes?.length ? { leftShare: seenFakes.filter((x) => x.feintDirection === 'left').length / seenFakes.length, n: seenFakes.length } : undefined;
   const modeLevel = reactionModeLevel(modeObs ?? [], p.reactionModesProgression, (drillId, m) => !!drillId && progressionEligible(p, drillId, m));
 
@@ -273,7 +276,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
         await recordMilestones(p);
         // Opt-in completion message (plan/14): one small record per completed session.
         void notifyFinished(p, recs).catch(() => undefined);
-        if (recs[0]?.kind === 'baseline' && recs[0].status !== 'stopped') go({ name: 'baselineQuestions', recordId: recs[0].id });
+        if (recs[0]?.kind === 'systemTest') go({ name: 'parent', section: 'systest', arg: ids.runId });
+        else if (recs[0]?.kind === 'baseline' && recs[0].status !== 'stopped') go({ name: 'baselineQuestions', recordId: recs[0].id });
         else go({ name: 'summary', runId: ids.runId });
       })();
     } else {
@@ -475,7 +479,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       );
     }
     const def = extras.current.get(benchSkipKey)?.defender;
-    if (def && def.reps > 0 && !tallied.has(benchSkipKey) && !camera.live && !extras.current.get(benchSkipKey)?.clipId) {
+    if (def && def.reps > 0 && !systemTest && !tallied.has(benchSkipKey) && !camera.live && !extras.current.get(benchSkipKey)?.clipId) {
       return (
         <div className="page">
           <DefenderTally
@@ -539,7 +543,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
           apply(E.next);
         }}
         kept={!!lastAttempt?.keptAt}
-        onKeep={async () => {
+        onKeep={systemTest ? undefined : async () => {
           const at = new Date().toISOString();
           apply((st) => ({ ...st, results: st.results.map((r) => (r.index === st.blockIdx ? { ...r, keptAt: at } : r)) }));
           for (const r of blockSaved) await db.benchmarkResults.update(r.id, { keptAt: at });

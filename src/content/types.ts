@@ -297,6 +297,24 @@ export interface AdvancementRule {
   requiresTransfer?: boolean;
 }
 
+export interface SystemTestBlock {
+  layoutId: string;
+  drillId: string;
+  minutes: number;
+  /** What this block tests, in plain words for the parent. */
+  tests: string;
+  /** Feature checks (ids from src/domain/systemTest.ts). */
+  checks: string[];
+}
+
+export interface SystemTestContent {
+  title: string;
+  note?: string;
+  blocks: SystemTestBlock[];
+  /** Things only a person can judge (sound, readability from the far end), asked after the run. */
+  parentChecks: { id: string; question: string }[];
+}
+
 export interface Programme {
   version: string;
   generated: string;
@@ -326,6 +344,8 @@ export interface Programme {
   coreMoveDrills: string[];
   benchmarkCueDrills?: Record<string, string>;
   benchmarkLayouts?: Record<string, string>;
+  /** Parent → System test: every feature once, blocks grouped by cone layout. Never counts. */
+  systemTest?: SystemTestContent;
   focusMetricConfig: Record<string, FocusMetricConfig>;
   reactionModesProgression: string[];
   defenderArchetypes: DefenderArchetypeInfo[];
