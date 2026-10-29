@@ -71,3 +71,13 @@ test('a drill whose switches are off offers one tap to turn them on before it st
   await expect(note).toHaveCount(0);
   expect((await table<{ camera: { enabled: boolean } }>(page, 'settings'))[0].camera.enabled).toBe(true);
 });
+
+test('a programme session on the home screen offers the same one tap before it starts', async ({ page }) => {
+  await boot(page, { clock: false });
+  await setup(page);
+  const note = page.getByTestId('turn-on-needed').first();
+  await expect(note).toContainText('This session uses');
+  await expect(note).toContainText('camera recording');
+  await note.getByRole('button', { name: /^Turn (it|them) on$/ }).click();
+  await expect.poll(async () => (await table<{ camera: { enabled: boolean } }>(page, 'settings'))[0].camera.enabled).toBe(true);
+});

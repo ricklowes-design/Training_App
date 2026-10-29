@@ -1,4 +1,5 @@
 import { dayKind } from '../domain/sequencing';
+import { TurnOnNeeded } from '../runner/TurnOnNeeded';
 import { useMemo, useState } from 'react';
 import { unlockAudio } from '../audio/audio';
 import { useData } from '../app/data';
@@ -47,6 +48,7 @@ function StartCard({ plan, title, detail, minutes, big, label }: { plan: RunPlan
         <div>{detail}</div>
         <div className="muted">{minutes} min · solo{d.settings.partnerAvailable ? ' or partner' : ''}</div>
         {unfit ? <div className="pill warn">{unfit}</div> : null}
+        <TurnOnNeeded blocks={plan.blocks} what="This session" />
         <label className="check" style={{ fontSize: '0.95rem' }}>
           <input type="checkbox" checked={isTrial} disabled={sugg.forced} onChange={(e) => setTrial(e.target.checked)} />
           Trial {sugg.reasons.length ? <span className="muted">({sugg.reasons.join(' ')})</span> : <span className="muted">(nothing counts until kept)</span>}
