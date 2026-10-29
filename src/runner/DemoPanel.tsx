@@ -14,6 +14,7 @@ import { fmtDate } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
 import { blockLayout, ConeSetup } from './ConeSetup';
 import { cueDrillFor } from '../cue/resolve';
+import { TurnOnNeeded } from './TurnOnNeeded';
 import { CueRules, talkThrough } from './CueRules';
 import { say, stopSpeech } from '../audio/audio';
 
@@ -195,6 +196,7 @@ export function DemoPanel(props: {
             <ConeSetup layoutId={layoutId} changed={false} />
           </details>
         ) : null}
+        <TurnOnNeeded blocks={[block]} />
         {talkControls}
         <CueRules p={p} block={block} wall={roomProfile?.wallUsable} />
         {drill ? (

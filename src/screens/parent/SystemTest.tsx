@@ -7,7 +7,7 @@ import { currentSetup } from '../../camera/clips';
 import { sampleFootage } from '../../camera/footage';
 import { familyOf } from '../../camera/session';
 import { db } from '../../db/db';
-import type { FeatureFlags, SessionRecord } from '../../db/types';
+import type { FeatureFlags, SessionRecord, Settings } from '../../db/types';
 import { CHECK_LABELS, coneMoves, evaluateBlock, systemTestPlan, TEST_FLAGS, type BlockEvidence, type CheckOutcome, type CheckResult, type FootageStats } from '../../domain/systemTest';
 import { fmtDate } from '../../ui/widgets';
 
@@ -51,17 +51,7 @@ function Intro() {
 
   async function start() {
     if (!plan) return;
-    const s = settings;
-    const on = Object.fromEntries(TEST_FLAGS.map((f) => [f, true])) as Partial<FeatureFlags>;
-    await db.settings.update('main', {
-      // Keep the first snapshot if a test was left switched on.
-      systemTestRestore: s.systemTestRestore ?? { savedAt: new Date().toISOString(), flags: s.flags, cueEngine: s.cueEngine, cameraEnabled: s.camera.enabled, wallMic: s.sound.wallMic, speech: s.sound.speech, tones: s.sound.tones },
-      flags: { ...s.flags, ...on },
-      cueEngine: true,
-      camera: { ...s.camera, enabled: true },
-      sound: { ...s.sound, wallMic: true, speech: true, tones: true },
-    });
-    await logHistory('parent', 'system test', 'everything switched on for the system test');
+    await switchOnForTest(settings);
     go({ name: 'run', plan, trial: true, trialReasons: ['system test'] });
   }
 
@@ -108,6 +98,7 @@ function Intro() {
           Starting switches on: recording, the 3D defender (realistic motion), the live feint detector, ball tracking, rapid touches, personalisation, cone and ball detectors, the voice, tones and the wall
           microphone. Session messages stay as they are. The test never counts toward the week, never unlocks anything and is not used for learning.
         </p>
+        <TurnOnTestButton />
         <div className="row">
           <button className="btn primary" onClick={start} data-testid="system-test-start">
             Switch everything on and start the test
@@ -129,6 +120,60 @@ function Intro() {
           </ul>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/** Everything the test uses, switched on; the settings before are kept for "Put the settings back". */
+async function switchOnForTest(s: Settings) {
+  const on = Object.fromEntries(TEST_FLAGS.map((f) => [f, true])) as Partial<FeatureFlags>;
+  await db.settings.update('main', {
+    // Keep the first snapshot if a test was left switched on.
+    systemTestRestore: s.systemTestRestore ?? { savedAt: new Date().toISOString(), flags: s.flags, cueEngine: s.cueEngine, cameraEnabled: s.camera.enabled, wallMic: s.sound.wallMic, speech: s.sound.speech, tones: s.sound.tones },
+    flags: { ...s.flags, ...on },
+    cueEngine: true,
+    camera: { ...s.camera, enabled: true },
+    sound: { ...s.sound, wallMic: true, speech: true, tones: true },
+  });
+  await logHistory('parent', 'system test', 'everything switched on for the system test');
+}
+
+const FLAG_LABELS: Record<string, string> = {
+  defender3d: 'the 3D defender',
+  realisticDefender: 'realistic defender motion',
+  liveOnsetDetector: 'the feint detector',
+  ballTracking: 'ball tracking',
+  rapidTouches: 'rapid touches',
+  learning: 'personalisation',
+  coneDetection: 'the cone detector',
+  neuralBallDetector: 'the ball detector model',
+};
+
+/** The switches the test uses that are off right now. */
+export function testSwitchesOff(s: Settings): string[] {
+  return [
+    ...(!s.camera.enabled ? ['camera recording'] : []),
+    ...(!s.cueEngine ? ['cues on the screen'] : []),
+    ...TEST_FLAGS.filter((f) => !s.flags[f]).map((f) => FLAG_LABELS[f] ?? f),
+    ...(s.sound.wallMic === false ? ['listening for the wall'] : []),
+    ...(!s.sound.speech ? ['the voice'] : []),
+    ...(!s.sound.tones ? ['the tones'] : []),
+  ];
+}
+
+/** "Turn on what's off": everything the test uses, without starting it. */
+function TurnOnTestButton() {
+  const { settings } = useData();
+  const off = testSwitchesOff(settings);
+  if (!off.length) return <span className="pill go" data-testid="system-test-all-on">Everything the test uses is on</span>;
+  return (
+    <div className="note-box stack" data-testid="system-test-off">
+      <span>Off now: {off.join(', ')}.</span>
+      <div className="row">
+        <button className="btn" onClick={() => switchOnForTest(settings)} data-testid="system-test-turn-on">
+          Turn on everything the test uses
+        </button>
+      </div>
     </div>
   );
 }
@@ -247,6 +292,7 @@ function Report({ runId }: { runId: string }) {
           </button>
           <RestoreButton />
         </div>
+        {count('fail') || count('partial') ? <TurnOnTestButton /> : null}
       </div>
       {blocks.map((b, i) => (
         <BlockReport key={i} n={i + 1} b={b} outcomes={evaluateBlock(b.checks, b.ev)} layoutName={p.layouts[b.layoutId]?.name ?? b.layoutId} />

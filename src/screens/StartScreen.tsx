@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { TurnOnNeeded } from '../runner/TurnOnNeeded';
 import { unlockAudio } from '../audio/audio';
 import { useData } from '../app/data';
 import { useNav } from '../app/nav';
@@ -52,6 +53,7 @@ export function StartScreen({ plan }: { plan: RunPlan }) {
           </tbody>
         </table>
         {planRoomFit(d, plan) ? <p className="pill warn">{planRoomFit(d, plan)}</p> : null}
+        <TurnOnNeeded blocks={plan.blocks} what="This session" />
         {kind === 'extra' || kind === 'anchor' ? <p className="muted">This is an extra: it does not unlock a session or count toward the week.</p> : null}
       </div>
       <div className="row spread" style={{ marginTop: 16 }}>
