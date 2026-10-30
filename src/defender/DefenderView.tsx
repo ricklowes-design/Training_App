@@ -5,12 +5,14 @@ import type { DefenderPose } from './stateMachine';
 // starts. If WebGL is missing or the frame rate stays too low, it switches to the 2D
 // fallback and reports it, so the block is recorded as "fallback2d", never as 3D.
 
-export const MIN_FPS = 20;
+import { MIN_FPS } from './fps';
 
-export function Defender3D({ getPose, onFallback, onFps }: { getPose: () => DefenderPose; onFallback: (reason: string) => void; onFps?: (fps: number) => void }) {
+export { MIN_FPS };
+
+export function Defender3D({ getPose, onFallback, onFps, paused = false }: { getPose: () => DefenderPose; onFallback: (reason: string) => void; onFps?: (fps: number) => void; paused?: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const cb = useRef({ getPose, onFallback, onFps });
-  cb.current = { getPose, onFallback, onFps };
+  const cb = useRef({ getPose, onFallback, onFps, paused });
+  cb.current = { getPose, onFallback, onFps, paused };
   useEffect(() => {
     let stop = false;
     let raf = 0;
@@ -20,7 +22,10 @@ export function Defender3D({ getPose, onFallback, onFps }: { getPose: () => Defe
       try {
         const mod = await import('./scene');
         if (stop || !canvas.current) return;
-        scene = mod.createDefenderScene(canvas.current);
+        scene = mod.createDefenderScene(canvas.current, () => {
+          stop = true;
+          cb.current.onFallback('3D graphics were reset by the Chromebook');
+        });
       } catch (e) {
         cb.current.onFallback(`3D could not start (${e instanceof Error ? e.message : String(e)})`);
         return;
@@ -51,8 +56,20 @@ export function Defender3D({ getPose, onFallback, onFps }: { getPose: () => Defe
           windowStart = now;
         }
         last = now;
+        // While paused the canvas stays (no new WebGL context per PAUSE) but nothing is drawn or timed.
+        if (cb.current.paused) {
+          frames = 0;
+          windowStart = now;
+          raf = requestAnimationFrame(loop);
+          return;
+        }
         fit(); // the layout can settle after the scene starts
-        scene.render(cb.current.getPose());
+        try {
+          scene.render(cb.current.getPose());
+        } catch (e) {
+          cb.current.onFallback(`3D drawing failed (${e instanceof Error ? e.message : String(e)})`);
+          return;
+        }
         frames++;
         if (now - windowStart >= 2000) {
           const fps = Math.round((frames * 1000) / (now - windowStart));

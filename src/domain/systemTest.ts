@@ -3,6 +3,7 @@ import type { Programme } from '../content/types';
 import type { CueLogEntry } from '../cue/engine';
 import type { BlockResult, DefenderScenario, FeatureFlags } from '../db/types';
 import type { RunBlock, RunPlan } from './plans';
+import { SMOOTH_FPS } from '../defender/fps';
 
 // Parent → System test: every feature once, the drills grouped by cone layout (content
 // systemTest), then a report per block: did each feature work, and if not, the likely reasons,
@@ -313,9 +314,10 @@ export function evaluateCheck(id: CheckId, e: BlockEvidence): CheckOutcome {
         ...(e.ctx.webgl === false ? ['This Chromebook reported no WebGL, so the arrow fallback is used.'] : []),
       ];
       if (!d) return out(id, 'fail', 'The block ran without the defender.', why);
-      if (d.view !== 'player3d') return out(id, 'fail', `The arrow fallback was used${d.fallbackReason ? `: ${d.fallbackReason}` : ''}.`, why);
-      const slow = e.ctx.defenderFps !== undefined && e.ctx.defenderFps < 30;
-      return out(id, slow ? 'partial' : 'pass', `3D defender shown (${d.reps} reps${e.ctx.defenderFps ? `, ${e.ctx.defenderFps} frames a second in the defender test` : ''}).`, slow ? ['The defender test measured under 30 frames a second: close other tabs, or turn off the realistic defender.'] : []);
+      // No WebGL at all gives the arrow fallback; a switch mid-block (slow, GPU reset) gives the 2D fallback.
+      if (d.view !== 'player3d') return out(id, 'fail', `${e.ctx.webgl === false ? 'The arrow fallback' : 'The 2D fallback'} was used${d.fallbackReason ? `: ${d.fallbackReason}` : ''}.`, why);
+      const slow = e.ctx.defenderFps !== undefined && e.ctx.defenderFps < SMOOTH_FPS;
+      return out(id, slow ? 'partial' : 'pass', `3D defender shown (${d.reps} reps${e.ctx.defenderFps ? `, ${e.ctx.defenderFps} frames a second in the defender test` : ''}).`, slow ? [`The defender test measured under ${SMOOTH_FPS} frames a second: close other tabs, or turn off the realistic defender.`] : []);
     }
     case 'feintDetector': {
       const sc = e.scenarios;

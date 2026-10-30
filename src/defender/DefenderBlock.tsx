@@ -34,7 +34,10 @@ export function DefenderBlock(props: {
   cb.current = { activeMs, onLog, onRepsDone, input, view, fallbackReason };
 
   useEffect(() => {
-    if (paused) return;
+    if (paused) {
+      tap.current = undefined; // a tap made while paused is not a feint
+      return;
+    }
     const t = setInterval(() => {
       const { activeMs, onLog, onRepsDone, input } = cb.current;
       const st = state.current;
@@ -79,7 +82,13 @@ export function DefenderBlock(props: {
       className={`practice defender ${paused ? 'paused' : ''}`}
       onPointerDown={parentTrigger ? () => (tap.current = cb.current.activeMs()) : undefined}
     >
-      {paused ? <div className="cue-screen">PAUSED</div> : view === 'player3d' ? <Defender3D getPose={getPose} onFps={onFps} onFallback={(why) => (setFallbackReason(why), setView('fallback2d'))} /> : <Defender2D getPose={getPose} />}
+      {view === 'player3d' ? (
+        // The canvas stays through PAUSE; PAUSED is drawn on top (audit task 12).
+        <Defender3D getPose={getPose} onFps={onFps} paused={paused} onFallback={(why) => (setFallbackReason(why), setView('fallback2d'))} />
+      ) : paused ? null : (
+        <Defender2D getPose={getPose} />
+      )}
+      {paused ? <div className="cue-screen paused-overlay">PAUSED</div> : null}
       <div className="overlay-top">
         {header}
         <span>
@@ -88,7 +97,10 @@ export function DefenderBlock(props: {
           {parentTrigger ? ' · parent taps when the feint starts' : ''}
         </span>
       </div>
-      <div className="controls">{controls}</div>
+      {/* PAUSE, STOP and DONE never count as the parent's feint tap. */}
+      <div className="controls" onPointerDown={(e) => e.stopPropagation()}>
+        {controls}
+      </div>
     </div>
   );
 }

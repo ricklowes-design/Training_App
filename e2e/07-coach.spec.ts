@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, closeParent, home, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startBlockNow, startCard, table } from './helpers';
+import { advance, boot, button, closeParent, home, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startBlockNow, startCard, table, scoredBy } from './helpers';
 
 async function ready(page: Page) {
   await boot(page);
@@ -115,6 +115,7 @@ test('advancement: criteria met → awaiting confirmation; parent checks; confir
     await runToEnd(page, {
       onForm: async (p) => {
         await p.getByRole('button', { name: 'Correct decisions /10 9', exact: true }).click();
+        await scoredBy(p);
         await button(p, 'Confirm').click();
       },
     });

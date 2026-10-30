@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openFocus, openParent, patchSettings, runToEnd, setup, startBlockNow, table } from './helpers';
+import { advance, boot, button, openFocus, openParent, patchSettings, runToEnd, setup, startBlockNow, table, scoredBy } from './helpers';
 
 // Experimental features, each off by default: the digit diagnostic by voice and the ball detector
 // model (network only). Cone detection is in 16-cone-detection.spec.ts.
@@ -60,6 +60,7 @@ test('digit diagnostic by voice: off by default; when on, what is heard becomes 
       // The numbers count starts from the estimate (current block only); directions stay blank.
       await expect(p.locator('.count[data-blank]')).toHaveCount(1);
       await p.getByRole('button', { name: 'Directions right /10 9', exact: true }).click();
+      await scoredBy(p);
       await button(p, 'Confirm').click();
     },
   });

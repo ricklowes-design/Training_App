@@ -300,6 +300,22 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.results.length, s.phase === 'done', ids]);
 
+  // The defender's frame rate: kept per block and written once, as the in-session value; the parent's
+  // 3D defender test keeps its own number (audit task 12).
+  const fpsSamples = useRef<number[]>([]);
+  useEffect(
+    () => () => {
+      const f = fpsSamples.current;
+      fpsSamples.current = [];
+      if (!f.length) return;
+      const median = [...f].sort((a, b) => a - b)[Math.floor(f.length / 2)];
+      void db.settings
+        .get('main')
+        .then((st) => st && db.settings.update('main', { capabilities: { ...(st.capabilities ?? { checkedAt: new Date().toISOString(), webgl: true, webgl2: false }), sessionDefenderFps: median, sessionDefenderFpsAt: new Date().toISOString() } }));
+    },
+    [s.blockIdx, s.attempt],
+  );
+
   // The screen stays on during a session; a hidden page (lid closed, screen off, another tab) pauses it,
   // and the session waits on the PAUSED screen for a tap (audit task 11). The pause counts toward the pause limits.
   useWakeLock(s.phase !== 'done');
@@ -701,7 +717,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
           if (last) void db.defenderScenarios.put({ ...last, sessionRecordId: recordId, blockIndex: sRef.current.blockIdx, attempt: sRef.current.attempt });
         }}
         input={defCfg.trigger === 'cameraOnset' && camera.live ? camera.defenderInput : undefined}
-        onFps={(fps) => void db.settings.update('main', { capabilities: { ...(settings.capabilities ?? { checkedAt: new Date().toISOString(), webgl: true, webgl2: false }), defenderFps: fps, defenderFpsAt: new Date().toISOString() } })}
+        onFps={(fps) => fpsSamples.current.push(fps)}
         onRepsDone={() => {
           if (block.mode === 'reps' || s.practice) apply(E.done);
         }}

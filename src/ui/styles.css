@@ -220,3 +220,10 @@ table.data th { color: var(--muted); font-weight: 600; }
 .howto-words { display: flex; flex-direction: column; gap: 10px; }
 .howto-word { display: flex; align-items: center; gap: 14px; font-size: 1.6rem; font-weight: 600; }
 .howto-word .pill { font-size: 1.3rem; min-width: 9.5em; text-align: center; }
+
+/* PAUSED drawn over the 3D defender, which keeps its canvas (audit task 12). */
+.paused-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}

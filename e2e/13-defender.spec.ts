@@ -97,3 +97,20 @@ test('when the 3D view cannot start, the block continues in the labelled 2D fall
   expect(obs.find((o) => o.metricId === 'correctResponseByDefenderAction')).toMatchObject({ value: 11, source: 'manual', status: 'verified' });
   expect(obs[0].contextKey.defenderArchetype).toBeTruthy();
 });
+
+test('PAUSE keeps the same 3D canvas (no new WebGL context per pause) and shows PAUSED over it (audit task 12)', async ({ page }) => {
+  test.setTimeout(300_000);
+  await boot(page);
+  await setup(page);
+  await toDefenderBlock(page);
+  const canvas = page.locator('[data-testid="defender-3d"]');
+  await expect(canvas).toBeVisible();
+  await canvas.evaluate((el) => ((el as HTMLElement).dataset.marker = 'first'));
+  await button(page, 'PAUSE').click();
+  await expect(page.locator('.paused-overlay')).toBeVisible();
+  await expect(canvas).toHaveAttribute('data-marker', 'first');
+  await button(page, /^RESUME|^Resume/).click();
+  await expect(page.locator('.paused-overlay')).toHaveCount(0);
+  await expect(canvas).toHaveAttribute('data-marker', 'first');
+  await button(page, 'STOP').click();
+});

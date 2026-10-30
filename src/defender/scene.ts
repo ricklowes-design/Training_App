@@ -46,7 +46,13 @@ function knee(hip: THREE.Vector3, foot: THREE.Vector3, forward: THREE.Vector3): 
   return hip.clone().add(dir.applyAxisAngle(bendAxis, -a).multiplyScalar(THIGH));
 }
 
-export function createDefenderScene(canvas: HTMLCanvasElement): DefenderScene {
+export function createDefenderScene(canvas: HTMLCanvasElement, onLost?: () => void): DefenderScene {
+  // A lost WebGL context (the Chromebook reset the GPU) is reported, so the block can fall back with a reason (audit task 12).
+  const lost = (e: Event) => {
+    e.preventDefault();
+    onLost?.();
+  };
+  canvas.addEventListener('webglcontextlost', lost);
   // preserveDrawingBuffer keeps the last frame for screenshots and replays paused mid-rep.
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
@@ -286,6 +292,7 @@ export function createDefenderScene(canvas: HTMLCanvasElement): DefenderScene {
       camera.updateProjectionMatrix();
     },
     dispose() {
+      canvas.removeEventListener('webglcontextlost', lost);
       renderer.dispose();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh) {
@@ -293,6 +300,8 @@ export function createDefenderScene(canvas: HTMLCanvasElement): DefenderScene {
           (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
         }
       });
+      // Release the context now rather than when the garbage collector gets to it.
+      renderer.forceContextLoss();
     },
   };
 }

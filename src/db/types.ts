@@ -771,6 +771,9 @@ export interface Capabilities {
   /** Measured by the 3D defender test in parent mode. */
   defenderFps?: number;
   defenderFpsAt?: string;
+  /** Median 3D frame rate during the last defender block of a session (written once per block). */
+  sessionDefenderFps?: number;
+  sessionDefenderFpsAt?: string;
   /** Measured by Parent → Balls → detector speed test. */
   ballDetectorFps?: number;
   ballDetectorDelegate?: string;
