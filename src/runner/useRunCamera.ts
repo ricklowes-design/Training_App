@@ -43,6 +43,9 @@ export function useRunCamera(args: {
   const [live, setLive] = useState(false);
   const [error, setError] = useState('');
   const [framing, setFraming] = useState<FramingResult | null>(null);
+  // The webcam was unplugged: reopen it when the next block's instructions show (audit task 6).
+  const ended = useRef(false);
+  const [reopen, setReopen] = useState(0);
   const recording = useRef<{ key: string; block: RunBlock; setup?: CameraSetup; blockIdx: number; attempt: number } | null>(null);
   const pending = useRef<Promise<unknown>>(Promise.resolve());
   const cb = useRef({ onClip, setExtras, recordId });
@@ -64,7 +67,15 @@ export function useRunCamera(args: {
       .then(({ session: cs, fellBack }) => {
         if (cancelled) return cs.close();
         session.current = cs;
+        ended.current = false;
+        cs.onEnded = () => {
+          // Keep the session until the current block ends, so the clip recorded so far is still saved.
+          ended.current = true;
+          setLive(false);
+          setError('The webcam was disconnected. Plug it back in; the next drill will try again.');
+        };
         setLive(true);
+        setError('');
         if (fellBack) setError('The webcam chosen in Camera set-up was not found, so another camera is being used. Check the USB cable.');
       })
       .catch((e) => setError(cameraErrorText(e)));
@@ -74,7 +85,12 @@ export function useRunCamera(args: {
       session.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [enabled, reopen]);
+
+  useEffect(() => {
+    if (enabled && ended.current && s.phase === 'demo' && !recording.current) setReopen((n) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.phase, s.blockIdx]);
 
   // Session-launch room check against the room profile (task 1.3): once, before the first block.
   useEffect(() => {

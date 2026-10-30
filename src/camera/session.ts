@@ -117,6 +117,10 @@ export class CameraSession {
   onset = new OnsetDetector();
   private lastPresenceAt = 0;
   private activeMs: () => number = () => 0;
+  /** Resolves when the current recorder has stopped, listened for from the start (audit task 6). */
+  private stopped: Promise<void> = Promise.resolve();
+  /** Called once if the camera's video track ends (unplugged, or taken by another app). */
+  onEnded?: () => void;
 
   private constructor(stream: MediaStream, video: HTMLVideoElement) {
     this.stream = stream;
@@ -130,7 +134,11 @@ export class CameraSession {
     video.playsInline = true;
     video.srcObject = stream;
     await video.play();
-    return new CameraSession(stream, video);
+    const cs = new CameraSession(stream, video);
+    stream.getVideoTracks()[0]?.addEventListener('ended', () => cs.onEnded?.(), { once: true });
+    // Browser tests only (navigator.webdriver): lets a test unplug the camera.
+    if (navigator.webdriver) (window as unknown as { __cameraSession?: CameraSession }).__cameraSession = cs;
+    return cs;
   }
 
   /** Opens the saved camera, else the USB webcam, else Chrome's default. `fellBack` is true when the saved one was missing. */
@@ -184,9 +192,15 @@ export class CameraSession {
     this.masks = { area, tripwire: mask(setup.tripwire), left, right };
     this.chunks = [];
     const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m)) ?? '';
-    this.recorder = new MediaRecorder(this.stream, { mimeType: mime || undefined, videoBitsPerSecond: RECORD_BITRATE });
-    this.recorder.ondataavailable = (e) => e.data.size && this.chunks.push(e.data);
-    this.recorder.start(1000);
+    const rec = new MediaRecorder(this.stream, { mimeType: mime || undefined, videoBitsPerSecond: RECORD_BITRATE });
+    this.recorder = rec;
+    // Listen from the start: Chrome can stop the recorder by itself (camera unplugged) before endBlock runs.
+    this.stopped = new Promise<void>((res) => rec.addEventListener('stop', () => res(), { once: true }));
+    rec.onerror = () => {
+      if (rec.state !== 'inactive') rec.stop();
+    };
+    rec.ondataavailable = (e) => e.data.size && this.chunks.push(e.data);
+    rec.start(1000);
     this.startLoop();
   }
 
@@ -204,9 +218,9 @@ export class CameraSession {
     const rec = this.recorder;
     this.recorder = null;
     if (!rec) return { blob: new Blob(), mime: '', presenceFrac: undefined };
-    const done = new Promise<void>((res) => (rec.onstop = () => res()));
     if (rec.state !== 'inactive') rec.stop();
-    await done;
+    // Never wait forever: a recorder that already stopped (or never reports it) gives up after 3 s.
+    await Promise.race([this.stopped, new Promise<void>((r) => setTimeout(r, 3000))]);
     const presenceFrac = this.presence.samples >= 10 ? this.presence.present / this.presence.samples : undefined;
     return { blob: new Blob(this.chunks, { type: rec.mimeType }), mime: rec.mimeType, presenceFrac };
   }

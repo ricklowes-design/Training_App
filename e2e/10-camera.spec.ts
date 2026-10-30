@@ -97,6 +97,35 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await expect(page.locator('ul.clean li')).toHaveCount(before - 1);
   });
 
+  test('a webcam unplugged mid-block never stops the session from saving (audit task 6)', async ({ page }) => {
+    test.setTimeout(240_000);
+    await boot(page);
+    await setup(page);
+    await cameraSetup(page, 'L2');
+    await arrowCues(page);
+    await place(page, 'Feinting', 9);
+    await start(page, 'Feinting · Stage 3 · Session 9');
+    await advance(page, 191_000);
+    await startBlockNow(page);
+    await page.clock.resume();
+    await expect(page.locator('.overlay-top')).toContainText('●', { timeout: 20_000 });
+    await page.waitForTimeout(4_000);
+    // "Unplug": the track ends, as Chrome reports a removed USB camera.
+    await page.evaluate(() => {
+      const t = (window as unknown as { __cameraSession: { stream: MediaStream } }).__cameraSession.stream.getVideoTracks()[0];
+      t.stop();
+      t.dispatchEvent(new Event('ended'));
+    });
+    await page.waitForTimeout(1_000);
+    await button(page, 'DONE').click();
+    await expect(page.locator('.endcard')).toBeVisible({ timeout: 20_000 });
+    await button(page, 'Repeat').click(); // the next showing reopens the camera
+    await button(page, 'STOP').click();
+    await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible({ timeout: 30_000 });
+    const clips = await table<{ blob: unknown }>(page, 'clips');
+    expect(clips.length).toBe(1); // what was recorded before the unplug is kept
+  });
+
   test('framing check turns red with a fix when the picture does not match the reference', async ({ page }) => {
     await boot(page);
     await setup(page);

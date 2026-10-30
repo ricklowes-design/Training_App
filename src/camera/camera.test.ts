@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { applyH, calibrationCones, homography, pointInPolygon, polygonMask } from './geometry';
 import { bestShift, framingCheck, motionFraction, ncc, type Gray } from './frames';
 
@@ -94,5 +94,29 @@ describe('camera choice and errors (audit 2026-10-29, task 5)', () => {
     expect(cameraErrorText(err('OverconstrainedError'))).toMatch(/^No webcam found/);
     expect(cameraErrorText(err('NotReadableError'))).toMatch(/^The webcam is busy/);
     expect(cameraErrorText(new Error('odd'))).toBe('Camera not available (odd).');
+  });
+});
+
+describe('recording survives the camera going away (audit 2026-10-29, task 6)', () => {
+  const fakeSession = async (rec: { state: string; mimeType: string; stop: () => void }, stopped: Promise<void>) => {
+    const { CameraSession } = await import('./session');
+    const cs = Object.create(CameraSession.prototype) as Record<string, unknown>;
+    Object.assign(cs, { recorder: rec, stopped, chunks: [new Blob(['x'])], presence: { samples: 0, present: 0 }, loopId: 0 });
+    return cs as unknown as import('./session').CameraSession;
+  };
+
+  it('endBlock resolves when Chrome already stopped the recorder', async () => {
+    const cs = await fakeSession({ state: 'inactive', mimeType: 'video/webm', stop: () => undefined }, Promise.resolve());
+    const out = await cs.endBlock();
+    expect(out.blob.size).toBe(1);
+  });
+
+  it('endBlock gives up after 3 s when the recorder never reports stopping', async () => {
+    vi.useFakeTimers();
+    const cs = await fakeSession({ state: 'recording', mimeType: 'video/webm', stop: () => undefined }, new Promise<void>(() => undefined));
+    const p = cs.endBlock();
+    await vi.advanceTimersByTimeAsync(3100);
+    await expect(p).resolves.toMatchObject({ mime: 'video/webm' });
+    vi.useRealTimers();
   });
 });

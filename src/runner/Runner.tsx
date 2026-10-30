@@ -270,7 +270,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       if (finishing.current) return;
       finishing.current = true;
       (async () => {
-        await camera.flush();
+        // Never wait forever for a clip (a camera unplugged mid-block, audit task 6).
+        await Promise.race([camera.flush(), new Promise((r) => setTimeout(r, 15_000))]);
         const recs = await saveProgress(withExtras(s), ids, new Set(savedRef.current.map((r) => r.blockIndex)), true);
         await db.settings.update('main', { lastSeenAppVersion: APP_VERSION, lastSeenContentVersion: p.version });
         await recordMilestones(p);
