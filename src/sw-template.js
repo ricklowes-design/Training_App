@@ -3,9 +3,17 @@ const VERSION = __VERSION__;
 const SHELL = __SHELL__;
 const CACHE = 'shell-' + VERSION;
 
+// A new version waits until the app asks for it (Home's "Update now"), so a deploy never swaps the
+// files under a running session (audit task 15). The very first install activates at once as usual.
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));
 });
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') self.skipWaiting();
+});
+
+// Weak Wi-Fi: give the network 4 s, then use the cached copy.
+const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -25,19 +33,22 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.endsWith('/content/programme.json')) {
     // Network first so content edits arrive on reload; cached copy when offline.
     event.respondWith(
-      fetch(req)
+      Promise.race([fetch(req), timeout(4000)])
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+          // Only good answers are cached (an error page never replaces the content).
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
           return res;
         })
-        .catch(() => caches.match(req)),
+        .catch(() => caches.match(req).then((hit) => hit || fetch(req))),
     );
     return;
   }
 
   if (req.mode === 'navigate') {
-    event.respondWith(fetch(req).catch(() => caches.match('./')));
+    event.respondWith(Promise.race([fetch(req), timeout(4000)]).catch(() => caches.match('./').then((hit) => hit || fetch(req))));
     return;
   }
 

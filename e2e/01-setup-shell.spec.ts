@@ -217,3 +217,20 @@ test('storage that cannot be opened shows a message, not "Loading…" for ever (
   await expect(page.getByTestId('error-screen')).toContainText("The app's storage could not be opened.");
   await expect(page.getByRole('button', { name: 'Download a backup' })).toBeVisible();
 });
+
+test('a waiting new version is offered on Home, never during a session (audit task 15)', async ({ page }) => {
+  await boot(page, { clock: false });
+  await setup(page, { focus: false });
+  await page.evaluate(() => {
+    const fake = { posted: [] as unknown[], postMessage(m: unknown) { this.posted.push(m); } };
+    (window as unknown as { __fake: typeof fake }).__fake = fake;
+    window.dispatchEvent(new CustomEvent('app-update', { detail: fake }));
+  });
+  const banner = page.getByTestId('app-update');
+  await expect(banner).toContainText('A new version of the app is ready.');
+  await button(banner, 'Update now').click();
+  expect(await page.evaluate(() => (window as unknown as { __fake: { posted: unknown[] } }).__fake.posted)).toEqual(['skipWaiting']);
+  // A session never shows it.
+  await page.getByRole('button', { name: /Start my session/ }).click();
+  await expect(page.getByTestId('app-update')).toHaveCount(0);
+});

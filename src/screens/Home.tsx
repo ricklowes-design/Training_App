@@ -1,6 +1,7 @@
 import { dayKind } from '../domain/sequencing';
 import { TurnOnNeeded } from '../runner/TurnOnNeeded';
 import { useMemo, useState } from 'react';
+import { useAppUpdate } from '../app/useAppUpdate';
 import { unlockAudio } from '../audio/audio';
 import { useData } from '../app/data';
 import { useNav } from '../app/nav';
@@ -93,6 +94,7 @@ export function Home() {
   const progress = useAreaProgress();
   const suggestion = useSuggestion();
   const [minutes, setMinutes] = useState<number>(20);
+  const appUpdate = useAppUpdate();
   // Remembered for this browser session only (a per-viewer convenience).
   const [focusOpen, setFocusOpenState] = useState(() => {
     try {
@@ -282,6 +284,14 @@ export function Home() {
                 </button>
               ) : null}
             </div>
+          </div>
+        ) : null}
+        {appUpdate.ready ? (
+          <div className="note-box row spread" data-testid="app-update">
+            <span>A new version of the app is ready.</span>
+            <button className="btn primary" onClick={appUpdate.update}>
+              Update now
+            </button>
           </div>
         ) : null}
         {backupDue(d) ? (
