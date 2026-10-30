@@ -3,7 +3,7 @@ import type { Pose } from './compute';
 
 // Pose Landmarker (VIDEO mode) for use inside a worker. GPU delegate when available.
 
-import { BALL_MODEL_URL, MODEL_URL } from './models';
+import { BALL_MODEL_URL, MODEL_URL, modelHref } from './models';
 
 export { MODEL_URL };
 
@@ -12,7 +12,7 @@ export async function createPose(model: 'lite' | 'full', wasmBase: string): Prom
   for (const delegate of ['GPU', 'CPU'] as const) {
     try {
       const landmarker = await PoseLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: MODEL_URL[model], delegate },
+        baseOptions: { modelAssetPath: modelHref(MODEL_URL[model], wasmBase), delegate },
         runningMode: 'VIDEO',
         numPoses: 1,
       });
@@ -32,7 +32,7 @@ export function toPose(lm: { x: number; y: number; visibility?: number }[] | und
 }
 
 // Ball detector model (experimental, off by default; part 17 task 6.1). EfficientDet-Lite0 from
-// MediaPipe (Apache-2.0), COCO class "sports ball". Downloaded from Google's model storage once.
+// MediaPipe (Apache-2.0), COCO class "sports ball". Hosted with the app (public/models).
 export { BALL_MODEL_URL };
 
 export async function createBallDetector(wasmBase: string): Promise<{ detector: import('@mediapipe/tasks-vision').ObjectDetector; delegate: 'GPU' | 'CPU' }> {
@@ -41,7 +41,7 @@ export async function createBallDetector(wasmBase: string): Promise<{ detector: 
   for (const delegate of ['GPU', 'CPU'] as const) {
     try {
       const detector = await ObjectDetector.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: BALL_MODEL_URL, delegate },
+        baseOptions: { modelAssetPath: modelHref(BALL_MODEL_URL, wasmBase), delegate },
         runningMode: 'VIDEO',
         categoryAllowlist: ['sports ball'],
         scoreThreshold: 0.25,
@@ -74,7 +74,7 @@ export async function detectRoomObjects(wasmBase: string, bitmap: ImageBitmap): 
   const { ObjectDetector } = await import('@mediapipe/tasks-vision');
   const fileset = await FilesetResolver.forVisionTasks(wasmBase, true);
   const detector = await ObjectDetector.createFromOptions(fileset, {
-    baseOptions: { modelAssetPath: BALL_MODEL_URL, delegate: 'CPU' },
+    baseOptions: { modelAssetPath: modelHref(BALL_MODEL_URL, wasmBase), delegate: 'CPU' },
     runningMode: 'IMAGE',
     categoryAllowlist: Object.keys(ROOM_CLASSES),
     scoreThreshold: 0.3,

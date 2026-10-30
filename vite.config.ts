@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8')) as { version: string };
+// The installed MediaPipe version names the service worker's WebAssembly cache, so an upgrade never reuses old files.
+const mpVersion = (JSON.parse(readFileSync(resolve(__dirname, 'node_modules/@mediapipe/tasks-vision/package.json'), 'utf8')) as { version: string }).version;
 const CONTENT_FILE = resolve(__dirname, 'content/programme.json');
 
 /**
@@ -73,7 +75,8 @@ function serviceWorker(): Plugin {
       const version = `${pkg.version}-${Date.now()}`;
       const src = readFileSync(resolve(__dirname, 'src/sw-template.js'), 'utf8')
         .replace('__VERSION__', JSON.stringify(version))
-        .replace('__SHELL__', JSON.stringify(shell));
+        .replace('__SHELL__', JSON.stringify(shell))
+        .replace('__MP_VERSION__', JSON.stringify(mpVersion));
       this.emitFile({ type: 'asset', fileName: 'sw.js', source: src });
     },
   };

@@ -189,8 +189,13 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     expect(ids).toEqual(['kept', 'new']);
   });
 
-  test('pose speed test applies the frame-rate policy (needs network for the models)', async ({ page }) => {
-    test.skip(!process.env.E2E_NETWORK, 'set E2E_NETWORK=1 to download the pose models');
+  test('pose speed test applies the frame-rate policy, with the models hosted in the app (no network to Google)', async ({ page }) => {
+    // Any request to Google's model storage fails the test: the models must come from the app itself.
+    const outside: string[] = [];
+    await page.route('https://storage.googleapis.com/**', (r) => {
+      outside.push(r.request().url());
+      return r.abort();
+    });
     test.setTimeout(300_000);
     await boot(page, { clock: false });
     await setup(page);
@@ -224,4 +229,5 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     const [s] = await table<{ camera: { poseTest?: { liteFps: number; fullFps: number } } }>(page, 'settings');
     expect(s.camera.poseTest!.liteFps).toBeGreaterThan(0);
     expect(s.camera.poseTest!.fullFps).toBeGreaterThan(0);
+    expect(outside).toEqual([]);
   });
