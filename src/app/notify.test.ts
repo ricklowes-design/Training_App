@@ -60,4 +60,15 @@ describe('completion messages (plan/14)', () => {
     await notifyFinished(p, [rec({ id: 'r2', areaId: 'feinting', sessionNumber: 9 })], none.f);
     expect(none.calls).toHaveLength(0);
   });
+
+  it("the first name is sent only when the parent switches the name on (audit task 14)", async () => {
+    const sent = async (includeName: boolean, id: string) => {
+      await db.settings.put({ ...DEFAULT_SETTINGS, flags: { ...DEFAULT_SETTINGS.flags, notifications: true }, notify: { ...discord, firstName: 'Sam', includeName } });
+      const f = okFetch();
+      await notifyFinished(p, [rec({ id, areaId: 'feinting', sessionNumber: 8 })], f.f);
+      return (f.calls[0].init!.body as FormData).get('content') as string;
+    };
+    expect(await sent(false, 'n1')).not.toContain('Sam');
+    expect(await sent(true, 'n2')).toMatch(/^Sam: /);
+  });
 });

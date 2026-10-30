@@ -162,7 +162,7 @@ export function initCue(config: CueConfig): CueState {
 export interface CueInput {
   /** Latest tripwire crossing (active ms), if the camera saw one. */
   tripwireMs?: number;
-  /** Side her upper body moved toward just before the tripwire. */
+  /** Side the player's upper body moved toward just before the tripwire. */
   shapingSide?: Side;
 }
 
@@ -223,7 +223,7 @@ export function tickCue(s: CueState, now: number, input: CueInput = {}): { state
   const rep = s.plan[s.repIdx % s.plan.length];
   if (s.repStartMs === null || !rep) return { state: s, actions };
 
-  // Tripwire: schedule the cue a short random delay after she crosses it.
+  // Tripwire: schedule the cue a short random delay after the player crosses it.
   if (s.config.useTripwire && s.cueAtMs === null && s.shownAtMs === null) {
     const last = s.log[s.log.length - 1];
     if (input.tripwireMs !== undefined && input.tripwireMs >= s.repStartMs && !last.missedTripwire) {

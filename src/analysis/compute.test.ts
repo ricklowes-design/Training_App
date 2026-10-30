@@ -24,7 +24,7 @@ const frames = (fromMs: number, toMs: number, fps: number, f: (t: number) => Par
 };
 
 describe('analysis building blocks', () => {
-  it('her side: picture right is her left unless mirrored', () => {
+  it("the player's side: picture right is the player's left unless mirrored", () => {
     expect(herSide(0.1, false)).toBe('left');
     expect(herSide(0.1, true)).toBe('right');
   });
@@ -40,7 +40,7 @@ describe('analysis building blocks', () => {
     expect(Math.abs(r.onsetMs! - 1430)).toBeLessThan(34);
   });
 
-  it('reaction onset is not timed when she was already moving', () => {
+  it('reaction onset is not timed when the player was already moving', () => {
     const f = frames(0, 3000, 30, () => ({ area: 0.2 }));
     expect(reactionOnset(f, 1200).reason).toBe('moving before the cue');
   });
@@ -50,7 +50,7 @@ describe('analysis building blocks', () => {
     const x = (t: number) => (t < 1000 ? 0.5 : t < 1300 ? 0.5 - (0.02 * (t - 1000)) / 300 : 0.48 + (0.1 * (t - 1300)) / 600);
     const f = frames(0, 2600, 30, (t) => ({ pose: pose(Math.min(x(t), 0.58)) }));
     const e = exitFromHips(f, 1000, false);
-    expect(e.exitDir).toBe('left'); // picture right = her left
+    expect(e.exitDir).toBe('left'); // picture right = the player's left
     expect(Math.abs(e.exitMs! - 1300)).toBeLessThan(40);
   });
 
@@ -87,7 +87,7 @@ describe('analysis building blocks', () => {
 });
 
 describe('rep and block analysis', () => {
-  // 10 reps, 3 s each; cue at +1 s; she exits through the cued gate 450 ms after the cue.
+  // 10 reps, 3 s each; cue at +1 s; the player exits through the cued gate 450 ms after the cue.
   const log: CueLogEntry[] = Array.from({ length: 10 }, (_, i) => ({
     rep: i,
     repStartMs: i * 3000,

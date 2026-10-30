@@ -49,7 +49,7 @@ function FeintRepReview({ clip, rep, feint }: { clip: Clip; rep: RepAnalysis; fe
       </div>
       <div className="row">
         <span className="muted">Exit seen on the replay</span>
-        <Seg value={side ?? 'x'} onChange={(v) => setSide(v as 'left' | 'right' | 'none')} options={[{ value: 'left', label: 'Her left' }, { value: 'right', label: 'Her right' }, { value: 'none', label: 'No exit' }]} />
+        <Seg value={side ?? 'x'} onChange={(v) => setSide(v as 'left' | 'right' | 'none')} options={[{ value: 'left', label: "Player's left" }, { value: 'right', label: "Player's right" }, { value: 'none', label: 'No exit' }]} />
         <button className="btn small primary" disabled={!ready || saved} onClick={save}>
           {saved ? 'Reviewed' : 'Save review'}
         </button>
@@ -58,7 +58,7 @@ function FeintRepReview({ clip, rep, feint }: { clip: Clip; rep: RepAnalysis; fe
   );
 }
 
-/** Scanning rep: did she look over the shoulder before the touch? The answer verifies the look and labels the scanning model. */
+/** Scanning rep: did the player look over the shoulder before the touch? The answer verifies the look and labels the scanning model. */
 function ScanRepReview({ clip, rep }: { clip: Clip; rep: RepAnalysis }) {
   const [looked, setLooked] = useState<'yes' | 'no' | null>(null);
   const [saved, setSaved] = useState(false);

@@ -23,7 +23,7 @@ test('first-run set-up saves the player, room layout v1, priorities, coach note 
   await page.getByRole('button', { name: 'Back', exact: true }).last().click();
   await expect(page.getByRole('heading', { name: "Let's start with measuring your space" })).toBeVisible();
   await expect(page.getByLabel('Room length metres')).toHaveValue('4.3');
-  await expect(page.getByTestId('wall-question')).toContainText('Can she kick the ball against the back wall?');
+  await expect(page.getByTestId('wall-question')).toContainText('Can the player kick the ball against the back wall?');
   await button(page, 'Yes, the wall can be used').click();
   await button(page, '2 Photo').click();
   await expect(page.getByRole('heading', { name: 'Position the Chromebook and take a photo' })).toBeVisible();

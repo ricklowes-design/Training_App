@@ -254,7 +254,7 @@ test('the voice talks through the instructions; skip it, or mark the drill as kn
   expect(text).toContain('1. Back to the screen. Ball at your feet.');
   expect(text).toContain('LEFT FREE: Touch and turn LEFT.');
   const talk = page.getByTestId('talk-controls');
-  const knows = talk.getByLabel("She knows this one: don't read it out next time");
+  const knows = talk.getByLabel("The player knows this one: don't read it out next time");
   await knows.click();
   await expect(knows).toBeChecked();
   await expect.poll(async () => (await table<{ talkThroughSkip?: string[] }>(page, 'settings'))[0].talkThroughSkip ?? []).toContain('S2');

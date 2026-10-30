@@ -9,7 +9,7 @@ import { fmtDate, Seg, Stepper } from '../../ui/widgets';
 const FAMILIES: { id: DrillFamily; name: string; where: string }[] = [
   { id: 'L2', name: 'Feinting (L2 feint lane)', where: 'In front, beside the screen, about 1.5 m high, angled down the lane.' },
   { id: 'L1', name: 'Dribbling (L1 slalom)', where: 'In front, elevated, as for feinting.' },
-  { id: 'L3', name: 'Scanning and receiving (L3 receive box)', where: 'In front of her, low, 2–3 m away; the screen is behind her.' },
+  { id: 'L3', name: 'Scanning and receiving (L3 receive box)', where: 'In front of the player, low, 2–3 m away; the screen is behind the player.' },
   { id: 'L4', name: 'Ball control (L4 mastery square)', where: 'Front-on, low.' },
 ];
 
@@ -199,7 +199,7 @@ function Wizard({ family, deviceId, deviceLabel, onDone }: { family: DrillFamily
                 <li key={z} className="row spread" style={{ fontWeight: i === zoneIdx ? 800 : 400 }}>
                   <span style={{ color: COLOURS[i % COLOURS.length] }}>
                     ■ {z}
-                    {z === 'tripwire' ? ' (a strip across the lane about 1 m before the feint cone)' : i === 0 ? ' (where she works; used for the presence rule)' : ''}
+                    {z === 'tripwire' ? ' (a strip across the lane about 1 m before the feint cone)' : i === 0 ? ' (where the player works; used for the presence rule)' : ''}
                   </span>
                   <span>
                     {zones[i].length}/4{' '}

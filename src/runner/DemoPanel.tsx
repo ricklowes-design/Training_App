@@ -92,7 +92,7 @@ export function DemoPanel(props: {
     if (stage === 'cones') toInstructions();
     else if (!isChoice) onStart();
   }, [left, playing, paused, holding, isChoice, onStart, stage, toInstructions]);
-  // The voice talks through the instructions (once per showing), unless she knows this drill.
+  // The voice talks through the instructions (once per showing), unless the player knows this drill.
   const talkKey = block.drillId ?? block.benchmarkId ?? block.anchorId ?? block.kind;
   const knows = (settings.talkThroughSkip ?? []).includes(talkKey);
   const talkText = talkThrough(p, block, title, roomProfile?.wallUsable);
@@ -138,7 +138,7 @@ export function DemoPanel(props: {
       )}
       <label className="check">
         <input type="checkbox" checked={knows} onChange={(e) => setKnows(e.target.checked)} />
-        She knows this one: don't read it out next time
+        The player knows this one: don't read it out next time
       </label>
     </div>
   );

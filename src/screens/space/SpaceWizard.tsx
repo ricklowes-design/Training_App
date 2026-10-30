@@ -124,7 +124,7 @@ function MeasureStep({ profile, space, setSpace, onChange, units, onNext, onNoTa
             />
           </div>
           <div className="card tight stack" data-testid="wall-question">
-            <strong style={{ fontSize: '1.2rem' }}>Can she kick the ball against the back wall?</strong>
+            <strong style={{ fontSize: '1.2rem' }}>Can the player kick the ball against the back wall?</strong>
             <span className="muted">A bare wall at the start end, and the household is fine with it. Some drills then use the wall: kick, check your shoulder, receive the bounce.</span>
             <Seg
               value={profile.wallUsable ? 'yes' : 'no'}

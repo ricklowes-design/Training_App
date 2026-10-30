@@ -77,7 +77,7 @@ export function splitMask(mask: Uint8Array, w: number, h: number): [Uint8Array, 
 }
 
 /** Floor positions (metres) of the four calibration cones for each drill family, from the room layout.
- *  x: across the room (0 = lane centre, + = right as she faces the camera); y: along the lane from the start wall. */
+ *  x: across the room (0 = lane centre, + = right as the player faces the camera); y: along the lane from the start wall. */
 export function calibrationCones(
   family: 'L1' | 'L2' | 'L3' | 'L4',
   d: { slalomFirstConeM: number; slalomSpacingM: number; feintConeM: number; feintGateAtM: number; feintGateWidthM: number; receiveBoxSideM: number; masterySquareM: number; feintStartM?: number },

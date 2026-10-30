@@ -6,7 +6,7 @@
 export interface Onset {
   onsetMs: number; // first frame above the motion level
   reportMs: number; // when the direction estimate was ready (the trigger time)
-  /** Direction of the initial movement in picture terms; the caller turns it into her side. */
+  /** Direction of the initial movement in picture terms; the caller turns it into the player's side. */
   pictureSide?: 'left' | 'right';
   confidence: number; // 0..1
   /** Size of the movement relative to the resting level, 0..1: an estimate, never a technique score. */

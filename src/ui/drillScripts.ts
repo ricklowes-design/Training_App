@@ -2,7 +2,7 @@ import type { DerivedLayout } from '../db/types';
 import { gateInner } from '../domain/layout';
 
 // Scripted drill animations for the drills that combine a move with the app's own cue (no outside video
-// shows the whole drill). Room coordinates as in LayoutDiagram: x across (her left is -x when she faces the
+// shows the whole drill). Room coordinates as in LayoutDiagram: x across (the player's left is -x when the player faces the
 // front), y from the back wall toward the front (the Chromebook). Distances come from the room's layout.
 // This shows the flow of the drill (where to go, when the cue comes, what each cue asks), not the technique.
 
@@ -80,7 +80,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
   const lane = (caption: string) => ({ p: [0, sy] as V, b: [0, sy + 0.35] as V, face: FRONT, lean: 0, cue: '', caption });
   const approach = (title: string, caption = 'Dribble at pace toward the feint cone', stopShort = 0.9) =>
     scene(title, lane(caption)).to(1.8, { p: [0, cy - stopShort], b: [0, cy - stopShort + 0.35] });
-  // Her left is -x facing the front.
+  // The player's left is -x facing the front.
   const exit = (sc: ReturnType<typeof scene>, side: -1 | 1, caption: string) =>
     sc
       .to(0.45, { lean: 0, caption, p: [side * 0.25, cy - 0.35], b: [side * 0.45, cy - 0.05] })
@@ -171,7 +171,7 @@ export function scriptFor(drillId: string, d: DerivedLayout, lengthM: number): D
       return { layoutId: 'L1', scenes: [sc.done()] };
     }
   }
-  // Receive box (L3): she starts between the box and the screen, facing the back wall; her left is +x then.
+  // Receive box (L3): the player starts between the box and the screen, facing the back wall; the player's left is +x then.
   const mid = lengthM / 2;
   const s = d.receiveBoxSideM / 2;
   // Across the room: the box's half-width, or (single-cone version) just beside the line of cones.

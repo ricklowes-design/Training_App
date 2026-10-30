@@ -58,7 +58,7 @@ describe('cue engine', () => {
   it('with the tripwire, the cue never fires before the crossing and the delay stays in 0–400 ms', () => {
     const d = drill('cue-exit');
     const period = d.repPeriodS! * 1000;
-    // She crosses the tripwire 2.2 s into each rep.
+    // The player crosses the tripwire 2.2 s into each rep.
     const input = (t: number) => {
       const repStart = Math.floor(t / period) * period;
       return t - repStart >= 2200 ? { tripwireMs: repStart + 2200 } : {};

@@ -5,7 +5,7 @@ import { frameAt, sceneLength, scriptFor, type V } from './drillScripts';
 import { LayoutDiagram } from './LayoutDiagram';
 
 // An animated, top-down demonstration of a drill that combines a move with the app's own cue:
-// where she goes, when the cue appears on the Chromebook, and what each cue asks. Every outcome
+// where the player goes, when the cue appears on the Chromebook, and what each cue asks. Every outcome
 // plays in turn; a parent can pick one or pause.
 
 export function DrillAnimation(props: { drillId: string; d: DerivedLayout; lengthM: number; widthM: number; floor?: RoomLayout['floor']; units?: Units; screenBehindM?: number; maxHeight?: number; startScene?: number; freezeAt?: number }) {

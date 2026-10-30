@@ -4595,8 +4595,8 @@
         }
       ],
       "questions": [
-        "Did she read and say the colour on most looks in the roll-and-look drill?",
-        "Did she look during the roll before the touch on at least 8 of 10 benchmark reps?",
+        "Did the player read and say the colour on most looks in the roll-and-look drill?",
+        "Did the player look during the roll before the touch on at least 8 of 10 benchmark reps?",
         "Was the S2 placement drill clean at cue 2 s with the head up?"
       ],
       "defaultStartSession": 1
@@ -5031,7 +5031,7 @@
         }
       ],
       "parentChecks": [
-        "She looked during the roll on at least 8 reps"
+        "The player looked during the roll on at least 8 reps"
       ]
     },
     {

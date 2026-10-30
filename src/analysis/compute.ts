@@ -34,7 +34,7 @@ export type DrillKind = 'feint' | 'scan' | 'slalom' | 'control';
 
 export interface AnalysisContext {
   kind: DrillKind;
-  mirror: boolean; // picture mirrored: picture left = her left
+  mirror: boolean; // picture mirrored: picture left = the player's left
   homography?: number[];
   blockEndMs: number;
   fps: number;
@@ -63,7 +63,7 @@ export const THRESHOLDS = {
 const vis = (p: PosePoint | undefined) => !!p && p.v >= 0.5;
 const mid = (a: PosePoint, b: PosePoint) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
-/** Her side for a picture-x direction: picture right = her left unless the picture is mirrored. */
+/** The player's side for a picture-x direction: picture right = the player's left unless the picture is mirrored. */
 export const herSide = (pictureDx: number, mirror: boolean): Side => (pictureDx > 0 ? (mirror ? 'right' : 'left') : mirror ? 'left' : 'right');
 
 export function median(xs: number[]): number | undefined {
@@ -149,7 +149,7 @@ function poseCoverage(frames: FrameData[], need: (p: Pose) => boolean): { covera
 const hipsVisible = (p: Pose) => vis(p.lHip) && vis(p.rHip);
 const shouldersVisible = (p: Pose) => vis(p.lShoulder) && vis(p.rShoulder);
 
-/** Exit from the hip midpoint track: the side she ends up on and when the movement toward it began. */
+/** Exit from the hip midpoint track: the side the player ends up on and when the movement toward it began. */
 export function exitFromHips(frames: FrameData[], cueMs: number, mirror: boolean): { exitMs?: number; exitDir?: Side; reason?: string } {
   const win = frames.filter((f) => f.tMs >= cueMs - 300 && f.tMs <= cueMs + 1500 && f.pose && hipsVisible(f.pose));
   if (win.length < 6) return { reason: 'hips not seen' };
@@ -236,7 +236,7 @@ export function feintFeatures(frames: FrameData[], fromMs: number, exitMs: numbe
   if (win.length < 6 || exitMs === undefined || !exitDir) return { status: 'unableToAssess' };
   const hipW = median(win.map((f) => Math.abs(f.pose!.lHip.x - f.pose!.rHip.x))) ?? 0.05;
   const x = (f: FrameData) => mid(f.pose!.lHip, f.pose!.rHip).x;
-  // Her exit side as a picture direction.
+  // The player's exit side as a picture direction.
   const exitSign = herSide(1, mirror) === exitDir ? 1 : -1;
   const before = win.filter((f) => f.tMs <= exitMs);
   const after = win.filter((f) => f.tMs >= exitMs);

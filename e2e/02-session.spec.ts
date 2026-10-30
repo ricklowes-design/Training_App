@@ -115,6 +115,9 @@ test('demo view starts by itself; Start block, DONE after 80%, Repeat and notes 
       .or(page.locator('.video iframe[src*="youtube"]'))
       .first(),
   ).toBeVisible();
+  // When the player is embedded (CI with network), it uses YouTube's no-cookie host (audit task 14).
+  const frames = page.locator('.video iframe[src*="youtube"]');
+  if (await frames.count()) await expect(frames.first()).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\//);
   await expect(page.getByText(/Starts by itself in \d+ s/)).toBeVisible();
   await startBlockNow(page);
   await expect(page.locator('.practice .drill')).toHaveText('Slalom close control');

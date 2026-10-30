@@ -50,7 +50,7 @@ export function SettingsSection() {
         </label>
         {(settings.talkThroughSkip ?? []).length ? (
           <div className="row">
-            <span className="muted">Not read out (she knows them): {(settings.talkThroughSkip ?? []).join(', ')}</span>
+            <span className="muted">Not read out (the player knows them): {(settings.talkThroughSkip ?? []).join(', ')}</span>
             <button className="btn small" onClick={() => save({ talkThroughSkip: [] })}>
               Read them all out again
             </button>
@@ -253,7 +253,7 @@ const FLAG_TEXT: { key: keyof Settings['flags']; label: string; detail: string }
   { key: 'defender3d', label: '3D defender', detail: 'Scored reactive drills show the player-perspective defender. Off, or no WebGL: word/arrow cues, recorded as the fallback.' },
   { key: 'realisticDefender', label: 'Realistic defender movement', detail: 'Experimental. The 3D defender moves with recorded movement of a real person defending (load, lunge, push back) instead of generated poses. Its reactions and scoring are unchanged. Compare both in Parent → 3D defender test first.' },
   { key: 'liveOnsetDetector', label: 'Live feint onset detector', detail: 'The camera starts the defender when the feint begins. Experimental until validated (part 16 §12 "Feint"); otherwise planned timing, labelled.' },
-  { key: 'speechDiagnostic', label: 'Digit diagnostic (speech)', detail: "Experimental. In the optional scanning diagnostic, Chrome listens for the numbers she calls (Chrome sends the audio to Google's speech service). Its count is only a starting estimate on the result card; you confirm it. Never needed to play." },
+  { key: 'speechDiagnostic', label: 'Digit diagnostic (speech)', detail: "Experimental. In the optional scanning diagnostic, Chrome listens for the numbers the player calls (Chrome sends the audio to Google's speech service). Its count is only a starting estimate on the result card; you confirm it. Never needed to play." },
   { key: 'notifications', label: 'Notifications', detail: 'After each completed session, post one short message to a Discord or Telegram chat you choose (set it up in Settings → Notifications). Only the date, area, session number, status and minutes are sent.' },
   { key: 'ballTracking', label: 'Ball tracking', detail: 'Use the registered ball profile in after-block analysis (part 17). Experimental until validated.' },
   { key: 'coneDetection', label: 'Cone detection', detail: 'Experimental. In Room profiles, finds orange cones in the room photo and moves the suggested markers onto them; you check and confirm every position.' },
@@ -293,7 +293,7 @@ function NotificationsCard() {
   const [reason, setReason] = useState('rest week');
   const save = (patch: Partial<NonNullable<Settings['notify']>>) => db.settings.update('main', { notify: { ...n, ...patch } });
   const ready = configured(n);
-  const sample = `${n.firstName ? `${n.firstName}: ` : ''}${tryFill(programme.feedbackTemplates, 'completed', { area: programme.areas[1]?.name ?? 'Feinting', n: 8, blocks: 4, minutes: 20 }) ?? ''}`;
+  const sample = `${n.includeName && n.firstName ? `${n.firstName}: ` : ''}${tryFill(programme.feedbackTemplates, 'completed', { area: programme.areas[1]?.name ?? 'Feinting', n: 8, blocks: 4, minutes: 20 }) ?? ''}`;
   return (
     <div className="card stack" data-testid="notifications-card">
       <h2>Notifications</h2>
@@ -321,10 +321,16 @@ function NotificationsCard() {
           </label>
         </div>
       )}
-      <label className="field">
-        <span>First name for the greeting (optional; the only personal detail sent)</span>
-        <input id="notify-name" value={n.firstName ?? ''} onChange={(e) => save({ firstName: e.target.value })} />
+      <label className="check">
+        <input type="checkbox" checked={!!n.includeName} onChange={(e) => save({ includeName: e.target.checked })} />
+        Include the player's first name in the message (off: the message has no name)
       </label>
+      {n.includeName ? (
+        <label className="field">
+          <span>First name for the greeting (the only personal detail sent)</span>
+          <input id="notify-name" value={n.firstName ?? ''} onChange={(e) => save({ firstName: e.target.value })} />
+        </label>
+      ) : null}
       <p>
         Example: <span className="mono">{sample}</span>
       </p>

@@ -10,7 +10,7 @@ import { db } from '../db/db';
 import type { RunBlock } from '../domain/plans';
 
 // After a "Try it" round: each rep in plain words, from the camera when it saw the rep. Facts only
-// (what the screen said, whether she looked, which way she went); nothing is counted or kept as a result.
+// (what the screen said, whether the player looked, which way the player went); nothing is counted or kept as a result.
 
 type Verdict = { word: string; looked?: boolean; right?: boolean; why?: string };
 

@@ -91,7 +91,7 @@ export function anticipation(input: Pick<ReactionInput, 'archetype' | 'tendency'
 
 export function reactionProbabilities(input: Omit<ReactionInput, 'randomSeed' | 'feintDirection'>): Record<DefenderReaction, number> {
   const base = { ...ARCHETYPE_TABLE[input.archetype] };
-  // A habit is read: more early steps into her usual exit (controlled; never certain).
+  // A habit is read: more early steps into the player's usual exit (controlled; never certain).
   base.commitOpposite *= 1 + 2.5 * anticipation(input);
   // Quality only counts as far as it is trusted: unknown or low-confidence → neutral 0.5.
   const c = Math.max(0, Math.min(1, input.featureConfidence));
@@ -152,7 +152,7 @@ export function defenderReaction(input: ReactionInput): ReactionOutput {
       commitDirection = fake ?? sideDraw; // bites on the fake
       break;
     case 'commitOpposite': {
-      // Read the fake and stepped into her exit; with no camera, an anticipating defender steps into her usual exit.
+      // Read the fake and stepped into the player's exit; with no camera, an anticipating defender steps into the player's usual exit.
       const habit = input.tendency && anticipation(input) > 0 ? (input.tendency.leftShare > 0.5 ? 'left' : 'right') : undefined;
       commitDirection = fake ? other(fake) : habit ? other(habit) : sideDraw;
       break;

@@ -383,7 +383,7 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
             <p className="muted">No photo: the size you picked is used.</p>
           )}
           <div className="stack">
-            <p>Tap round the floor she can safely use, going round the edge. Leave about half a metre from furniture, radiators and anything breakable. The app never guesses clearance from the picture.</p>
+            <p>Tap round the floor the player can safely use, going round the edge. Leave about half a metre from furniture, radiators and anything breakable. The app never guesses clearance from the picture.</p>
             <p>
               {prof.safePolygonNormalized.length} corners · {prof.safePolygonNormalized.length >= 3 ? `about ${effectiveDims({ ...prof, spaceSource: 'polygon' }).length} × ${effectiveDims({ ...prof, spaceSource: 'polygon' }).width} m (approximate) · ${profileClass({ ...prof, spaceSource: 'polygon' })}` : 'tap at least 3'}
             </p>

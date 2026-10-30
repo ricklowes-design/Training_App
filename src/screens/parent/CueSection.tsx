@@ -74,7 +74,7 @@ function Editor({ drill, isNew, onDone }: { drill: CueDrill; isNew: boolean; onD
         </label>
       </div>
       <label className="field">
-        <span>Rule (what she does)</span>
+        <span>Rule (what the player does)</span>
         <input type="text" value={d.rule} onChange={(e) => set({ rule: e.target.value })} />
       </label>
       <div className="row">

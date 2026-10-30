@@ -6,7 +6,8 @@ import { tryFill } from '../domain/templates';
 
 // Completion messages to a chat webhook (plan/14, opt-in): the Chromebook posts when a session
 // ends, so no server is needed. Only one small record per completed session leaves the device:
-// date, area, session number, status and minutes (14.4), worded by the content's templates.
+// date, area, session number, status and minutes (14.4), worded by the content's templates. A first
+// name is added only when the parent switches on "Include the player's first name" (default off).
 // Messages that cannot be sent (offline) wait in a queue and go on the next open.
 
 export type NotifySettings = NonNullable<Settings['notify']>;
@@ -89,7 +90,7 @@ export async function flushQueue(fetchImpl: typeof fetch = fetch): Promise<{ sen
 export async function notifyFinished(p: Programme, records: SessionRecord[], fetchImpl: typeof fetch = fetch): Promise<void> {
   const s = await db.settings.get('main');
   if (!s?.flags.notifications || !configured(s.notify) || paused(s.notify)) return;
-  const msgs = records.map((r) => completionMessage(p, r, s.notify!.firstName)).filter((m): m is QueuedMessage => !!m);
+  const msgs = records.map((r) => completionMessage(p, r, s.notify!.includeName ? s.notify!.firstName : undefined)).filter((m): m is QueuedMessage => !!m);
   if (!msgs.length) return;
   const queue = [...(s.notify!.queue ?? []).filter((q) => !msgs.some((m) => m.id === q.id)), ...msgs].slice(-30);
   await db.settings.update('main', { notify: { ...s.notify!, queue } });

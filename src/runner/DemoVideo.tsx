@@ -60,7 +60,7 @@ interface YTPlayer {
 interface YTNamespace {
   Player: new (
     el: HTMLElement,
-    opts: { videoId: string; playerVars?: Record<string, number | string>; events?: Record<string, (e: { data: number }) => void> },
+    opts: { host?: string; videoId: string; playerVars?: Record<string, number | string>; events?: Record<string, (e: { data: number }) => void> },
   ) => YTPlayer;
 }
 declare global {
@@ -152,9 +152,11 @@ export function DemoVideo({ drill, hasOwnClip, onPlayingChange }: { drill: Drill
           if (startS !== undefined) vars.start = startS;
           if (endS !== undefined) vars.end = endS;
         } else Object.assign(vars, { loop: 1, playlist: vid });
+        // The no-cookie host: no tracking cookies for a child's app (audit task 14). The iframe API script itself still comes from www.youtube.com.
         player = new YT.Player(el, {
+          host: 'https://www.youtube-nocookie.com',
           videoId: vid,
-          playerVars: vars,
+          playerVars: { ...vars, origin: location.origin },
           events: {
             onStateChange: (e) => {
               onPlayingChange?.(e.data === 1 || e.data === 3);

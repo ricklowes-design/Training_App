@@ -124,6 +124,8 @@ export interface Settings {
     telegramChatId?: string;
     /** Optional first name for the greeting (the only personal detail sent). */
     firstName?: string;
+    /** The first name goes into messages only when this is switched on (default off; audit task 14). */
+    includeName?: boolean;
     pausedUntil?: string;
     pauseReason?: string;
     queue?: import('../app/notify').QueuedMessage[];
