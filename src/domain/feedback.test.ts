@@ -32,17 +32,17 @@ describe('results and comparisons', () => {
   it('faster with more errors is not called an improvement', () => {
     const s = comparisonSentences(t, 'Slalom', db(9.6, 2, 11.2, 3), db(9.8, 1, 11.2, 3), true);
     expect(s[0]).toBe('Slalom Pattern R: 9.6 s with 2 errors, previously 9.8 s with 1: faster, 1 more error(s).');
-    expect(s[0]).not.toMatch(/up from/);
+    expect(s[0]).not.toMatch(/better this attempt/);
   });
 
   it('faster with the same errors is an improvement', () => {
     const s = comparisonSentences(t, 'Slalom', db(9.6, 1, 11.2, 3), db(9.8, 1, 11.2, 3), true);
-    expect(s[0]).toBe('Slalom Pattern R: 9.6 s · 1 err, up from 9.8 s · 1 err at the same conditions.');
+    expect(s[0]).toBe('Slalom Pattern R: 9.6 s · 1 err, better this attempt than 9.8 s · 1 err at the same conditions.');
   });
 
   it('no improvement claim when conditions differ', () => {
     const s = comparisonSentences(t, 'Gate test', { kind: 'SB', correct: 9 }, { kind: 'SB', correct: 7 }, false);
-    expect(s[0]).not.toMatch(/up from/);
+    expect(s[0]).not.toMatch(/better this attempt/);
   });
 
   it('comparison across layouts or cue levels is refused with a reason', () => {

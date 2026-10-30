@@ -84,7 +84,7 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
         )}
         {pbs.length ? (
           <div data-testid="personal-best">
-            <strong>Personal best at these conditions:</strong>{' '}
+            <strong>Best recorded result at these conditions:</strong>{' '}
             {pbs.map((b, i) => (
               <span key={b.key}>
                 {i ? ' · ' : ''}

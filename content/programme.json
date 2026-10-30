@@ -1,5 +1,5 @@
 {
-  "version": "0.6.2",
+  "version": "0.6.3",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -4500,7 +4500,7 @@
     "completedBenchmarkSkipped": "Session complete with the benchmark skipped. Session {next} is unlocked.",
     "partial": "Partial session saved. Session {n} stays as your next session.",
     "stopped": "Stopped. If anything hurts, talk to a parent or a qualified professional before training again.",
-    "improvement": "{metric}: {now}, up from {before} at the same conditions.",
+    "improvement": "{metric}: {now}, better this attempt than {before} at the same conditions.",
     "fasterMoreErrors": "{metric}: {time} with {errors} errors, previously {ptime} with {perrors}: faster, {diff} more error(s).",
     "advancementReady": "Criteria met: {criteria}. Stage {to} unlocks after a parent confirms.",
     "return": "First session in {days} days: complete. Session {next} is unlocked.",
@@ -4527,7 +4527,7 @@
     "milestoneTen": "10 completed sessions ({date}).",
     "milestoneTransfer": "Coach transfer note recorded for {area} ({date}).",
     "homeToday": "Today: {goals}",
-    "homeImprovement": "Last credible improvement: {metric} {before} → {now} ({date})",
+    "homeImprovement": "Latest better result at the same conditions: {metric} {before} → {now} ({date})",
     "homeNoImprovement": "No comparable improvement recorded yet.",
     "gameDay": "Game day: a light session is suggested.",
     "chanceLine": "{correct}/{n} right. Guessing among {k} would reach {correct} or more in {pct}% of blocks: a group-level clue, not proof of scanning on any rep.",

@@ -56,7 +56,9 @@ export function reasonsFor(i: RecInput, areaId: string): string[] {
     const series = comparable.map((r) => resultLines(r.values).find((l) => l.key === line.key)).filter((l): l is NonNullable<typeof l> => !!l);
     const vals = series.map((l) => (l.timeS !== undefined ? l.timeS : l.score)).filter((v): v is number => v !== undefined);
     const tr = trend(vals, line.timeS === undefined);
-    if (tr.trend !== 'insufficient') out.push(`${p.benchmarks.find((b) => b.id === last.benchmarkId)?.name ?? last.benchmarkId} ${tr.trend} over ${tr.n} comparable tests`);
+    // Descriptive only: "improving" needs an approved, metric-specific repeatability rule (Brief R09).
+    const word = { improving: 'recent results better than earlier ones', deteriorating: 'recent results below earlier ones', stable: 'results level' } as const;
+    if (tr.trend !== 'insufficient') out.push(`${p.benchmarks.find((b) => b.id === last.benchmarkId)?.name ?? last.benchmarkId}: ${word[tr.trend]} across ${tr.n} comparable tests`);
   }
   // Uncertainty: nothing recent to go on is a reason to observe, never a penalty.
   const lastDate = last ? new Date(last.date) : undefined;

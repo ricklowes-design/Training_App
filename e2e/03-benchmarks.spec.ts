@@ -111,7 +111,7 @@ test('slalom benchmark: faster with more errors is never called an improvement; 
       },
     });
     if (n === 4) {
-      // End-of-drill card and summary: "faster, more errors", never "up from".
+      // End-of-drill card and summary: "faster, more errors", never "better this attempt".
       const card = page.locator('.card', { hasText: 'Dribbling · Session 4' });
       await expect(card).toContainText('Slalom time and control Pattern R: 9.6 s with 2 errors, previously 9.8 s with 1: faster, 1 more error(s).');
     }
@@ -126,7 +126,7 @@ test('slalom benchmark: faster with more errors is never called an improvement; 
   await expect(page.getByText(/^Now \(Nov 3\):/)).toBeVisible();
   const text = await page.locator('.card').first().innerText();
   expect(text).toMatch(/s · \d+ err/);
-  expect(text).not.toMatch(/Pattern R: .* up from/);
+  expect(text).not.toMatch(/Pattern R: .* better this attempt/);
   expect(text).toMatch(/Slalom time and control Pattern R: .* with 2 errors, previously .* with 1: faster, 1 more error\(s\)\./);
 });
 
@@ -150,7 +150,7 @@ test('a room change starts a new layout line: no comparison across layouts, with
   await runToEnd(page);
   const card = page.locator('.card', { hasText: 'Ball control · Session 4' });
   await expect(card).toContainText('No earlier result at the same conditions.');
-  await expect(card).not.toContainText('up from');
+  await expect(card).not.toContainText('better this attempt');
   await home(page);
   await button(page, 'Progress').click();
   await button(page, 'Drills').click();
