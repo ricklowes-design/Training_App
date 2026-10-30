@@ -10,6 +10,8 @@ import { useNav } from '../app/nav';
 import { db } from '../db/db';
 import type { BenchmarkResult, BenchmarkValues, Conditions } from '../db/types';
 import { recordMilestones } from '../domain/milestoneStore';
+import { countedResults } from '../domain/records';
+import { capstoneGates } from '../domain/capstone';
 import type { RunBlock, RunPlan } from '../domain/plans';
 import { fmtClock, HoldButton } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
@@ -428,8 +430,17 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return 'manual-switchedon';
   };
 
-  async function logBenchmark(b: RunBlock, benchmarkId: string, values: BenchmarkValues, recordedBy: Conditions['recordedBy'], drillId?: string, prefilledFrom?: 'camera') {
+  async function logBenchmark(
+    b: RunBlock,
+    benchmarkId: string,
+    values: BenchmarkValues,
+    recordedBy: Conditions['recordedBy'],
+    drillId?: string,
+    prefilledFrom?: 'camera',
+    camera?: { estimate?: BenchmarkResult['cameraEstimate']; validatedBy?: string },
+  ) {
     if (!ids) return;
+    const name = p.benchmarks.find((x) => x.id === benchmarkId)?.name;
     const res = await saveBenchmark({
       recordId: recordIdForBlock(s.plan, ids, s.blockIdx),
       blockIndex: s.blockIdx,
@@ -437,9 +448,12 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       benchmarkId,
       areaId: b.areaId,
       drillId,
-      conditions: conditionsFor(b, recordedBy),
+      conditions: { ...conditionsFor(b, recordedBy), ...(recordedBy === 'app' && camera?.validatedBy ? { validatedBy: camera.validatedBy } : {}) },
       values,
       prefilledFrom,
+      cameraEstimate: camera?.estimate,
+      // A player's score is weighed against earlier results and recent practice (owner decision 2026-10-30).
+      weigh: { earlier: countedResults(data.results, data.records), practiceDrillId: drillId ?? p.anchors.find((a) => a.name === name)?.drillId },
     });
     setSaved((x) => [...x, res]);
     const q = await saveProgress(withExtras(sRef.current), ids, new Set([...savedRef.current.map((r) => r.blockIndex), s.blockIdx]), false);
@@ -591,6 +605,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       // "Scored by" is chosen on the card each time; never carried over from an earlier session.
       const cond = { ...conditionsFor(block, 'parent'), cueLevel };
       const shown = digitsShown[`${s.blockIdx}:${s.attempt}`];
+      const prefill = (PREFILL_KINDS as readonly string[]).includes(kind) && blockAnalysis?.clip ? cameraPrefill(kind as PrefillKind, blockAnalysis.a, blockAnalysis.reps) : null;
+      // The camera may score this test on its own when its measure passed validation (owner decision 2026-10-30).
+      const validatedBy = capstoneGates(p, settings).gates.find((g) => g.passed && p.capstone.components.find((c) => c.id === g.id)?.scoresTests?.includes(id))?.id;
       return (
         <div className="page">
           <div className="stack">
@@ -602,9 +619,15 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
               conditions={cond}
               initial={initialValues(kind, cueLevel, times[`${s.blockIdx}:${s.attempt}`])}
               hasEstimate={!!times[`${s.blockIdx}:${s.attempt}`] && (kind === 'DB' || kind === 'A1')}
-              camera={(PREFILL_KINDS as readonly string[]).includes(kind) && blockAnalysis?.clip ? cameraPrefill(kind as PrefillKind, blockAnalysis.a, blockAnalysis.reps) : null}
+              camera={prefill}
+              cameraValidated={!!validatedBy}
               onCameraUsed={(used) => (cameraUsed.current = used)}
-              onSave={(values, by) => logBenchmark(block, id, values, by, kind === 'CA' ? caDrill : block.kind === 'anchor' ? block.drillId : undefined, cameraUsed.current ? 'camera' : undefined)}
+              onSave={(values, by) =>
+                logBenchmark(block, id, values, by, kind === 'CA' ? caDrill : block.kind === 'anchor' ? block.drillId : undefined, cameraUsed.current ? 'camera' : undefined, {
+                  estimate: prefill?.values,
+                  validatedBy,
+                })
+              }
               onSkip={() => setSkippedBench((x) => new Set([...x, kind === 'CA' ? benchSkipKey + ':CA' : benchSkipKey]))}
             />
           </div>

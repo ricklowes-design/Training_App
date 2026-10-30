@@ -231,7 +231,7 @@ const programmeShape: Check = obj({
   reactionModesProgression: list(str),
   defenderArchetypes: list(obj({ id: str, label: str, notes: optional(str) })),
   scanModes: list(obj({ id: str, label: str, note: str, requires: nullOr(str) })),
-  capstone: obj({ id: str, name: str, chain: list(str), note: str, components: list(obj({ id: str, label: str, minReps: posNum, minAgreement: posNum, procedure: str })) }),
+  capstone: obj({ id: str, name: str, chain: list(str), note: str, components: list(obj({ id: str, label: str, minReps: posNum, minAgreement: posNum, procedure: str, scoresTests: optional(list(str)) })) }),
   defenderDrills: list(
     obj({
       id: str,

@@ -2,6 +2,9 @@ import { APP_VERSION } from '../app/data';
 import { db } from '../db/db';
 import type { BenchmarkResult, BenchmarkValues, Conditions, SessionRecord, Settings, SwitchSnapshot } from '../db/types';
 import { evaluateCompletion, unconfirmedBlocks, withPlayerConfirmation } from '../domain/completion';
+import { evidenceOk } from '../domain/advancement';
+import { comparability } from '../domain/comparability';
+import { supportFor } from '../domain/support';
 import type { RunPlan } from '../domain/plans';
 import type { RunState } from './engine';
 
@@ -121,6 +124,9 @@ export async function saveBenchmark(args: {
   conditions: Conditions;
   values: BenchmarkValues;
   prefilledFrom?: 'camera';
+  cameraEstimate?: BenchmarkResult['cameraEstimate'];
+  /** For a player-scored result: the evidence to weigh it against (owner decision 2026-10-30). */
+  weigh?: { earlier: BenchmarkResult[]; practiceDrillId?: string };
 }): Promise<BenchmarkResult> {
   const res: BenchmarkResult = {
     id: crypto.randomUUID(),
@@ -134,9 +140,33 @@ export async function saveBenchmark(args: {
     conditions: args.conditions,
     values: args.values,
     ...(args.prefilledFrom ? { prefilledFrom: args.prefilledFrom } : {}),
+    ...(args.cameraEstimate ? { cameraEstimate: args.cameraEstimate } : {}),
   };
+  // The video of this test, when the camera recorded it.
+  const clip = await db.clips
+    .where('sessionRecordId')
+    .equals(args.recordId)
+    .filter((c) => c.blockIndex === args.blockIndex && c.attempt === args.attempt)
+    .first()
+    .catch(() => undefined);
+  if (clip) res.clipId = clip.id;
+  if (args.conditions.recordedBy === 'self' && args.weigh) {
+    const history = args.weigh.earlier.filter((r) => r.benchmarkId === res.benchmarkId && r.id !== res.id && comparability(res, r).ok && evidenceOk(r));
+    res.support = supportFor({ claimed: res.values, cameraEstimate: args.cameraEstimate, history, practiceAccuracy: await practiceAccuracy(args.weigh.practiceDrillId, args.recordId) });
+    // A score to check keeps its video until a parent has looked (it is not pruned with old clips).
+    if (res.support.level === 'check' && clip) await db.clips.update(clip.id, { keep: true });
+  }
   await db.benchmarkResults.put(res);
   return res;
+}
+
+/** Camera decision accuracy of practice blocks of one drill in the last 28 days (other sessions). */
+async function practiceAccuracy(drillId: string | undefined, recordId: string): Promise<number[]> {
+  if (!drillId) return [];
+  const since = new Date(Date.now() - 28 * 86_400_000).toISOString();
+  const clips = await db.clips.where('date').above(since).filter((c) => c.drillId === drillId && c.sessionRecordId !== recordId).toArray().catch(() => []);
+  const rows = await db.blockAnalyses.bulkGet(clips.map((c) => c.id)).catch(() => []);
+  return rows.map((r) => r?.data.accuracy).filter((x): x is number => x !== undefined && Number.isFinite(x));
 }
 
 export async function saveRoomCheck(ids: RunIds, roomCheck: NonNullable<SessionRecord['roomCheck']>): Promise<void> {

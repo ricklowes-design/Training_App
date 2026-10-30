@@ -108,8 +108,10 @@ export function BenchmarkForm(props: {
   camera?: import('../analysis/prefill').CameraPrefill | null;
   /** Told whether the confirmed numbers started from the camera estimate. */
   onCameraUsed?: (used: boolean) => void;
+  /** The camera's measure for this test passed validation: the camera may be the scorer. */
+  cameraValidated?: boolean;
 }) {
-  const { title, conditions, initial, hasEstimate, onSave, onSkip, saveLabel, camera, onCameraUsed } = props;
+  const { title, conditions, initial, hasEstimate, onSave, onSkip, saveLabel, camera, onCameraUsed, cameraValidated } = props;
   const [v, setV] = useState<BenchmarkValues>(initial);
   const touched = useRef(false);
   const [fromCamera, setFromCamera] = useState(false);
@@ -127,10 +129,19 @@ export function BenchmarkForm(props: {
   // Nothing is pre-selected unless the app scored the result itself: the parent or player taps who scored it.
   const [by, setBy] = useState<Conditions['recordedBy'] | null>(conditions.recordedBy === 'app' ? 'app' : null);
   const [saving, setSaving] = useState(false);
+  const [edited, setEdited] = useState(false);
   const set = (next: BenchmarkValues) => {
     touched.current = true;
+    setEdited(true);
     setV(next);
   };
+  // The camera can be the scorer when its measure passed validation and its count stands unchanged
+  // (owner decision 2026-10-30); it is then chosen already, so the card needs one tap.
+  const cameraCan = !!cameraValidated && fromCamera && !edited;
+  useEffect(() => {
+    if (cameraCan && by === null) setBy('app');
+    if (!cameraCan && by === 'app' && conditions.recordedBy !== 'app') setBy(null);
+  }, [cameraCan]); // eslint-disable-line react-hooks/exhaustive-deps
   // A4 looks are optional: blank looks are dropped rather than blocking the confirm.
   const toSave: BenchmarkValues = v.kind === 'A4' && Number.isNaN(v.looks ?? Number.NaN) ? { kind: 'A4', correct: v.correct } : v;
   const ready = complete(toSave) && by !== null;
@@ -230,7 +241,7 @@ export function BenchmarkForm(props: {
       {body}
       <div className="row">
         <span className="muted">Scored by</span>
-        <Seg<Conditions['recordedBy'] | ''> value={by ?? ''} onChange={(v) => setBy(v || null)} options={[{ value: 'parent', label: 'Parent' }, { value: 'self', label: 'Player' }]} />
+        <Seg<Conditions['recordedBy'] | ''> value={by ?? ''} onChange={(v) => setBy(v || null)} options={[...(cameraCan ? [{ value: 'app' as const, label: 'Camera (checked)' }] : []), { value: 'parent', label: 'Parent' }, { value: 'self', label: 'Player' }]} />
       </div>
       <div className="row spread">
         {onSkip ? (

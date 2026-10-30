@@ -179,6 +179,12 @@ export function useRunCamera(args: {
             try {
               await db.clips.put(clip);
               extras.clipId = clip.id;
+              // A test scored before its video finished saving gets the video now; one marked to check keeps it.
+              const scored = await db.benchmarkResults.where('sessionRecordId').equals(sessionRecordId).filter((r) => r.blockIndex === rec.blockIdx && r.attempt === rec.attempt && !r.clipId).toArray();
+              for (const r of scored) {
+                await db.benchmarkResults.update(r.id, { clipId: clip.id });
+                if (r.support?.level === 'check') await db.clips.update(clip.id, { keep: true });
+              }
               if (rec.setup) cb.current.onClip?.(clip, rec.block, rec.setup);
             } catch (e) {
               // The clip is lost, but never the presence value or the record (audit task 8).

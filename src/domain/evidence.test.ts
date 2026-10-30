@@ -32,7 +32,7 @@ describe('comparison contract', () => {
 
 describe('evidence contract', () => {
   it('self-scored, flagged and unvalidated automatic scores cannot promote, each with a reason and a next step', () => {
-    expect(evidenceFor(sb('2026-11-04', 9, { recordedBy: 'self' }))).toMatchObject({ ok: false, reason: 'scored by the player alone' });
+    expect(evidenceFor(sb('2026-11-04', 9, { recordedBy: 'self' }))).toMatchObject({ ok: false, reason: 'scored by the player alone, before score checks existed' });
     expect(evidenceFor(sb('2026-11-04', 9, {}, { flagged: 'tone missed' }))).toMatchObject({ ok: false });
     const auto = evidenceFor(sb('2026-11-04', 9, { recordedBy: 'app' }));
     expect(auto).toMatchObject({ ok: false, reason: 'automatic score not yet validated' });
@@ -99,5 +99,24 @@ describe('same setting only (owner decision 2026-10-30)', () => {
     expect(mixed.notCounted[0].reason).toMatch(/different cue level/);
     const same = evaluateRule(p, two, [sb('2026-11-03T10:00:00', 9, { cueLevel: 'pace' }), sb('2026-11-04T10:00:00', 9, { cueLevel: 'pace' })], []);
     expect(same.met).toBe(true);
+  });
+});
+
+describe("player scores backed by other evidence (owner decision 2026-10-30)", () => {
+  const self = (date: string, correct: number, level: 'strong' | 'check', extra: Partial<BenchmarkResult> = {}) =>
+    sb(date, correct, { recordedBy: 'self' }, { support: { method: 'support-1', level, reasons: [] }, ...extra });
+  it('a backed player score counts; an unbacked one counts but needs a check; a checked one counts plainly', () => {
+    expect(evidenceFor(self('2026-11-04', 9, 'strong'))).toEqual({ ok: true });
+    expect(evidenceFor(self('2026-11-04', 9, 'check'))).toEqual({ ok: true, needsCheck: true });
+    expect(evidenceFor(self('2026-11-04', 9, 'check', { review: { by: 'parent', at: '', outcome: 'ok' } }))).toEqual({ ok: true });
+  });
+  it('the stage check lists the counted player scores a parent should check', () => {
+    const st = evaluateRule(p, rule, [self('2026-11-03T10:00:00', 9, 'strong'), self('2026-11-04T10:00:00', 9, 'check')], []);
+    expect(st.met).toBe(true);
+    expect(st.toCheck.map((r) => r.date)).toEqual(['2026-11-04T10:00:00']);
+  });
+  it('the camera scores on its own only when its measure passed validation', () => {
+    expect(evidenceFor(sb('2026-11-04', 9, { recordedBy: 'app' })).ok).toBe(false);
+    expect(evidenceFor(sb('2026-11-04', 9, { recordedBy: 'app', validatedBy: 'firstTouch' })).ok).toBe(true);
   });
 });

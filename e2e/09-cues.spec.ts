@@ -142,16 +142,8 @@ test('cue engine off: cue drills show the normal practice view (SwitchedOn fallb
   await expect(page.locator('.practice.cue')).toHaveCount(0);
 });
 
-test('a camera estimate from this block starts the SB card when every rep was judged (D10)', async ({ page }) => {
-  await boot(page);
-  await setup(page);
-  await place(page, 'Scanning', 3);
-  await start(page, 'Scanning · Stage 1 · Session 3');
-  await advance(page, 191_000);
-  await button(page, 'Skip block').click();
-  await advance(page, 61_000);
-  // (Stand-in for the after-block analysis of this block: all 10 reps judged, 6 correct. Written before the
-  // benchmark block opens because a raw database write does not wake the app's live queries.)
+/** Stand-in for the after-block analysis of the SB block: all 10 reps judged, 6 correct. */
+async function seedSbAnalysis(page: Page) {
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
@@ -173,6 +165,19 @@ test('a camera estimate from this block starts the SB card when every rep was ju
         };
       }),
   );
+}
+
+test('a camera estimate from this block starts the SB card when every rep was judged (D10)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await place(page, 'Scanning', 3);
+  await start(page, 'Scanning · Stage 1 · Session 3');
+  await advance(page, 191_000);
+  await button(page, 'Skip block').click();
+  await advance(page, 61_000);
+  // (Stand-in for the after-block analysis of this block: all 10 reps judged, 6 correct. Written before the
+  // benchmark block opens because a raw database write does not wake the app's live queries.)
+  await seedSbAnalysis(page);
   await button(page, 'Skip block').click();
   await startBlockNow(page);
   await advance(page, 10_500);
@@ -182,8 +187,31 @@ test('a camera estimate from this block starts the SB card when every rep was ju
   await expect(page.locator('.count[data-blank]')).toHaveCount(0);
   await scoredBy(page);
   await button(page, 'Confirm').click();
-  const res = await table<{ benchmarkId: string; values: { correct: number }; prefilledFrom?: string }>(page, 'benchmarkResults');
-  expect(res.find((x) => x.benchmarkId === 'SB')).toMatchObject({ values: { correct: 6 }, prefilledFrom: 'camera' });
+  await expect.poll(async () => (await table<{ benchmarkId: string }>(page, 'benchmarkResults')).some((x) => x.benchmarkId === 'SB')).toBe(true);
+  const res = await table<{ benchmarkId: string; values: { correct: number }; prefilledFrom?: string; cameraEstimate?: { correct: number } }>(page, 'benchmarkResults');
+  expect(res.find((x) => x.benchmarkId === 'SB')).toMatchObject({ values: { correct: 6 }, prefilledFrom: 'camera', cameraEstimate: { correct: 6 } });
+});
+
+test('with its measure validated, the camera scores the SB test on its own: one tap (owner decision 2026-10-30)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await patchSettings(page, { validations: { firstTouch: { reps: 20, agreed: 19, date: '2026-11-01' } } });
+  await place(page, 'Scanning', 3);
+  await start(page, 'Scanning · Stage 1 · Session 3');
+  await advance(page, 191_000);
+  await button(page, 'Skip block').click();
+  await advance(page, 61_000);
+  await seedSbAnalysis(page);
+  await button(page, 'Skip block').click();
+  await startBlockNow(page);
+  await advance(page, 10_500);
+  await advance(page, 95_000, 1_000);
+  await expect(page.getByText(/Camera estimate from this block \(all 10 reps judged\)/)).toBeVisible();
+  await expect(button(page, 'Camera (checked)')).toHaveAttribute('aria-pressed', 'true');
+  await button(page, 'Confirm').click();
+  await expect.poll(async () => (await table<{ benchmarkId: string }>(page, 'benchmarkResults')).some((x) => x.benchmarkId === 'SB')).toBe(true);
+  const res = await table<{ benchmarkId: string; conditions: { recordedBy: string; validatedBy?: string } }>(page, 'benchmarkResults');
+  expect(res.find((x) => x.benchmarkId === 'SB')!.conditions).toMatchObject({ recordedBy: 'app', validatedBy: 'firstTouch' });
 });
 
 test('cones, then instructions with the game purpose, then "Try it": 3 slow reps, a check card, then the real drill', async ({ page }) => {

@@ -112,6 +112,15 @@ export function summaryLines(d: AppData, rec: SessionRecord): string[] {
     const name = p.benchmarks.find((b) => b.id === first.benchmarkId)?.name ?? p.anchors.find((a) => a.id === first.benchmarkId)?.name ?? first.benchmarkId;
     lines.push(comparisonSentences(t, name, first.values, prev?.values, !!prev)[0] ?? null);
   }
+  // How a player-scored test was counted (owner decision 2026-10-30).
+  for (const r of mine.filter((x) => x.conditions.recordedBy === 'self' && x.support)) {
+    const test = p.benchmarks.find((b) => b.id === r.benchmarkId)?.name ?? p.anchors.find((a) => a.id === r.benchmarkId)?.name ?? r.benchmarkId;
+    lines.push(
+      r.support!.level === 'strong'
+        ? tryFill(t, 'resultSupported', { test, why: r.support!.reasons.join(' and ') })
+        : tryFill(t, r.clipId ? 'resultToCheckVideo' : 'resultToCheck', { test }),
+    );
+  }
 
   // One focus: plateau, or what the stage criteria still need.
   if (rec.areaId && rec.kind === 'programme') {

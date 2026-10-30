@@ -380,6 +380,8 @@ export interface CapstoneComponent {
   minReps: number;
   minAgreement: number;
   procedure: string;
+  /** Tests the camera may score on its own once this component passes its validation (owner decision 2026-10-30). */
+  scoresTests?: string[];
 }
 
 export interface Capstone {

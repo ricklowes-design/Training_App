@@ -272,6 +272,16 @@ export interface Conditions {
   modelVersion?: string;
   /** Minutes of a builder test slot that differs from the standard length; absent = standard. */
   slotMinutes?: number;
+  /** recordedBy 'app' on a test the camera scored: the validation component that allowed it. */
+  validatedBy?: string;
+}
+
+/** What backs a score the player entered, worked out when it was saved (owner decision 2026-10-30). */
+export interface ScoreSupport {
+  method: 'support-1';
+  /** strong: other evidence agrees; check: counted, but a parent should check it. */
+  level: 'strong' | 'check';
+  reasons: string[];
 }
 
 /** Values per benchmark type. */
@@ -302,6 +312,14 @@ export interface BenchmarkResult {
   values: BenchmarkValues;
   keptAt?: string;
   flagged?: string; // "unreliable" note, e.g. start tone missed
+  /** The camera's own count for this block, kept when the card started from it. */
+  cameraEstimate?: { correct?: number; early?: number; looks?: number };
+  /** For a player-scored result: what backs it (owner decision 2026-10-30). */
+  support?: ScoreSupport;
+  /** A parent's check of a player-scored result. 'notRight' also marks the result unreliable. */
+  review?: { by: 'parent'; at: string; outcome: 'ok' | 'notRight' };
+  /** The clip recorded during this test, when there is one. */
+  clipId?: string;
 }
 
 export interface Placement {

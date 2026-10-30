@@ -1,10 +1,11 @@
 import { areaProgress } from '../../domain/sequencing';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { logHistory, useData } from '../../app/data';
 import { useNav } from '../../app/nav';
 import type { ContentBlock, Drill } from '../../content/types';
 import { db } from '../../db/db';
-import type { NoteTarget } from '../../db/types';
+import type { BenchmarkResult, NoteTarget } from '../../db/types';
 import { recordMilestones } from '../../domain/milestoneStore';
 import { currentValue } from '../../domain/overrides';
 import { areaName, planMinutes } from '../../domain/plans';
@@ -444,6 +445,40 @@ export function PrioritiesSection() {
   );
 }
 
+/** One player-scored test to check: its numbers, why it was not backed, its video, and the two answers
+ *  (owner decision 2026-10-30). "Not right" marks it unreliable, so it no longer counts. */
+function ResultCheck({ r }: { r: BenchmarkResult }) {
+  const clip = useLiveQuery(() => (r.clipId ? db.clips.get(r.clipId) : undefined), [r.clipId]);
+  const [url, setUrl] = useState<string>();
+  useEffect(() => {
+    if (!clip?.blob) return;
+    const u = URL.createObjectURL(clip.blob);
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [clip]);
+  const answer = async (outcome: 'ok' | 'notRight') => {
+    await db.benchmarkResults.update(r.id, { review: { by: 'parent', at: new Date().toISOString(), outcome }, ...(outcome === 'notRight' ? { flagged: "parent's check: not right" } : {}) });
+    if (r.clipId && outcome === 'ok') await db.clips.update(r.clipId, { keep: false });
+    await logHistory('parent', 'checked a player-scored test', `${r.benchmarkId} ${fmtDate(r.date)}: ${outcome === 'ok' ? 'looks right' : 'not right'}`);
+  };
+  return (
+    <div className="card tight stack" data-testid="result-check">
+      <div>
+        {fmtDate(r.date)} · {r.benchmarkId}: {resultText(r.values)} <span className="muted">(scored by the player; {r.support?.reasons.join('; ')})</span>
+      </div>
+      {url ? <video src={url} controls style={{ maxWidth: '100%', maxHeight: 360 }} /> : <p className="muted">No video of this test (the camera was off).</p>}
+      <div className="row">
+        <button className="btn go" onClick={() => answer('ok')}>
+          Looks right
+        </button>
+        <button className="btn" onClick={() => answer('notRight')}>
+          Not right
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AdvancementSection() {
   const d = useData();
   const { programme: p, advancements, extraCriteria } = d;
@@ -502,6 +537,16 @@ export function AdvancementSection() {
                 </ul>
               </div>
             ) : null}
+            {st.toCheck.length ? (
+              <div className="stack" data-testid="to-check">
+                <p>
+                  <strong>Check first:</strong> {st.toCheck.length} of the passing tests {st.toCheck.length === 1 ? 'was' : 'were'} scored by the player without other evidence to back {st.toCheck.length === 1 ? 'it' : 'them'}. Watch the video where there is one, then mark each.
+                </p>
+                {st.toCheck.map((r) => (
+                  <ResultCheck key={r.id} r={r} />
+                ))}
+              </div>
+            ) : null}
             {st.met && skipFrom(a.id, st.rule.to) ? <p className="pill info">Skip ahead: confirming passes over sessions {skipFrom(a.id, st.rule.to)}; they stay available to repeat.</p> : null}
             {st.latest ? <p className="muted">Latest: {fmtDate(st.latest.date)} {resultText(st.latest.values)} (level {st.latest.conditions.cueLevel})</p> : null}
             {st.withheld ? <p className="pill warn">Withheld {fmtDate(st.withheld.date)}: {st.withheld.reason}</p> : null}
@@ -526,7 +571,7 @@ export function AdvancementSection() {
               </label>
             ))}
             <div className="row">
-              <button className="btn primary" disabled={!st.met || !allChecked} onClick={() => decide('confirmed')}>
+              <button className="btn primary" disabled={!st.met || !allChecked || st.toCheck.length > 0} onClick={() => decide('confirmed')}>
                 Confirm advancement
               </button>
               <input type="text" placeholder="Reason (to withhold or to advance anyway)" value={reason[key] ?? ''} onChange={(e) => setReason({ ...reason, [key]: e.target.value })} style={{ maxWidth: 360 }} />

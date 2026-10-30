@@ -144,6 +144,38 @@ test('advancement: criteria met → awaiting confirmation; parent checks; confir
   await expect(startCard(page, 'Scanning · Stage 2 · Session 5')).toBeVisible();
 });
 
+test("player-scored tests count, but ones without backing need the parent's check before the stage move (owner decision 2026-10-30)", async ({ page }) => {
+  await ready(page);
+  await place(page, 'Scanning', 3);
+  for (const n of [3, 4]) {
+    if (n === 4) await page.clock.setSystemTime(new Date('2026-11-04T17:00:00'));
+    await start(page, `Scanning · Stage 1 · Session ${n}`);
+    await runToEnd(page, {
+      onForm: async (p) => {
+        await p.getByRole('button', { name: 'Correct decisions /10 9', exact: true }).click();
+        await button(p, 'Player').click();
+        await button(p, 'Confirm').click();
+      },
+    });
+    // The first has nothing to compare with; the second agrees with the first (9 after 9).
+    await expect(page.locator('.card', { hasText: `Scanning · Session ${n}` })).toContainText(
+      n === 3 ? "counted on the player's score; a parent should check it before the next stage move" : "counted on the player's score, backed by earlier results on this test (1)",
+    );
+    await home(page);
+  }
+  await openParent(page, /^Advancement/);
+  const card = page.locator('.card', { hasText: 'Scanning and decision-making: to Stage 2' });
+  await expect(card.getByText('criteria met', { exact: true })).toBeVisible();
+  await expect(card.getByTestId('result-check')).toHaveCount(1);
+  await expect(card.getByTestId('result-check')).toContainText('nothing else to compare with yet');
+  await expect(button(card, 'Confirm advancement')).toBeDisabled();
+  await card.getByLabel('Both feet were used in the tests').check();
+  await expect(button(card, 'Confirm advancement')).toBeDisabled(); // still waiting on the check
+  await button(card.getByTestId('result-check'), 'Looks right').click();
+  await expect(card.getByTestId('result-check')).toHaveCount(0);
+  await expect(button(card, 'Confirm advancement')).toBeEnabled();
+});
+
 test('advancement: withhold with a reason, custom criterion, advance anyway', async ({ page }) => {
   await ready(page);
   await place(page, 'Feinting', 1);

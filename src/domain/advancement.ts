@@ -13,6 +13,8 @@ export interface RuleStatus {
   needed: number;
   /** Passing results the player scored alone: shown, but not evidence for advancement (part 15 D12). */
   selfScoredIgnored: number;
+  /** Qualifying results counted on the player's score that a parent should check before confirming. */
+  toCheck: BenchmarkResult[];
   /** Passing results left out, with why and what to do next (Brief R02). */
   notCounted: { result: BenchmarkResult; reason: string; next: string }[];
   extraOpen: ExtraCriterion[];
@@ -52,17 +54,24 @@ export function candidates(rule: AdvancementRule, counted: BenchmarkResult[]): B
 }
 
 /** Benchmarks the app scores by itself with a validated method (the quiz's own answer key). Any other
- *  app-only score is an automatic measure not yet validated, and cannot advance a stage. */
+ *  app-only score counts only when the camera measure behind it passed its validation (`validatedBy`). */
 const APP_VALIDATED = new Set(['QUIZ']);
 
-export type Evidence = { ok: true } | { ok: false; reason: string; next: string };
+/** `needsCheck`: counted on the player's score, but a parent should check it before confirming a stage. */
+export type Evidence = { ok: true; needsCheck?: boolean } | { ok: false; reason: string; next: string };
 
-/** One contract for whether a result can stand as evidence of progress (Brief R02). A parent or coach
- *  entering a manual test is valid manual scoring; a camera estimate counts only once a person confirmed it. */
+/** One contract for whether a result can stand as evidence of progress (Brief R02, owner decisions
+ *  2026-10-30). Parent or coach scoring counts. A player's score counts when other evidence backs it
+ *  (`support`), and counts but needs a parent's check when it doesn't. The camera's own score counts
+ *  only when its measure passed validation. */
 export function evidenceFor(r: BenchmarkResult): Evidence {
   if (r.flagged) return { ok: false, reason: `marked unreliable (${r.flagged})`, next: 'Run the test again when it can be scored properly.' };
-  if (r.conditions.recordedBy === 'self') return { ok: false, reason: 'scored by the player alone', next: 'Run the test again with a parent scoring.' };
-  if (r.conditions.recordedBy === 'app' && !APP_VALIDATED.has(r.benchmarkId)) {
+  if (r.conditions.recordedBy === 'self') {
+    if (r.review?.outcome === 'ok') return { ok: true };
+    if (!r.support) return { ok: false, reason: 'scored by the player alone, before score checks existed', next: 'Run the test again.' };
+    return r.support.level === 'strong' ? { ok: true } : { ok: true, needsCheck: true };
+  }
+  if (r.conditions.recordedBy === 'app' && !APP_VALIDATED.has(r.benchmarkId) && !r.conditions.validatedBy) {
     return { ok: false, reason: 'automatic score not yet validated', next: 'Run the test again with a parent scoring.' };
   }
   return { ok: true };
@@ -94,7 +103,9 @@ export function evaluateRule(
   for (let i = list.length - 1; i >= 0 && passes(rule, list[i]); i--) run.push(list[i]);
   // Repeated success on different days (part 15 D12): two passes on one day count once.
   const trailing = new Set(run.map((r) => localDay(r.date))).size;
-  const selfScoredIgnored = all.filter((r) => r.conditions.recordedBy === 'self' && !r.flagged && passes(rule, r)).length;
+  const selfScoredIgnored = all.filter((r) => r.conditions.recordedBy === 'self' && !r.flagged && !evidenceOk(r) && passes(rule, r)).length;
+  const counting = new Set(run.map((r) => localDay(r.date)));
+  const toCheck = run.filter((r) => { const e = evidenceFor(r); return e.ok && e.needsCheck; }).filter((r) => counting.has(localDay(r.date)));
   const notCounted: RuleStatus['notCounted'] = [];
   for (const r of ruled) {
     if (list.includes(r) || !passes(rule, r)) continue;
@@ -120,6 +131,7 @@ export function evaluateRule(
     needed,
     selfScoredIgnored,
     notCounted,
+    toCheck,
     extraOpen,
     met,
     latest: all[all.length - 1],
