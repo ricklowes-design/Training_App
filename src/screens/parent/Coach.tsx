@@ -4,14 +4,13 @@ import { logHistory, useData } from '../../app/data';
 import { useNav } from '../../app/nav';
 import type { ContentBlock, Drill } from '../../content/types';
 import { db } from '../../db/db';
-import type { NoteTarget, TransferObs } from '../../db/types';
+import type { NoteTarget } from '../../db/types';
 import { recordMilestones } from '../../domain/milestoneStore';
 import { currentValue } from '../../domain/overrides';
 import { areaName, planMinutes } from '../../domain/plans';
 import { resultText } from '../../domain/metrics';
 import { fmtDate, Modal, Seg } from '../../ui/widgets';
 import { ruleStatusFor } from '../helpers';
-import { localDate } from '../../domain/dates';
 
 const AUTHOR_OPTIONS = [
   { value: 'coach via parent', label: 'Coach via parent' },
@@ -490,7 +489,6 @@ export function AdvancementSection() {
             <p>
               {st.criteriaText}
               {st.needed ? ` — qualifying tests on ${st.qualifying} of ${st.needed} different days` : ''}
-              {st.rule.requiresTransfer ? ` · coach transfer note ${st.hasTransfer ? 'recorded' : 'needed'}` : ''}
             </p>
             {st.notCounted.length ? (
               <div className="muted" data-testid="not-counted">
@@ -565,129 +563,6 @@ export function AdvancementSection() {
               <li key={x.id}>
                 {fmtDate(x.date)} · {areaName(p, x.areaId)} {x.from} → {x.to}: {x.decision}
                 {x.reason ? ` (${x.reason})` : ''}
-              </li>
-            ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/** One transfer observation as text, with its optional detail (also used in the coach export). */
-export function transferLine(p: ReturnType<typeof useData>['programme'], t: TransferObs): string {
-  const detail = [
-    t.setting === 'match' ? 'match' : t.setting === 'training' ? 'team training' : null,
-    t.seenTimes !== undefined ? `seen ${t.seenTimes}${t.chances !== undefined ? ` of ${t.chances} chances` : ' times'}` : null,
-    t.confidence ? { low: 'not sure', medium: 'fairly sure', high: 'sure' }[t.confidence] : null,
-  ].filter(Boolean);
-  return `${t.seenOn} · ${areaName(p, t.areaId)} · ${t.author}: ${t.behaviour}${detail.length ? ` (${detail.join(', ')})` : ''}${t.examples ? ` — ${t.examples}` : ''}`;
-}
-
-export function TransferSection() {
-  const { programme: p, transfers } = useData();
-  const [areaId, setAreaId] = useState(p.areas[0].id);
-  const [seenOn, setSeenOn] = useState(localDate());
-  const [behaviour, setBehaviour] = useState('');
-  const [setting, setSetting] = useState<'' | 'training' | 'match'>('');
-  const [seenTimes, setSeenTimes] = useState('');
-  const [chances, setChances] = useState('');
-  const [examples, setExamples] = useState('');
-  const [confidence, setConfidence] = useState<'' | 'low' | 'medium' | 'high'>('');
-  const [author, authorPicker] = useAuthor();
-  const num = (v: string) => (v.trim() && Number.isFinite(Number(v)) ? Math.max(0, Math.round(Number(v))) : undefined);
-  return (
-    <div className="stack">
-      <div className="card stack">
-        <p className="muted">"Seen in training or a match on [date]: [behaviour]". This is the Stage 4 exit evidence.</p>
-        <div className="grid2">
-          <label className="field">
-            <span>Area</span>
-            <select value={areaId} onChange={(e) => setAreaId(e.target.value)}>
-              {p.areas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Seen on</span>
-            <input type="date" value={seenOn} onChange={(e) => setSeenOn(e.target.value)} />
-          </label>
-        </div>
-        <label className="field">
-          <span>Behaviour seen</span>
-          <input type="text" value={behaviour} onChange={(e) => setBehaviour(e.target.value)} placeholder="e.g. final look before receiving, twice in the second half" />
-        </label>
-        {/* Optional detail that makes the note more useful to the coach (Brief R12). */}
-        <div className="grid3">
-          <label className="field">
-            <span>Where (optional)</span>
-            <select value={setting} onChange={(e) => setSetting(e.target.value as typeof setting)}>
-              <option value="">—</option>
-              <option value="training">Team training</option>
-              <option value="match">Match</option>
-            </select>
-          </label>
-          <label className="field">
-            <span>Seen (times, optional)</span>
-            <input type="number" min={0} value={seenTimes} onChange={(e) => setSeenTimes(e.target.value)} />
-          </label>
-          <label className="field">
-            <span>Out of chances (optional)</span>
-            <input type="number" min={0} value={chances} onChange={(e) => setChances(e.target.value)} />
-          </label>
-        </div>
-        <div className="grid2">
-          <label className="field">
-            <span>Examples (optional)</span>
-            <input type="text" value={examples} onChange={(e) => setExamples(e.target.value)} placeholder="e.g. 12th minute, checked over the shoulder, turned away from pressure" />
-          </label>
-          <label className="field">
-            <span>How sure (optional)</span>
-            <select value={confidence} onChange={(e) => setConfidence(e.target.value as typeof confidence)}>
-              <option value="">—</option>
-              <option value="low">Not sure</option>
-              <option value="medium">Fairly sure</option>
-              <option value="high">Sure</option>
-            </select>
-          </label>
-        </div>
-        {authorPicker}
-        <button
-          className="btn primary"
-          disabled={!behaviour.trim()}
-          onClick={async () => {
-            await db.transferObs.add({
-              date: new Date().toISOString(),
-              seenOn,
-              areaId,
-              behaviour: behaviour.trim(),
-              author,
-              setting: setting || undefined,
-              seenTimes: num(seenTimes),
-              chances: num(chances),
-              examples: examples.trim() || undefined,
-              confidence: confidence || undefined,
-            });
-            await logHistory(author, 'transfer observation', `${areaName(p, areaId)} ${seenOn}: ${behaviour.trim()}`);
-            await recordMilestones(p);
-            setBehaviour('');
-            setSeenTimes('');
-            setChances('');
-            setExamples('');
-          }}
-        >
-          Save observation
-        </button>
-      </div>
-      <div className="card">
-        <ul className="clean">
-          {[...transfers]
-            .sort((a, b) => b.seenOn.localeCompare(a.seenOn))
-            .map((t) => (
-              <li key={t.id}>
-                {transferLine(p, t)}
               </li>
             ))}
         </ul>

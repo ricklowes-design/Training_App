@@ -7,7 +7,6 @@ const TILES: [RegExp, string | RegExp][] = [
   [/^Session blocks/, 'Session blocks'],
   [/^Cue drills/, /Cue drills run full screen/],
   [/^Advancement/, 'Decisions'],
-  [/^Transfer observation/, /Stage 4 exit evidence/],
   [/^Priorities/, /Priority skills show as a tag/],
   [/^Placement/, 'Not placed'],
   [/^Trials/, 'Trial period'],

@@ -47,8 +47,12 @@ describe('content warnings', () => {
   it('lists stage rules that need fewer than two days, not exit rules', async () => {
     const { contentWarnings } = await import('./validate');
     const { loadProgramme } = await import('../test/fixtures');
-    const w = contentWarnings(loadProgramme());
-    expect(w.length).toBe(3);
+    const p = loadProgramme();
+    expect(contentWarnings(p)).toEqual([]); // all two days since the owner's decision
+    const one = structuredClone(p);
+    one.advancementRules.find((r) => r.areaId === 'control' && r.from === 'st2')!.consecutive = 1;
+    const w = contentWarnings(one);
+    expect(w.length).toBe(1);
     expect(w.every((x) => !x.includes('→exit'))).toBe(true);
     expect(w[0]).toMatch(/needs passes on 1 day; stage advancement usually needs two different days/);
   });

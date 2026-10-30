@@ -15,7 +15,6 @@ export interface RuleStatus {
   selfScoredIgnored: number;
   /** Passing results left out, with why and what to do next (Brief R02). */
   notCounted: { result: BenchmarkResult; reason: string; next: string }[];
-  hasTransfer: boolean;
   extraOpen: ExtraCriterion[];
   met: boolean;
   latest?: BenchmarkResult;
@@ -80,7 +79,7 @@ export function evaluateRule(
   p: Programme,
   rule: AdvancementRule,
   counted: BenchmarkResult[],
-  transfers: TransferObs[],
+  _transfers: TransferObs[], // kept for callers; transfer notes no longer gate advancement
   extra: ExtraCriterion[] = [],
   decisions: Advancement[] = [],
 ): RuleStatus {
@@ -106,9 +105,10 @@ export function evaluateRule(
     }
   }
   const needed = rule.consecutive;
-  const hasTransfer = transfers.some((t) => t.areaId === rule.areaId);
   const extraOpen = extra.filter((x) => x.areaId === rule.areaId && x.from === rule.from && !x.metAt);
-  const met = trailing >= needed && (!rule.requiresTransfer || hasTransfer) && extraOpen.length === 0;
+  // Coach transfer notes are no longer required (owner decision 2026-10-30): the end of an area is
+  // confirmed by a parent after a feedback session with the coach.
+  const met = trailing >= needed && extraOpen.length === 0;
   const withheld = [...decisions]
     .filter((d) => d.areaId === rule.areaId && d.from === rule.from && d.to === rule.to)
     .sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -119,7 +119,6 @@ export function evaluateRule(
     needed,
     selfScoredIgnored,
     notCounted,
-    hasTransfer,
     extraOpen,
     met,
     latest: all[all.length - 1],

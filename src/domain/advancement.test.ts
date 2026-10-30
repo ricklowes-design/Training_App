@@ -50,10 +50,14 @@ describe('advancement criteria', () => {
     expect(evaluateRule(p, fr, [fb(5, 9, '2026-11-01T00:00:00Z'), fb(5, 9, '2026-11-08T00:00:00Z')], []).met).toBe(false); // 42/60, left 56%
   });
 
-  it('stage 4 exit needs a coach transfer observation', () => {
+  it('stage 4 exit no longer needs a coach transfer note: it waits on the parent confirmation (owner decision 2026-10-30)', () => {
     const exit = ruleFor(p, 'feinting', 'st4')!;
-    expect(evaluateRule(p, exit, [], []).met).toBe(false);
-    expect(evaluateRule(p, exit, [], [{ date: '', seenOn: '2026-12-01', areaId: 'feinting', behaviour: 'x', author: 'coach' }]).met).toBe(true);
+    expect(evaluateRule(p, exit, [], []).met).toBe(true);
+    expect(evaluateRule(p, exit, [], []).criteriaText).toMatch(/a parent confirms after a feedback session with the coach/);
+  });
+
+  it('every stage rule with a test needs passes on two different days (owner decision 2026-10-30)', () => {
+    expect(p.advancementRules.filter((r) => r.benchmarkId).every((r) => r.consecutive >= 2)).toBe(true);
   });
 
   it('an open custom criterion holds advancement back', () => {

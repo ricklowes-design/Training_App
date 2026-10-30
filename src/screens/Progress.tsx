@@ -162,7 +162,6 @@ function SkillsTab() {
                     To reach {status.rule.to === 'exit' ? 'the end of the area' : `Stage ${p.stages.find((s) => s.id === status.rule.to)?.order}`}: {status.criteriaText}
                     {status.needed ? ` — ${status.qualifying} of ${status.needed}` : ''}
                     {status.latest ? ` (${fmtDate(status.latest.date)}: ${resultText(status.latest.values)})` : ''}
-                    {status.rule.requiresTransfer ? ` · coach transfer note ${status.hasTransfer ? 'recorded' : 'needed'}` : ''}
                     {status.met ? <span className="pill go"> criteria met: awaiting parent confirmation</span> : null}
                     {status.withheld ? <span className="pill warn"> withheld: {status.withheld.reason}</span> : null}
                   </div>

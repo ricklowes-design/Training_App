@@ -1,5 +1,5 @@
 {
-  "version": "0.6.5",
+  "version": "0.7.0",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -4106,25 +4106,25 @@
       "st1->st2": "SB >= 8/10 at 3 s, two consecutive, both feet",
       "st2->st3": "SB >= 8/10 at 2 s twice; parent rubric looked during roll >= 8 reps",
       "st3->st4": "SB >= 8/10 at 1.5 s twice, random timing",
-      "st4->exit": "SB >= 8/10 at 1 s and coach transfer observation"
+      "st4->exit": "SB >= 8/10 at 1 s twice; a parent confirms after a feedback session with the coach"
     },
     "feinting": {
       "st1->st2": "FB >= 40/60 twice; left >= 70% of right",
       "st2->st3": "FB >= 44/60 at pace twice; left >= 80% of right",
       "st3->st4": "F5 cue accuracy >= 14/16 and F6 rubric >= 44/60 twice",
-      "st4->exit": "coach transfer observation: move linked to pass/shot"
+      "st4->exit": "move linked to pass/shot; a parent confirms after a feedback session with the coach"
     },
     "dribbling": {
       "st1->st2": "DB errors <= 2 twice, both patterns",
       "st2->st3": "DB-head-up digits >= 7/8 with errors <= 2 twice; left within 10% of right",
-      "st3->st4": "D3 cue accuracy >= 14/16 and DB-head-up maintained",
-      "st4->exit": "coach transfer observation: head-up dribble linked to pass/shot"
+      "st3->st4": "D3 cue accuracy >= 14/16 twice and DB-head-up maintained",
+      "st4->exit": "head-up dribble linked to pass/shot; a parent confirms after a feedback session with the coach"
     },
     "control": {
       "st1->st2": "CB-2 >= 7/10 with left >= 3/5 twice",
-      "st2->st3": "CB-2 >= 8/10 at pace with left >= 4/5; CB-1 left >= 80% of right",
-      "st3->st4": "C3 cue accuracy >= 14/16 and CB-2 maintained",
-      "st4->exit": "coach transfer observation: first touch away with either foot"
+      "st2->st3": "CB-2 >= 8/10 at pace with left >= 4/5, twice; CB-1 left >= 80% of right",
+      "st3->st4": "C3 cue accuracy >= 14/16 twice and CB-2 maintained",
+      "st4->exit": "first touch away with either foot; a parent confirms after a feedback session with the coach"
     }
   },
   "cueDrills": [
@@ -5185,15 +5185,14 @@
       "cueLevels": [
         "1"
       ],
-      "consecutive": 1,
+      "consecutive": 2,
       "checks": [
         {
           "metric": "correct",
           "op": ">=",
           "value": 8
         }
-      ],
-      "requiresTransfer": true
+      ]
     },
     {
       "areaId": "feinting",
@@ -5267,7 +5266,6 @@
       "areaId": "feinting",
       "from": "st4",
       "to": "exit",
-      "requiresTransfer": true,
       "consecutive": 0,
       "checks": []
     },
@@ -5324,7 +5322,7 @@
       "drillIds": [
         "D3"
       ],
-      "consecutive": 1,
+      "consecutive": 2,
       "checks": [
         {
           "metric": "correct",
@@ -5340,7 +5338,6 @@
       "areaId": "dribbling",
       "from": "st4",
       "to": "exit",
-      "requiresTransfer": true,
       "consecutive": 0,
       "checks": []
     },
@@ -5374,7 +5371,7 @@
       "cueLevels": [
         "std"
       ],
-      "consecutive": 1,
+      "consecutive": 2,
       "checks": [
         {
           "metric": "cb2Total",
@@ -5404,7 +5401,7 @@
       "drillIds": [
         "C3"
       ],
-      "consecutive": 1,
+      "consecutive": 2,
       "checks": [
         {
           "metric": "correct",
@@ -5420,7 +5417,6 @@
       "areaId": "control",
       "from": "st4",
       "to": "exit",
-      "requiresTransfer": true,
       "consecutive": 0,
       "checks": []
     }

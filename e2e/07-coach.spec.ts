@@ -166,26 +166,6 @@ test('advancement: withhold with a reason, custom criterion, advance anyway', as
   expect(adv[1].reason).toMatch(/^advanced without the criteria/);
 });
 
-test('transfer observation: saved, shown as stage 4 evidence and a milestone', async ({ page }) => {
-  await ready(page);
-  await place(page, 'Scanning', 1);
-  await openParent(page, /^Transfer observation/);
-  await page.getByLabel('Behaviour seen').fill('final look before receiving, twice');
-  await page.getByLabel('Seen on').fill('2026-11-01');
-  await button(page, 'Save observation').click();
-  await expect(page.locator('li', { hasText: '2026-11-01 · Scanning · coach via parent: final look before receiving, twice' })).toBeVisible();
-  // Optional detail (Brief R12).
-  await page.getByLabel('Behaviour seen').fill('checked shoulder before receiving');
-  await page.getByLabel('Where (optional)').selectOption('match');
-  await page.getByLabel('Seen (times, optional)').fill('3');
-  await page.getByLabel('Out of chances (optional)').fill('5');
-  await page.getByLabel('How sure (optional)').selectOption('medium');
-  await button(page, 'Save observation').click();
-  await expect(page.locator('li', { hasText: 'checked shoulder before receiving (match, seen 3 of 5 chances, fairly sure)' })).toBeVisible();
-  await closeParent(page);
-  await expect(page.getByText(/Coach transfer note recorded for Scanning/)).toBeVisible();
-});
-
 test('coach export: area, stage, drill, question, last results and criteria; copy and save', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await ready(page);
@@ -200,9 +180,8 @@ test('coach export: area, stage, drill, question, last results and criteria; cop
   await expect(pre).toContainText('Question: Is the double feint right?');
   await expect(pre).toContainText('none yet');
   await expect(pre).toContainText('Next criteria: F5 cue accuracy >= 14/16');
-  // Practice and transfer, without claiming cause (Brief R12).
+  // Practice, without claiming cause (Brief R12).
   await expect(pre).toContainText('Home practice, last 7 days: 0 training visits');
-  await expect(pre).toContainText('nothing recorded yet, so whether this carries over to soccer is unknown');
   await expect(pre).toContainText('it does not show that home practice caused any change in matches');
   await button(page, 'Copy text').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Drill asked about: F6');

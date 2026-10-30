@@ -3,7 +3,7 @@ import { useData } from '../../app/data';
 import { useNav, type ParentSection } from '../../app/nav';
 import { backupDue } from '../helpers';
 import { PinGate } from './PinGate';
-import { AdvancementSection, DrillsSection, HistorySection, NotesSection, PrioritiesSection, SessionsSection, TransferSection } from './Coach';
+import { AdvancementSection, DrillsSection, HistorySection, NotesSection, PrioritiesSection, SessionsSection } from './Coach';
 import { BackupSection, ContentSection, DemosSection, ResultsSection, ExportSection, PlacementSection, RoomSection, TrialsSection } from './DataSections';
 import { SettingsSection } from './SettingsSection';
 import { CueSection } from './CueSection';
@@ -32,7 +32,6 @@ const TILES: { section: ParentSection; title: string; detail: string; group: Til
   { section: 'sessions', title: 'Session blocks', detail: 'Add, replace or remove a drill', group: 'training' },
   { section: 'cues', title: 'Cue drills', detail: 'Cue values, timing, catch trials, second cue', group: 'training' },
   { section: 'advancement', title: 'Advancement', detail: 'Confirm or withhold a stage', group: 'progress' },
-  { section: 'transfer', title: 'Transfer observation', detail: 'Seen in training or a match', group: 'progress' },
   { section: 'priorities', title: 'Priorities', detail: 'Priority skills per area', group: 'training' },
   { section: 'placement', title: 'Placement', detail: 'Starting session per area', group: 'training' },
   { section: 'trials', title: 'Trials', detail: 'Keep, make a trial, trial period, problem reports', group: 'training' },
@@ -144,9 +143,6 @@ export function Parent({ section, arg }: { section: ParentSection; arg?: string 
       break;
     case 'advancement':
       body = <AdvancementSection />;
-      break;
-    case 'transfer':
-      body = <TransferSection />;
       break;
     case 'history':
       body = <HistorySection />;
