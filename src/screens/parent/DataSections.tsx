@@ -27,7 +27,25 @@ export function BackupSection() {
 
   async function doExport() {
     const b = await exportBackup(db, APP_VERSION);
-    downloadText(backupFileName(), JSON.stringify(b, null, 1));
+    const text = JSON.stringify(b, null, 1);
+    // Chrome on ChromeOS: save through the file picker, and count the backup only once it is written.
+    const picker = (window as unknown as { showSaveFilePicker?: (o: unknown) => Promise<{ createWritable: () => Promise<{ write: (t: string) => Promise<void>; close: () => Promise<void> }> }> }).showSaveFilePicker;
+    if (picker) {
+      try {
+        const h = await picker({ suggestedName: backupFileName(), types: [{ description: 'Training backup', accept: { 'application/json': ['.json'] } }] });
+        const w = await h.createWritable();
+        await w.write(text);
+        await w.close();
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return; // cancelled: no backup made
+        setMsg(`The backup could not be saved (${e instanceof Error ? e.message : String(e)}).`);
+        return;
+      }
+      await db.settings.update('main', { lastBackupAt: new Date().toISOString() });
+      setMsg(`Backup saved (${records.length} sessions). Keep a copy off this Chromebook, for example in Google Drive.`);
+      return;
+    }
+    downloadText(backupFileName(), text);
     await db.settings.update('main', { lastBackupAt: new Date().toISOString() });
     setMsg(`Backup saved to Downloads (${records.length} sessions). Move it to Google Drive to keep it off this Chromebook.`);
   }
@@ -36,7 +54,11 @@ export function BackupSection() {
     const r = await importBackup(db, text);
     setPending(null);
     if (!r.ok) setMsg(r.error);
-    else setMsg(`Restored: ${r.counts.sessionRecords ?? 0} sessions, ${r.counts.benchmarkResults ?? 0} results, ${r.counts.coachNotes ?? 0} notes.`);
+    else
+      setMsg(
+        `Restored: ${r.counts.sessionRecords ?? 0} sessions, ${r.counts.benchmarkResults ?? 0} results, ${r.counts.coachNotes ?? 0} notes, ${r.counts.cameraSetups ?? 0} camera set-ups. Videos are not in backups.` +
+          (r.messagesNeedSetup ? ' Session messages are off until their link or token is entered again in Parent → Settings.' : ''),
+      );
   }
 
   return (
@@ -44,8 +66,8 @@ export function BackupSection() {
       <StorageLine />
       <div className="card stack">
         <p>
-          Everything is stored only in Chrome on this Chromebook. A backup is one file with every session, result, note, override and setting. Own demo clips are not included; they stay on
-          this device.
+          Everything is stored only in Chrome on this Chromebook. A backup is one file with every session, result, note, override, setting, room and camera set-up. Videos (recorded clips
+          and own demo clips) are not included; they stay on this device. The session-message link or token is not included either: after a restore on a new Chromebook, enter it again.
         </p>
         <p className="muted">
           Last backup: {settings.lastBackupAt ? fmtDate(settings.lastBackupAt, { day: 'numeric', month: 'short', year: 'numeric' }) : 'never'} · Chrome keeps this site's data:{' '}

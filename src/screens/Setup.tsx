@@ -65,7 +65,8 @@ export function Setup() {
         priorities,
         backupReminder: backup,
         pinHash,
-        lastBackupAt: settings.lastBackupAt ?? new Date().toISOString(),
+        // No made-up backup date: the first reminder comes once a session exists (audit task 10).
+        lastBackupAt: settings.lastBackupAt,
       });
       await saveRoomProfile(room, programme, { ...DEFAULT_SETTINGS, ...settings, equipment });
       if (coachNote.trim()) {

@@ -136,7 +136,8 @@ db.on('blocked', () => {
   if (typeof alert === 'function') alert('Close other tabs of this app so it can update, then reload.');
 });
 
-/** Tables included in the JSON backup. Demo clips and recorded clips are not included; small photos in profiles are embedded as base64. */
+/** Tables included in the JSON backup. Demo clips and recorded clips are not included; photos (room profiles, floor maps,
+ *  camera reference frames) are embedded as base64. Session-message credentials are left out (src/db/backup.ts). */
 export const BACKUP_TABLES = [
   'settings',
   'player',
@@ -154,6 +155,7 @@ export const BACKUP_TABLES = [
   'problemReports',
   'history',
   'cueDrills',
+  'cameraSetups',
   'repAnalyses',
   'blockAnalyses',
   'roomProfiles',

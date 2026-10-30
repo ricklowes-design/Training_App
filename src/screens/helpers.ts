@@ -74,8 +74,9 @@ export function ruleStatusFor(d: AppData, areaId: string): RuleStatus | null {
   return evaluateRule(p, rule, countedResults(d.results, d.records), d.transfers, d.extraCriteria, d.advancements);
 }
 
+/** A month since the last backup, or never backed up once there is at least one session. */
 export const backupDue = (d: AppData) =>
-  d.settings.backupReminder && (!d.settings.lastBackupAt || Date.now() - new Date(d.settings.lastBackupAt).getTime() > 30 * 86_400_000);
+  d.settings.backupReminder && (d.settings.lastBackupAt ? Date.now() - new Date(d.settings.lastBackupAt).getTime() > 30 * 86_400_000 : d.records.length > 0);
 
 /** Why a plan cannot run in the current room (a drill's layout exceeds the safe floor), or null (task 1.4). */
 export function planRoomFit(d: AppData, plan: RunPlan): string | null {

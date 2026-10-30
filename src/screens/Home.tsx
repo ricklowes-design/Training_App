@@ -284,7 +284,14 @@ export function Home() {
             </div>
           </div>
         ) : null}
-        {backupDue(d) ? <p className="muted">A backup is due. A parent can make one in Parent → Backup.</p> : null}
+        {backupDue(d) ? (
+          <div className="note-box row spread" data-testid="backup-due">
+            <span>Time for a backup of this Chromebook's training records.</span>
+            <button className="btn" onClick={() => go({ name: 'parent', section: 'backup' })}>
+              Parent: back up
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

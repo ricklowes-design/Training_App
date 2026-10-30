@@ -19,7 +19,9 @@ test('backup: export → clear site data → restore on the first screen → eve
   await button(page, 'Save note').click();
   await parentMenu(page);
   await button(page, /^Backup/).click();
-  await expect(page.getByText(/Last backup: Nov 3, 2026/)).toBeVisible(); // set-up counts as the first reminder point
+  await expect(page.getByText(/Last backup: never/)).toBeVisible(); // set-up no longer pretends a backup was made
+  // The download path (the save picker is a native dialog a test cannot answer).
+  await page.evaluate(() => Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true }));
   const [dl] = await Promise.all([page.waitForEvent('download'), button(page, 'Export backup').click()]);
   expect(dl.suggestedFilename()).toBe('home-training-backup-2026-11-03.json');
   const path = await dl.path();
@@ -67,7 +69,7 @@ test('the monthly backup reminder shows when a backup is due', async ({ page }) 
   await ready(page);
   await patchSettings(page, { lastBackupAt: '2026-09-01T00:00:00.000Z' });
   await page.reload();
-  await expect(page.getByText('A backup is due. A parent can make one in Parent → Backup.')).toBeVisible();
+  await expect(page.getByTestId('backup-due')).toContainText("Time for a backup of this Chromebook's training records.");
   await openParent(page);
   await expect(page.getByText('A backup is due (monthly reminder).')).toBeVisible();
   await button(page, 'Back up now').click();

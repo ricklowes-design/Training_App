@@ -19,7 +19,8 @@ export function useFloorImage(profile: Pick<RoomProfile, 'floorMap'> | undefined
   const blob = profile?.floorMap?.image;
   const [url, setUrl] = useState<string>();
   useEffect(() => {
-    if (!blob) return setUrl(undefined);
+    // An old, broken restore stored the image as {}: never crash a session over it.
+    if (!(blob instanceof Blob)) return setUrl(undefined);
     const u = URL.createObjectURL(blob);
     setUrl(u);
     return () => URL.revokeObjectURL(u);
