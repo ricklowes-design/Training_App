@@ -1,4 +1,4 @@
-## Current task: integrated execution plan 2026-10-30 (docs/execution-plan-2026-10-30.md), Phase A
+## Current task: integrated execution plan 2026-10-30 (docs/execution-plan-2026-10-30.md): Phases A–F done; waiting on the owner decisions below and the parent checks
 
 ## Plan update change log (parts 15–18)
 The plan was revised on 2026-10-14 (part 15 decision register, part 16 agent update, part 17 ball tracking, part 18 continuous learning). Work follows the slices in plan/09. Milestone 1–2 work below is kept; what each decision changed is listed here.
@@ -296,3 +296,6 @@ Plan update (parts 15–18), part 16 §12:
 - Dependencies: whether to move to Vite 6+/Vitest 4 to clear the remaining dev-only npm audit advisories (they affect only the local dev server and test runner, not the published app).
 - R11: sample sizes and acceptable error for personalised models, to be set after a multi-session hand-labelled pilot (the current minimums of 10 held-out / 12 training examples are unchanged).
 - R12: whether a transfer note needs to be recent or specific (for example with chances counted) to count as stage-4 evidence; today any note counts, as before.
+- 2. Light builder sessions turn benchmarks into rest and still unlock as completed: intended?
+- 3. A multi-area run counts one session per area toward the week (the coach export now counts it as one training visit): intended?
+- 4. Sessions passed over by a confirmed skip-ahead: offer them to repeat, or change the wording?
