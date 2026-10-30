@@ -15,7 +15,8 @@ import { fmtClock, HoldButton } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
 import { blockLayout, conesChanged } from './ConeSetup';
-import { cueRuleLine, cueSayLine } from './CueRules';
+import { cueRuleLine } from './CueRules';
+import { resolveTraining } from '../domain/trainingMode';
 import { PracticeCard } from './PracticeCard';
 import { cueDrillFor, usesWall } from '../cue/resolve';
 import { EndCard } from './EndCard';
@@ -117,9 +118,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   const labels: E.Labels = useMemo(
     () => ({ blockName, warmupSteps: p.warmup.steps, countdownS: p.builder.countdownS, setsFor, startFor: (b: RunBlock) => {
         const id = blockLayout(p, b);
-        return [id ? p.layouts[id]?.start : undefined, cueSayLine(p, b)].filter(Boolean).join(' ') || undefined;
+        return [id ? p.layouts[id]?.start : undefined, resolveTraining(p, b, settings, data.roomProfile?.wallUsable)?.say].filter(Boolean).join(' ') || undefined;
       } }),
-    [blockName, p, setsFor],
+    [blockName, p, setsFor, settings, data.roomProfile?.wallUsable],
   );
   const setWindows = (b: RunBlock, label: string) => setWindowsFor(setsFor(b), b.minutes, label);
   // Mastery-set windows the camera can measure: V-pull sets, and the tap sets for rapid-touch estimates.
@@ -299,6 +300,15 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.results.length, s.phase === 'done', ids]);
+
+  // Store how each block actually ran and which instructions went with it (Brief R01).
+  useEffect(() => {
+    if (s.phase !== 'active' || s.practice) return;
+    const b = s.plan.blocks[s.blockIdx];
+    const t = b ? resolveTraining(p, b, settings, data.roomProfile?.wallUsable) : null;
+    if (t) setExtras(`${s.blockIdx}:${s.attempt}`, { trainingMode: t.mode, instructionVersion: t.version });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.phase, s.blockIdx, s.attempt]);
 
   // The defender's frame rate: kept per block and written once, as the in-session value; the parent's
   // 3D defender test keeps its own number (audit task 12).

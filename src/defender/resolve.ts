@@ -9,13 +9,19 @@ import { allowedModesAt, START_LEVEL } from './progression';
 
 /** The defender set-up for a block, or null when the block uses word/arrow cues instead (part 15 D3):
  *  only work blocks of drills with a defender drill, with the 3D flag on and WebGL available. Anchors keep arrows. */
-export function defenderConfigFor(p: Programme, block: RunBlock, settings: Settings, seed: number, modeLevel = START_LEVEL, tendency?: { leftShare: number; n: number }): DefenderBlockConfig | null {
-  if (block.kind !== 'work' || !settings.flags?.defender3d) return null;
+/** Whether a block will show the 3D defender (the same test defenderConfigFor makes), so instructions can match it. */
+export function defenderWillShow(p: Programme, block: RunBlock, settings: Pick<Settings, 'flags' | 'capabilities'>): boolean {
+  if (block.kind !== 'work' || !settings.flags?.defender3d) return false;
   const drill = p.drills.find((d) => d.id === block.drillId);
-  const dd = drill?.defenderDrillId ? p.defenderDrills.find((x) => x.id === drill.defenderDrillId) : undefined;
-  if (!dd) return null;
+  if (!drill?.defenderDrillId || !p.defenderDrills.some((x) => x.id === drill.defenderDrillId)) return false;
   // No WebGL: the word/arrow cue engine is the fallback, recorded under its own cue level.
-  if (settings.capabilities && !settings.capabilities.webgl) return null;
+  return !(settings.capabilities && !settings.capabilities.webgl);
+}
+
+export function defenderConfigFor(p: Programme, block: RunBlock, settings: Settings, seed: number, modeLevel = START_LEVEL, tendency?: { leftShare: number; n: number }): DefenderBlockConfig | null {
+  if (!defenderWillShow(p, block, settings)) return null;
+  const drill = p.drills.find((d) => d.id === block.drillId);
+  const dd = p.defenderDrills.find((x) => x.id === drill!.defenderDrillId)!;
   const r = rng(seed);
   const archetype = dd.archetypes[Math.floor(r() * dd.archetypes.length)] as ArchetypeId;
   return {

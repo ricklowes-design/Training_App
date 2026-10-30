@@ -13,7 +13,7 @@ import type { RoomCheck } from '../camera/roomCheck';
 import type { RunBlock } from '../domain/plans';
 import type { RunState } from './engine';
 
-export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'clipError' | 'defender' | 'windows'>>;
+export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'clipError' | 'defender' | 'windows' | 'trainingMode' | 'instructionVersion'>>;
 
 const flip = (s: Side): Side => (s === 'left' ? 'right' : 'left');
 

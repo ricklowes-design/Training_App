@@ -33,6 +33,21 @@ test('a reactive drill shows the 3D defender from the player view, with no arrow
   await holdStop(page);
 });
 
+test('the instructions teach reading the 3D defender, with no arrow (Brief R01)', async ({ page }) => {
+  test.setTimeout(300_000);
+  await boot(page);
+  await setup(page);
+  await place(page, 'Feinting', 9);
+  await start(page, 'Feinting · Stage 3 · Session 9');
+  await advance(page, 191_000);
+  const cones = page.getByRole('button', { name: '✓ Cones are out: show the instructions' });
+  if (await cones.isVisible().catch(() => false)) await cones.click();
+  const rules = page.getByTestId('cue-rules');
+  await expect(rules).toHaveAttribute('data-mode', 'defender3d');
+  await expect(page.getByTestId('defender-read')).toBeVisible();
+  await expect(rules).not.toContainText(/arrow/i);
+});
+
 test('without WebGL the drill falls back to word/arrow cues, recorded under the cue engine level', async ({ page }) => {
   test.setTimeout(200_000);
   await page.addInitScript(() => {
@@ -47,7 +62,16 @@ test('without WebGL the drill falls back to word/arrow cues, recorded under the 
   await setup(page);
   const [s] = await table<{ capabilities: { webgl: boolean } }>(page, 'settings');
   expect(s.capabilities.webgl).toBe(false);
-  await toDefenderBlock(page);
+  await place(page, 'Feinting', 9);
+  await start(page, 'Feinting · Stage 3 · Session 9');
+  await advance(page, 191_000);
+  const cones = page.getByRole('button', { name: '✓ Cones are out: show the instructions' });
+  if (await cones.isVisible().catch(() => false)) await cones.click();
+  // The fallback is named and teaches its own arrow (Brief R01).
+  await expect(page.getByTestId('cue-rules')).toHaveAttribute('data-mode', 'cueFallback');
+  await expect(page.getByTestId('mode-label')).toContainText('word or arrow instead');
+  await button(page, '▶ Start block').click();
+  await advance(page, 10_500);
   await expect(page.locator('.practice.cue')).toBeVisible();
   await expect(page.locator('.practice.defender')).toHaveCount(0);
 });
@@ -86,6 +110,9 @@ test('when the 3D view cannot start, the block continues in the labelled 2D fall
   expect(f5.defender!.view).toBe('fallback2d');
   expect(f5.defender!.fallbackReason).toMatch(/3D could not start/);
   expect(f5.cueLevel).toMatch(/^defender-2d-/);
+  // The block stores the training mode and instruction version it ran with (Brief R01).
+  expect((f5 as { trainingMode?: string }).trainingMode).toBe('defender3d');
+  expect((f5 as { instructionVersion?: string }).instructionVersion).toMatch(/:defender3d$/);
   const scen = await table<Scenario>(page, 'defenderScenarios');
   expect(scen.every((x) => x.view === 'fallback2d')).toBe(true);
   const first = scen.filter((x) => x.repIndex >= 0).slice(0, 16);

@@ -16,6 +16,7 @@ import { blockLayout, ConeSetup } from './ConeSetup';
 import { cueDrillFor } from '../cue/resolve';
 import { TurnOnNeeded } from './TurnOnNeeded';
 import { CueRules, talkThrough } from './CueRules';
+import { resolveTraining } from '../domain/trainingMode';
 import { say, stopSpeech } from '../audio/audio';
 
 export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
@@ -95,7 +96,9 @@ export function DemoPanel(props: {
   // The voice talks through the instructions (once per showing), unless the player knows this drill.
   const talkKey = block.drillId ?? block.benchmarkId ?? block.anchorId ?? block.kind;
   const knows = (settings.talkThroughSkip ?? []).includes(talkKey);
-  const talkText = talkThrough(p, block, title, roomProfile?.wallUsable);
+  // The block's resolved training mode: instructions, speech and demo describe what will actually run (Brief R01).
+  const teach = resolveTraining(p, block, settings, roomProfile?.wallUsable);
+  const talkText = talkThrough(p, block, title, teach);
   const readOut = useCallback(() => {
     if (!settings.sound.speech) return;
     setTalking(true);
@@ -196,7 +199,7 @@ export function DemoPanel(props: {
         ) : null}
         <TurnOnNeeded blocks={[block]} />
         {talkControls}
-        <CueRules p={p} block={block} wall={roomProfile?.wallUsable} />
+        <CueRules t={teach} />
         {drill ? (
           <DetailFold folded={!!cueDrillFor(p, block)}>
             <p>
@@ -253,7 +256,16 @@ export function DemoPanel(props: {
         ) : null}
       </div>
       <div className="col">
-        {shownDrill ? <DemoVideo drill={shownDrill} hasOwnClip={demoClipIds.includes(shownDrill.id)} onPlayingChange={onPlayingChange} /> : <div className="video muted">No video for this block</div>}
+        {shownDrill && (!shownDrill.demo.modes || !teach || shownDrill.demo.modes.includes(teach.mode)) ? (
+          <DemoVideo drill={shownDrill} hasOwnClip={demoClipIds.includes(shownDrill.id)} onPlayingChange={onPlayingChange} />
+        ) : shownDrill ? (
+          // The linked video teaches a different version of this drill: the in-app animation and steps instead (Brief R01).
+          <div className="video muted" data-testid="demo-mode-mismatch">
+            The video shows a different version of this drill; follow the steps and the animation.
+          </div>
+        ) : (
+          <div className="video muted">No video for this block</div>
+        )}
         {shownDrill && layout && scriptFor(shownDrill.id, layout.derived, layout.roomLengthM) ? (
           <DrillAnimation drillId={shownDrill.id} d={layout.derived} lengthM={layout.roomLengthM} widthM={layout.roomWidthM} floor={layout.floor} units={units} screenBehindM={p.layoutGeometry.receiveBox.cueScreenBehindM} maxHeight={300} />
         ) : null}

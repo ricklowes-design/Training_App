@@ -1,76 +1,82 @@
 import type { Programme } from '../content/types';
 import { cueDrillFor } from '../cue/resolve';
 import type { RunBlock } from '../domain/plans';
+import type { ResolvedTeaching } from '../domain/trainingMode';
 
-// What the screen will show in a cue block and what to do for each (content: cueDrills[].values and
-// .rule, and the drill that teaches it). General rules only: nothing here tells which side is right on a rep.
+// What the player is told before a block, for the way it will actually run (Brief R01): the 3D defender
+// (how to read it), its word/arrow fallback (labelled), a cue drill, an anchor, or a plain drill with its
+// own teaching. General rules only: nothing here tells which side is right on a rep.
 
 export function cueRuleLine(p: Programme, block: RunBlock): string | null {
   const c = cueDrillFor(p, block);
   return c?.rule ? `${c.values!.join(' · ')}: ${c.rule}` : null;
 }
 
-export function CueRules({ p, block, wall }: { p: Programme; block: RunBlock; wall?: boolean }) {
-  const c = cueDrillFor(p, block);
-  if (!c) return null;
-  // The drill this block runs, or (for tests and anchors) the drill that teaches this cue.
-  const own = p.drills.find((d) => d.id === block.drillId && d.cueDrillId === c.id);
-  const anchorDrill = block.anchorId ? p.drills.find((d) => d.id === p.anchors.find((a) => a.id === block.anchorId)?.drillId) : undefined;
-  const teaching = own ?? anchorDrill ?? p.drills.find((d) => d.cueDrillId === c.id);
-  const how = c.howTo;
-  // With a wall: kick at the wall, the cue comes on the bounce.
-  const steps = (wall && teaching?.stepsWall) || teaching?.steps;
+export function CueRules({ t }: { t: ResolvedTeaching | null }) {
+  // A plain drill without its own teaching keeps the purpose/set-up/do panel only.
+  if (!t || (t.mode === 'plain' && !t.success)) return null;
   return (
-    <div className="howto" data-testid="cue-rules">
-      {how?.why ? (
-        <p className="howto-why" data-testid="cue-why">
-          <strong>Why:</strong> {how.why}
+    <div className="howto" data-testid="cue-rules" data-mode={t.mode}>
+      {t.label ? (
+        <p className="note-box" data-testid="mode-label">
+          {t.label}
         </p>
       ) : null}
-      {steps?.length ? (
+      {t.why ? (
+        <p className="howto-why" data-testid="cue-why">
+          <strong>Why:</strong> {t.why}
+        </p>
+      ) : null}
+      {t.steps.length ? (
         <ol className="howto-steps" data-testid="cue-steps">
-          {steps.map((st) => (
+          {t.steps.map((st) => (
             <li key={st}>{st}</li>
           ))}
         </ol>
-      ) : teaching ? (
-        <p className="howto-why">{teaching.prescription}</p>
       ) : null}
-      <div className="howto-words">
-        {c.values!.map((v) => (
-          <div key={v} className="howto-word">
-            <span className="pill info">{v}</span>
-            <span>{how?.words[v] ?? c.rule}</span>
-          </div>
-        ))}
-      </div>
-      {how?.expect ? <p className="muted">{how.expect}</p> : null}
+      {t.read?.length ? (
+        <ul className="howto-read" data-testid="defender-read">
+          {t.read.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+      ) : null}
+      {t.words?.length ? (
+        <div className="howto-words">
+          {t.words.map((w) => (
+            <div key={w.value} className="howto-word">
+              <span className="pill info">{w.value}</span>
+              <span>{w.meaning}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {t.expect ? <p className="muted">{t.expect}</p> : null}
+      {t.success ? (
+        <p className="muted" data-testid="teach-success">
+          <strong>Done well:</strong> {t.success} <strong>Watch for:</strong> {t.commonError}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-/** The short spoken version, said with the countdown ("Walk to the start …"). */
-export function cueSayLine(p: Programme, block: RunBlock): string | undefined {
-  return cueDrillFor(p, block)?.howTo?.say;
-}
-
-/** What the voice reads out before a drill: why, the steps, and what each word means (or, for drills
- *  without cues, the purpose and what to do). */
-export function talkThrough(p: Programme, block: RunBlock, title: string, wall?: boolean): string {
-  const c = cueDrillFor(p, block);
-  const drill = p.drills.find((d) => d.id === block.drillId);
+/** What the voice reads out before a drill: why, the steps, how to read the defender or what each word
+ *  means, from the same resolved teaching as the screen. Plain drills without teaching: purpose and steps. */
+export function talkThrough(p: Programme, block: RunBlock, title: string, t: ResolvedTeaching | null): string {
   const parts: string[] = [`${title}.`];
-  if (c) {
-    const anchorDrill = block.anchorId ? p.drills.find((d) => d.id === p.anchors.find((a) => a.id === block.anchorId)?.drillId) : undefined;
-    const teaching = (drill?.cueDrillId === c.id ? drill : undefined) ?? anchorDrill ?? p.drills.find((d) => d.cueDrillId === c.id);
-    const steps = (wall && teaching?.stepsWall) || teaching?.steps || [];
-    if (c.howTo?.why) parts.push(`Why: ${c.howTo.why}`);
-    parts.push(...steps.map((st, i) => `${i + 1}. ${st}`));
-    for (const v of c.values ?? []) if (c.howTo?.words[v]) parts.push(`${v}: ${c.howTo.words[v]}`);
-  } else if (drill) {
-    parts.push(drill.purpose.endsWith('.') ? drill.purpose : `${drill.purpose}.`);
-    parts.push(...(drill.steps ?? [drill.prescription]));
+  if (t && !(t.mode === 'plain' && !t.success)) {
+    if (t.label) parts.push(t.label);
+    if (t.why) parts.push(`Why: ${t.why}`);
+    parts.push(...t.steps.map((st, i) => `${i + 1}. ${st}`));
+    if (t.read) parts.push(...t.read);
+    for (const w of t.words ?? []) if (w.meaning) parts.push(`${w.value}: ${w.meaning}`);
+  } else {
+    const drill = p.drills.find((d) => d.id === block.drillId);
+    if (drill) {
+      parts.push(drill.purpose.endsWith('.') ? drill.purpose : `${drill.purpose}.`);
+      parts.push(...(drill.steps ?? [drill.prescription]));
+    }
   }
   return parts.join(' ');
 }
-

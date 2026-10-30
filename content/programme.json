@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.6.1",
   "generated": "2026-10-13",
   "note": "Starter content. Edit freely; the app validates the schema on load. Demo refs are empty until the parent records or pastes them. Version 0.2.0 adds structured data used by the app: drill modes, layout geometry, baselines, builder templates, the picture quiz, structured advancement rules and the cue-accuracy benchmark. Version 0.3.0 adds cue-engine settings to cueDrills (trigger, reps, timings, catch trials, second cue) and links drills to cue drills. 0.4.0 (part 16 update): competence-based stage names, FocusMetricConfig per drill, scanning modes, S3 as an optional diagnostic, defender archetypes and reaction modes. Sessions that used S3 now use S2 (S3 is an optional diagnostic, D8). 0.5.0: suggested outside demonstration videos (YouTube) for the technique drills, with alternatives and an optional part (start/end) to show; all unverified until a parent checks them. Drills whose prescription gives sets carry structured sets (count and labels) so the app announces each set. 0.5.1: parent-checked demonstrations with the part to show; new candidates for drills whose video did not show the move.",
   "layouts": {
@@ -622,7 +622,37 @@
         "Dribble to the cone. Scissors.",
         "Read the word.",
         "GO or HELD. Finish in the stop zone."
-      ]
+      ],
+      "teach": {
+        "defender3d": {
+          "why": "A good defender can recover after your first fake. Then a second fake wins, but only when it is needed.",
+          "steps": [
+            "Dribble at the defender from the start cone.",
+            "Scissors at the cone, then watch the defender.",
+            "Defender stays across: go. Defender recovers: fake again the other way, then go."
+          ],
+          "read": [
+            "Defender stays leaning the way of your first fake: it is still beaten.",
+            "Defender steps back into the middle or toward your exit: it has recovered."
+          ],
+          "success": "You finish in the stop zone past the defender, ball close, using a second fake only when the defender recovered.",
+          "commonError": "Doing the second fake every time, even when the defender stayed beaten.",
+          "easier": "Try it first: three slow reps at walking pace.",
+          "harder": "Full pace, and finish with a short pass into a target."
+        },
+        "cue": {
+          "why": "A good defender can recover after your first fake. Then a second fake wins, but only when it is needed.",
+          "steps": [
+            "Dribble to the cone and scissors.",
+            "Read the word on the screen.",
+            "GO: exit now. HELD: fake the other way, then exit."
+          ],
+          "success": "You finish in the stop zone with the ball close, doing the second fake only on HELD.",
+          "commonError": "Doing the second fake every time, even on GO.",
+          "easier": "Try it first: three slow reps at walking pace.",
+          "harder": "Full pace, and finish with a short pass into a target."
+        }
+      }
     },
     {
       "id": "F5",
@@ -679,7 +709,37 @@
         "Start cone. Face the screen.",
         "Dribble to the cone.",
         "Arrow shows: fake away, go the arrow way."
-      ]
+      ],
+      "teach": {
+        "defender3d": {
+          "why": "Fake one way, go the other: past a defender who believed the fake.",
+          "steps": [
+            "Dribble at the defender from the start cone.",
+            "Fake one way at the cone and watch the defender.",
+            "Go past on the side the defender leaves open."
+          ],
+          "read": [
+            "Defender steps toward your fake: that side is closed, the other is open.",
+            "Defender holds in the middle: neither side is given, so choose and go with pace."
+          ],
+          "success": "You exit past the defender on the open side and reach the stop zone with the ball close.",
+          "commonError": "Deciding the exit before the fake, without watching the defender.",
+          "easier": "Try it first: three slow reps at walking pace.",
+          "harder": "Full pace, and keep your head up through the fake."
+        },
+        "cue": {
+          "why": "Fake one way, go the other: past a defender who believed the fake.",
+          "steps": [
+            "Dribble to the cone.",
+            "An arrow shows on the screen.",
+            "Fake away from the arrow, go the arrow way."
+          ],
+          "success": "You exit on the arrow side and reach the stop zone with the ball close.",
+          "commonError": "Slowing down to read the arrow, or deciding before it shows.",
+          "easier": "Try it first: three slow reps at walking pace.",
+          "harder": "Full pace, and keep your head up through the fake."
+        }
+      }
     },
     {
       "id": "F6",
@@ -717,7 +777,38 @@
         "Start cone. Face the screen.",
         "Dribble. Fake at the cone.",
         "Read the word. Do what it says."
-      ]
+      ],
+      "teach": {
+        "defender3d": {
+          "why": "In a game the defender decides what you do next: go past, change direction, or protect the ball.",
+          "steps": [
+            "Dribble at the defender and fake at the cone.",
+            "Watch what the defender does.",
+            "Bit: go. Held: change direction. Blocked: protect the ball and turn away."
+          ],
+          "read": [
+            "Bit: the defender lunges toward your fake.",
+            "Held: the defender stays balanced in the middle.",
+            "Blocked: the defender closes the space in front of you."
+          ],
+          "success": "Your move matches what the defender did, and the ball stays close.",
+          "commonError": "Doing the same move whatever the defender does.",
+          "easier": "Try it first: three slow reps at walking pace.",
+          "harder": "Full pace; after a block, finish with a pass to a target."
+        },
+        "cue": {
+          "why": "In a game the defender decides what you do next: go past, change direction, or protect the ball.",
+          "steps": [
+            "Dribble to the cone and fake.",
+            "Read the word on the screen.",
+            "BIT: go. HELD: change direction. BLOCKED: protect the ball and turn away."
+          ],
+          "success": "Your move matches the word, and the ball stays close.",
+          "commonError": "Treating HELD as always a second fake.",
+          "easier": "Try it first: three slow reps at walking pace.",
+          "harder": "Full pace; after BLOCKED, finish with a pass to a target."
+        }
+      }
     },
     {
       "id": "F7",
@@ -746,7 +837,21 @@
         "solo": true,
         "partner": null
       },
-      "mode": "reps"
+      "mode": "reps",
+      "teach": {
+        "plain": {
+          "why": "A beaten defender is only worth it if the next action keeps the ball: here, a quick pass.",
+          "steps": [
+            "Dribble to the cone and fake.",
+            "Exit on the side you chose.",
+            "Pass into the target with your exit foot within two touches."
+          ],
+          "success": "The pass reaches the target within two touches of the exit, with the exit foot.",
+          "commonError": "An extra touch to switch feet before the pass.",
+          "easier": "Walking pace, pass from a standing ball.",
+          "harder": "Full pace, one touch after the exit."
+        }
+      }
     },
     {
       "id": "F8",
@@ -1341,7 +1446,21 @@
         "solo": true,
         "partner": null
       },
-      "mode": "timed"
+      "mode": "timed",
+      "teach": {
+        "plain": {
+          "why": "A clean first touch off a firm pass sets up the next action; the wall gives you a passer.",
+          "steps": [
+            "Pass firmly against the wall from 2 to 3 metres.",
+            "Control the return with one touch, away from your body.",
+            "Pass again; then two-touch and one-touch passing, more with the left foot."
+          ],
+          "success": "Each return is controlled in one touch, within a step, without the ball getting away.",
+          "commonError": "Stopping the ball dead under the body instead of moving it into space.",
+          "easier": "Stand closer and pass softer.",
+          "harder": "Stand farther back and play one-touch passes."
+        }
+      }
     }
   ],
   "areas": [
@@ -5452,14 +5571,14 @@
     },
     "C6": {
       "primary": [
-        "M4"
+        "firstTouchControlled"
       ],
       "supporting": [
         "controlErrors"
       ],
       "experimental": [],
       "progressionEligible": [
-        "M4"
+        "firstTouchControlled"
       ],
       "qualityGuardrails": [
         "controlErrors"
@@ -5676,7 +5795,6 @@
     },
     "F7": {
       "primary": [
-        "correctResponseByDefenderAction",
         "targetHit"
       ],
       "supporting": [
@@ -5684,7 +5802,6 @@
       ],
       "experimental": [],
       "progressionEligible": [
-        "correctResponseByDefenderAction",
         "targetHit"
       ],
       "qualityGuardrails": [

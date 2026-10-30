@@ -1,5 +1,6 @@
 import { CHECK_IDS } from '../domain/systemTest';
-import type { Programme } from './types';
+import { METRIC_LABELS } from '../domain/focus';
+import { TEACH_MODES, type Programme } from './types';
 
 // A small hand-written schema checker. Each problem is reported as
 // "<where>: <what was expected>, found <what was there>" so a typo in the JSON
@@ -127,6 +128,7 @@ const programmeShape: Check = obj({
       prescription: str,
       steps: optional(list(str)),
       stepsWall: optional(list(str)),
+      teach: optional(record(obj({ why: optional(str), steps: list(str), read: optional(list(str)), success: str, commonError: str, easier: str, harder: str }))),
       cues: list(str),
       commonErrors: list(str),
       demo: obj({
@@ -137,6 +139,7 @@ const programmeShape: Check = obj({
         outsideMustShow: nullOr(str),
         status: str,
         title: optional(str),
+        modes: optional(list(str)),
         startS: optional(num),
         endS: optional(num),
         alternatives: optional(list(obj({ ref: str, title: str, startS: optional(num), endS: optional(num) }))),
@@ -307,6 +310,20 @@ function crossCheck(p: Programme, errs: string[]): void {
   for (const x of p.defenderDrills) for (const m of x.allowedModes ?? []) if (!p.reactionModesProgression.includes(m)) errs.push(`defender drill ${x.id}: "${m}" is not one of the reaction modes`);
   const modeIds = new Set(p.scanModes.map((m) => m.id));
   for (const d of p.drills) for (const m of d.scanModes ?? []) if (!modeIds.has(m)) errs.push(`drill ${d.id}: scan mode "${m}" is not one of the scan modes`);
+  // Teaching per training mode (Brief R01): known modes, three steps, and a 3D version for every defender drill.
+  for (const d of p.drills) {
+    for (const [m, t] of Object.entries(d.teach ?? {})) {
+      if (!(TEACH_MODES as readonly string[]).includes(m)) errs.push(`drill ${d.id}: unknown teaching mode "${m}" (known: ${TEACH_MODES.join(', ')})`);
+      if (t && t.steps.length !== 3) errs.push(`drill ${d.id} teaching ${m}: three steps expected, found ${t.steps.length}`);
+    }
+    for (const m of d.demo.modes ?? []) if (!['defender3d', 'cueFallback', 'cue', 'anchorFixed', 'plain'].includes(m)) errs.push(`drill ${d.id}: demo mode "${m}" is not a training mode`);
+    if (d.defenderDrillId && !d.teach?.defender3d) errs.push(`drill ${d.id}: runs with the 3D defender but has no "defender3d" teaching`);
+    if (d.defenderDrillId && d.cueDrillId && !d.teach?.cue) errs.push(`drill ${d.id}: has a word/arrow fallback but no "cue" teaching`);
+  }
+  // Every measure a drill names must be one the app knows.
+  for (const [id, f] of Object.entries(p.focusMetricConfig)) {
+    for (const m of [...f.primary, ...f.supporting, ...f.experimental, ...f.progressionEligible, ...(f.qualityGuardrails ?? [])]) if (!(m in METRIC_LABELS)) errs.push(`focusMetricConfig ${id}: unknown measure "${m}"`);
+  }
   const st = p.systemTest;
   if (st) {
     const seen: string[] = [];

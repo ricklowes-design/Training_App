@@ -48,8 +48,26 @@ export interface DemoRef {
   /** Only this part of the linked video is shown (seconds); it loops. */
   startS?: number;
   endS?: number;
+  /** Training modes the video actually teaches (Brief R01); absent = technique only, fits every mode. */
+  modes?: string[];
   /** Other candidate videos a parent can switch to. */
   alternatives?: { ref: string; title: string; startS?: number; endS?: number }[];
+}
+
+/** How a block will actually run, so its instructions, speech and demo match it (Brief R01). */
+export const TEACH_MODES = ['defender3d', 'cue', 'plain'] as const;
+export type TeachMode = (typeof TEACH_MODES)[number];
+
+export interface DrillTeaching {
+  why?: string;
+  /** Three short steps. */
+  steps: string[];
+  /** What the opponent can do and how to read it (defender mode); never which way is right on a rep. */
+  read?: string[];
+  success: string;
+  commonError: string;
+  easier: string;
+  harder: string;
 }
 
 export interface Drill {
@@ -64,6 +82,8 @@ export interface Drill {
   steps?: string[];
   /** The same rep when a wall can be used: kick at the wall, the cue comes on the bounce. */
   stepsWall?: string[];
+  /** Teaching per training mode (Brief R01): what the player is told for the way the block will actually run. */
+  teach?: Partial<Record<TeachMode, DrillTeaching>>;
   cues: string[];
   commonErrors: string[];
   demo: DemoRef;

@@ -188,6 +188,10 @@ export interface BlockResult {
   clipId?: string;
   /** Why the block's video was not kept (storage full…); the block itself is saved. */
   clipError?: string;
+  /** How the block actually ran (Brief R01): defender3d, cueFallback, cue, anchorFixed or plain. */
+  trainingMode?: string;
+  /** Content version and mode of the instructions the player was given. */
+  instructionVersion?: string;
   /** A block run with the defender (part 15 D3): the view actually used and how reps were triggered. */
   defender?: { view: 'player3d' | 'fallback2d'; archetype: string; reps: number; triggerSources: string[]; fallbackReason?: string; scenarioIds: string[] };
 }
