@@ -1,3 +1,4 @@
+import { StorageLine } from '../../ui/StorageLine';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { logHistory, useData } from '../../app/data';
@@ -283,6 +284,7 @@ export function ClipsSection() {
       <p className="muted">
         {clips?.length ?? 0} clips, {totalMb} MB. Clips older than {settings.camera.retentionDays} days are deleted unless kept. Clips never leave this Chromebook unless you save one.
       </p>
+      <StorageLine />
       <ul className="clean">
         {(clips ?? []).map((c) => (
           <li key={c.id} className="row spread">

@@ -20,6 +20,7 @@ import { PracticeCard } from './PracticeCard';
 import { cueDrillFor, usesWall } from '../cue/resolve';
 import { EndCard } from './EndCard';
 import * as E from './engine';
+import { saveFailedText } from '../app/storage';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
 import { DigitFlasher, PictureQuiz, TimedRuns, VPullWindows } from './SpecialViews';
 import { CueBlock } from './CueBlock';
@@ -263,26 +264,37 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     return () => clearInterval(t);
   }, [labels, handle]);
 
+  // The end-of-session save, retried from the card when it fails (audit 2026-10-29, task 8).
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const finish = async () => {
+    if (!ids) return;
+    setSaveError(null);
+    try {
+      // Never wait forever for a clip (a camera unplugged mid-block, audit task 6).
+      await Promise.race([camera.flush(), new Promise((r) => setTimeout(r, 15_000))]);
+      const recs = await saveProgress(withExtras(sRef.current), ids, new Set(savedRef.current.map((r) => r.blockIndex)), true);
+      await db.settings.update('main', { lastSeenAppVersion: APP_VERSION, lastSeenContentVersion: p.version });
+      await recordMilestones(p);
+      // Opt-in completion message (plan/14): one small record per completed session.
+      void notifyFinished(p, recs).catch(() => undefined);
+      if (recs[0]?.kind === 'systemTest') go({ name: 'parent', section: 'systest', arg: ids.runId });
+      else if (recs[0]?.kind === 'baseline' && recs[0].status !== 'stopped') go({ name: 'baselineQuestions', recordId: recs[0].id });
+      else go({ name: 'summary', runId: ids.runId });
+    } catch (e) {
+      setSaveError(saveFailedText(e));
+    }
+  };
+
   // Save after each block; finish when done.
   useEffect(() => {
     if (!ids) return;
     if (s.phase === 'done') {
       if (finishing.current) return;
       finishing.current = true;
-      (async () => {
-        // Never wait forever for a clip (a camera unplugged mid-block, audit task 6).
-        await Promise.race([camera.flush(), new Promise((r) => setTimeout(r, 15_000))]);
-        const recs = await saveProgress(withExtras(s), ids, new Set(savedRef.current.map((r) => r.blockIndex)), true);
-        await db.settings.update('main', { lastSeenAppVersion: APP_VERSION, lastSeenContentVersion: p.version });
-        await recordMilestones(p);
-        // Opt-in completion message (plan/14): one small record per completed session.
-        void notifyFinished(p, recs).catch(() => undefined);
-        if (recs[0]?.kind === 'systemTest') go({ name: 'parent', section: 'systest', arg: ids.runId });
-        else if (recs[0]?.kind === 'baseline' && recs[0].status !== 'stopped') go({ name: 'baselineQuestions', recordId: recs[0].id });
-        else go({ name: 'summary', runId: ids.runId });
-      })();
+      void finish();
     } else {
-      void saveProgress(withExtras(s), ids, benchmarksLogged, false);
+      // A failed per-block save shows the retry card at the end; the final save writes everything again.
+      void saveProgress(withExtras(s), ids, benchmarksLogged, false).catch((e) => setSaveError(saveFailedText(e)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.results.length, s.phase === 'done', ids]);
@@ -548,7 +560,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
           for (const r of blockSaved) await db.benchmarkResults.update(r.id, { keptAt: at });
         }}
         onNote={(text) => apply((st) => ({ ...st, results: st.results.map((r) => (r === lastAttempt ? { ...r, note: text } : r)) }))}
-        extraLine={quizLine ?? chanceLineFor(blockSaved)}
+        extraLine={[quizLine ?? chanceLineFor(blockSaved), camera.clipError || undefined].filter(Boolean).join(' ') || undefined}
         recordId={recordIdForBlock(s.plan, ids, s.blockIdx)}
       />
     );
@@ -571,6 +583,18 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     );
   }
 
+  if (s.phase === 'done' && saveError)
+    return (
+      <div className="page" data-testid="save-error">
+        <div className="card stack">
+          <h1 style={{ margin: 0 }}>Not saved yet</h1>
+          <p style={{ fontSize: '1.3rem' }}>{saveError}</p>
+          <button className="btn go huge" onClick={() => void finish()}>
+            Try again
+          </button>
+        </div>
+      </div>
+    );
   if (s.phase === 'done') return <div className="practice"><div className="sub">Saving…</div></div>;
 
   // ----- Practice view (active) -----

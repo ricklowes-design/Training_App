@@ -174,3 +174,17 @@ test('the warm-up can be skipped with one tap; the session is then partial and s
   expect(rec.reasons).toContain('warm-up not finished');
   expect(rec.blocks[0]).toMatchObject({ skipped: true });
 });
+
+test('a failed end-of-session save shows Try again, and Try again reaches the summary (audit task 8)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await start(page, /Scanning · Baseline/);
+  await page.clock.runFor(5_000);
+  await page.evaluate(() => ((window as unknown as { __failNextFinalSave: boolean }).__failNextFinalSave = true));
+  await button(page, 'STOP').click();
+  await page.clock.resume();
+  const card = page.getByTestId('save-error');
+  await expect(card).toContainText('This session could not be saved yet (test: save failed). Tap Try again.');
+  await button(card, 'Try again').click();
+  await expect(page.getByRole('heading', { name: /Session saved/ })).toBeVisible();
+});

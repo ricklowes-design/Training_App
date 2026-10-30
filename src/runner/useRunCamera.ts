@@ -3,6 +3,8 @@ import type { Programme } from '../content/types';
 import { currentSetup, familyForBlock } from '../camera/clips';
 import type { FramingResult } from '../camera/frames';
 import { CameraSession, cameraErrorText } from '../camera/session';
+import { isQuota, MIN_FREE_MB_TO_RECORD, storageMB } from '../app/storage';
+import { pruneClips } from '../camera/clips';
 import type { CueInput, Side } from '../cue/engine';
 import type { DefenderInput } from '../defender/block';
 import { db } from '../db/db';
@@ -11,7 +13,7 @@ import type { RoomCheck } from '../camera/roomCheck';
 import type { RunBlock } from '../domain/plans';
 import type { RunState } from './engine';
 
-export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'defender' | 'windows'>>;
+export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'clipError' | 'defender' | 'windows'>>;
 
 const flip = (s: Side): Side => (s === 'left' ? 'right' : 'left');
 
@@ -43,6 +45,9 @@ export function useRunCamera(args: {
   const [live, setLive] = useState(false);
   const [error, setError] = useState('');
   const [framing, setFraming] = useState<FramingResult | null>(null);
+  const [clipError, setClipError] = useState('');
+  // Too little free space: drills are not recorded (checked when the camera opens).
+  const noSpace = useRef(false);
   // The webcam was unplugged: reopen it when the next block's instructions show (audit task 6).
   const ended = useRef(false);
   const [reopen, setReopen] = useState(0);
@@ -56,6 +61,16 @@ export function useRunCamera(args: {
   const enabled = settings.camera.enabled;
   const block = s.plan.blocks[s.blockIdx];
   const setup = block ? currentSetup(setups, familyForBlock(p, block)) : undefined;
+
+  async function checkSpace() {
+    let s0 = await storageMB();
+    if (s0 && s0.freeMB < MIN_FREE_MB_TO_RECORD) {
+      await pruneClips(settings.camera.retentionDays).catch(() => 0); // try to free space first
+      s0 = await storageMB();
+    }
+    noSpace.current = !!s0 && s0.freeMB < MIN_FREE_MB_TO_RECORD;
+    if (noSpace.current) setError('Not enough space to record drills. Parent → Clips can free space.');
+  }
 
   // Open once per run; close at the end.
   useEffect(() => {
@@ -76,6 +91,7 @@ export function useRunCamera(args: {
         };
         setLive(true);
         setError('');
+        void checkSpace();
         if (fellBack) setError('The webcam chosen in Camera set-up was not found, so another camera is being used. Check the USB cable.');
       })
       .catch((e) => setError(cameraErrorText(e)));
@@ -139,34 +155,45 @@ export function useRunCamera(args: {
       recording.current = null;
       const done = cs.endBlock().then(async ({ blob, mime, presenceFrac }) => {
         const extras: BlockExtras = {};
-        if (rec.setup && rec.block.kind === 'work' && presenceFrac !== undefined && !unverified.current) extras.presenceFrac = Math.round(presenceFrac * 100) / 100;
-        const sessionRecordId = cb.current.recordId(rec.blockIdx);
-        if (blob.size && sessionRecordId) {
-          const result = stateRef.current.results.find((r) => r.index === rec.blockIdx && r.attempt === rec.attempt);
-          const clip: Clip = {
-            id: crypto.randomUUID(),
-            blob,
-            mime,
-            drillId: rec.block.drillId,
-            blockLabel: rec.block.drillId ?? rec.block.anchorId ?? rec.block.benchmarkId ?? rec.block.kind,
-            sessionRecordId,
-            blockIndex: rec.blockIdx,
-            attempt: rec.attempt,
-            date: new Date().toISOString(),
-            durationS: result?.elapsedS ?? 0,
-            cameraSetupId: rec.setup?.id,
-            startActiveMs: 0,
-          };
-          await db.clips.put(clip);
-          extras.clipId = clip.id;
-          if (rec.setup) cb.current.onClip?.(clip, rec.block, rec.setup);
+        try {
+          if (rec.setup && rec.block.kind === 'work' && presenceFrac !== undefined && !unverified.current) extras.presenceFrac = Math.round(presenceFrac * 100) / 100;
+          const sessionRecordId = cb.current.recordId(rec.blockIdx);
+          if (blob.size && sessionRecordId) {
+            const result = stateRef.current.results.find((r) => r.index === rec.blockIdx && r.attempt === rec.attempt);
+            const clip: Clip = {
+              id: crypto.randomUUID(),
+              blob,
+              mime,
+              drillId: rec.block.drillId,
+              blockLabel: rec.block.drillId ?? rec.block.anchorId ?? rec.block.benchmarkId ?? rec.block.kind,
+              sessionRecordId,
+              blockIndex: rec.blockIdx,
+              attempt: rec.attempt,
+              date: new Date().toISOString(),
+              durationS: result?.elapsedS ?? 0,
+              cameraSetupId: rec.setup?.id,
+              startActiveMs: 0,
+            };
+            try {
+              await db.clips.put(clip);
+              extras.clipId = clip.id;
+              if (rec.setup) cb.current.onClip?.(clip, rec.block, rec.setup);
+            } catch (e) {
+              // The clip is lost, but never the presence value or the record (audit task 8).
+              const why = isQuota(e) ? 'Storage is full, so this drill’s video was not kept.' : 'This drill’s video could not be saved.';
+              extras.clipError = why;
+              setClipError(why);
+            }
+          }
+        } finally {
+          cb.current.setExtras(rec.key, extras);
         }
-        cb.current.setExtras(rec.key, extras);
       });
       pending.current = pending.current.then(() => done).catch(() => undefined);
     }
-    if (active && !recording.current) {
+    if (active && !recording.current && !noSpace.current) {
       recording.current = { key, block, setup, blockIdx: s.blockIdx, attempt: s.attempt };
+      setClipError('');
       cs.startBlock(setup ?? REVIEW_ONLY, activeMs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -206,5 +233,6 @@ export function useRunCamera(args: {
     cueInput,
     /** Resolves when every clip so far is saved and its presence recorded. */
     flush: () => pending.current,
+    clipError,
   };
 }

@@ -59,6 +59,12 @@ export async function saveProgress(state: RunState, ids: RunIds, benchmarksLogge
   const { plan } = state;
   const multi = plan.parts.length > 1;
   const out: SessionRecord[] = [];
+  // Browser tests only (navigator.webdriver): fail the next final save once, to check the retry card.
+  const w = typeof window !== 'undefined' ? (window as unknown as { __failNextFinalSave?: boolean }) : undefined;
+  if (final && typeof navigator !== 'undefined' && navigator.webdriver && w?.__failNextFinalSave) {
+    w.__failNextFinalSave = false;
+    throw new Error('test: save failed');
+  }
   await db.transaction('rw', db.sessionRecords, async () => {
     for (let i = 0; i < ids.recordIds.length; i++) {
       const rec = await db.sessionRecords.get(ids.recordIds[i]);

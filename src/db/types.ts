@@ -184,6 +184,8 @@ export interface BlockResult {
   cueLevel?: string; // engine-timed / engine-tripwire when the cue engine ran the block
   presenceFrac?: number; // camera presence in the drill area (plan/14 §14.6 item 4)
   clipId?: string;
+  /** Why the block's video was not kept (storage full…); the block itself is saved. */
+  clipError?: string;
   /** A block run with the defender (part 15 D3): the view actually used and how reps were triggered. */
   defender?: { view: 'player3d' | 'fallback2d'; archetype: string; reps: number; triggerSources: string[]; fallbackReason?: string; scenarioIds: string[] };
 }

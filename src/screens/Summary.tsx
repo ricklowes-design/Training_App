@@ -183,6 +183,11 @@ export function Summary({ runId }: { runId: string }) {
               {l}
             </p>
           ))}
+          {rec.blocks.some((b) => b.clipError) ? (
+            <p className="muted" data-testid="clip-errors">
+              {[...new Set(rec.blocks.map((b) => b.clipError).filter(Boolean))].join(' ')} The session itself is saved.
+            </p>
+          ) : null}
           {rec.trial && !rec.promotedAt ? (
             <div className="row">
               <button className="btn primary" onClick={() => keep(rec)}>

@@ -1,3 +1,4 @@
+import { StorageLine } from '../../ui/StorageLine';
 import { useRef, useState } from 'react';
 import { APP_VERSION, logHistory, useData } from '../../app/data';
 import { useNav } from '../../app/nav';
@@ -40,6 +41,7 @@ export function BackupSection() {
 
   return (
     <div className="stack">
+      <StorageLine />
       <div className="card stack">
         <p>
           Everything is stored only in Chrome on this Chromebook. A backup is one file with every session, result, note, override and setting. Own demo clips are not included; they stay on
