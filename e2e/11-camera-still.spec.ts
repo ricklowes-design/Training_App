@@ -10,7 +10,7 @@ type Block = { index: number; drillId?: string; presenceFrac?: number; clipId?: 
 // Fake webcam: a still picture, i.e. nobody in the lane.
 test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-capture=${stillVideo()}`] } });
 
-  test('a work block with an empty drill area counts as skipped: the session is partial', async ({ page }) => {
+  test("a work block the camera's activity check cannot confirm is reported as a camera check: the session is partial (Brief R03)", async ({ page }) => {
     test.setTimeout(300_000);
     await boot(page);
     await setup(page);
@@ -38,7 +38,8 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await runToEnd(page);
     const card = page.locator('.card', { hasText: 'Dribbling · Session 1' });
     await expect(card).toContainText('partial');
-    await expect(card).toContainText(/Reason: block 2 skipped(, block \d skipped)*./); // every work block in an empty lane
+    await expect(card).toContainText(/Reason: block 2: camera activity check could not confirm it(, block \d: camera activity check could not confirm it)*./); // every work block in an empty lane
+    await expect(card).toContainText(/Practice saved: \d+ minutes./);
     const [rec] = await table<{ blocks: Block[] }>(page, 'sessionRecords');
     expect(rec.blocks.find((b) => b.index === 1)!.presenceFrac).toBeLessThan(0.7);
   });

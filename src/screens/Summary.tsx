@@ -6,7 +6,7 @@ import { db } from '../db/db';
 import type { SessionRecord } from '../db/types';
 import { plateau } from '../domain/advancement';
 import { lastComparable } from '../domain/comparability';
-import { isCompletedStatus } from '../domain/completion';
+import { isCompletedStatus, practiceMinutes } from '../domain/completion';
 import { comparisonSentences } from '../domain/metrics';
 import { recordMilestones } from '../domain/milestoneStore';
 import { areaName } from '../domain/plans';
@@ -84,6 +84,8 @@ export function summaryLines(d: AppData, rec: SessionRecord): string[] {
     } else if (rec.status === 'partial') {
       lines.push(tryFill(t, 'partial', { n: rec.sessionNumber ?? '' }));
       lines.push(tryFill(t, 'reason', { reason: rec.reasons.join(', ') }));
+      // Practice done is always kept and shown, whatever the outcome (Brief R03).
+      lines.push(tryFill(t, 'practiceSaved', { minutes: practiceMinutes(rec.blocks) }));
     }
   } else if (rec.kind === 'baseline') {
     const bl = p.baselines.find((b) => b.areaId === rec.areaId);

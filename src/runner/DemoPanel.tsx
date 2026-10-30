@@ -284,7 +284,7 @@ export function DemoPanel(props: {
         {roomCheck && roomCheck.status !== 'matched' ? (
           <div className="muted" data-testid="room-check">
             {roomCheck.message}
-            {roomCheck.status === 'moved' ? ' This session is camera-unverified: clips are kept, the presence rule is not applied.' : ''}
+            {roomCheck.status === 'moved' ? ' This session is camera-unverified: clips are kept, the camera activity check is not applied.' : ''}
           </div>
         ) : null}
         {drillNotes.map((n) => (

@@ -23,14 +23,32 @@ export interface CompletionOutcome {
   reasons: string[];
 }
 
-// Item 4: with the camera on, a work block needs movement in the drill area for 70% of it.
+// Item 4: with the camera on, a work block needs movement in the drill area for 70% of it. This is a
+// motion-based activity check (pixel change in the marked area), not a person detector (Brief R03); the
+// credit rule stays as it is until the owner decides, but a block it could not confirm is reported as a
+// camera check, never as a skipped block.
 export const MIN_PRESENCE_FRACTION = 0.7;
+
+const ranItsTime = (r: BlockResult) => r.ranToEnd || (r.mode === 'reps' && r.doneEarly && r.elapsedS >= REPS_DONE_MIN_FRACTION * r.plannedS);
+const activityNotConfirmed = (r: BlockResult) => r.presenceFrac !== undefined && r.presenceFrac < MIN_PRESENCE_FRACTION;
 
 export function blockRanFully(r: BlockResult): boolean {
   if (r.skipped || r.practice) return false;
-  if (r.presenceFrac !== undefined && r.presenceFrac < MIN_PRESENCE_FRACTION) return false;
-  if (r.ranToEnd) return true;
-  return r.mode === 'reps' && r.doneEarly && r.elapsedS >= REPS_DONE_MIN_FRACTION * r.plannedS;
+  if (activityNotConfirmed(r)) return false;
+  return ranItsTime(r);
+}
+
+/** The camera's activity check for a block: what it observed, kept apart from the completion decision. */
+export type ActivityCheck = 'confirmed' | 'notConfirmed' | 'unavailable' | 'cameraMoved';
+export function activityCheckFor(presenceFrac: number | undefined, cameraMoved: boolean): ActivityCheck {
+  if (cameraMoved) return 'cameraMoved';
+  if (presenceFrac === undefined) return 'unavailable';
+  return presenceFrac < MIN_PRESENCE_FRACTION ? 'notConfirmed' : 'confirmed';
+}
+
+/** Minutes of practice actually done (every block that ran, whatever its outcome). */
+export function practiceMinutes(results: BlockResult[]): number {
+  return Math.round(results.filter((r) => !r.skipped && !r.practice).reduce((t, r) => t + (r.elapsedS || 0), 0) / 60);
 }
 
 const minutesText = (s: number) => {
@@ -62,7 +80,11 @@ export function evaluateCompletion(input: CompletionInput): CompletionOutcome {
     if (b.kind === 'warmup') {
       if (!attemptsFor(i).some(blockRanFully)) reasons.push('warm-up not finished');
     } else if (b.kind === 'work' && inPart(b)) {
-      if (!attemptsFor(i).some(blockRanFully)) reasons.push(`${label} skipped`);
+      const tries = attemptsFor(i);
+      if (tries.some(blockRanFully)) return;
+      // Ran its time, but the camera's activity check could not confirm it: a technical reason.
+      const unconfirmed = tries.find((r) => !r.skipped && !r.practice && ranItsTime(r) && activityNotConfirmed(r));
+      reasons.push(unconfirmed ? `${label}: camera activity check could not confirm it` : `${label} skipped`);
     }
   });
 

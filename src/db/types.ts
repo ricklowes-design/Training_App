@@ -184,7 +184,11 @@ export interface BlockResult {
   keptAt?: string; // per-drill "Keep this" on a trial
   cueLog?: import('../cue/engine').CueLogEntry[];
   cueLevel?: string; // engine-timed / engine-tripwire when the cue engine ran the block
-  presenceFrac?: number; // camera presence in the drill area (plan/14 §14.6 item 4)
+  /** Share of the block with motion in the marked drill area: the camera's motion-based activity check
+   *  (plan/14 §14.6 item 4, Brief R03). Not a person detector. */
+  presenceFrac?: number;
+  /** What the activity check could say, apart from the completion decision (Brief R03). */
+  activityCheck?: import('../domain/completion').ActivityCheck;
   clipId?: string;
   /** Why the block's video was not kept (storage full…); the block itself is saved. */
   clipError?: string;

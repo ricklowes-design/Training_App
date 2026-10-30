@@ -1,3 +1,4 @@
+import { activityCheckFor } from '../domain/completion';
 import { useEffect, useRef, useState } from 'react';
 import type { Programme } from '../content/types';
 import { currentSetup, familyForBlock } from '../camera/clips';
@@ -13,7 +14,7 @@ import type { RoomCheck } from '../camera/roomCheck';
 import type { RunBlock } from '../domain/plans';
 import type { RunState } from './engine';
 
-export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'clipId' | 'clipError' | 'defender' | 'windows' | 'trainingMode' | 'instructionVersion'>>;
+export type BlockExtras = Partial<Pick<BlockResult, 'cueLog' | 'cueLevel' | 'presenceFrac' | 'activityCheck' | 'clipId' | 'clipError' | 'defender' | 'windows' | 'trainingMode' | 'instructionVersion'>>;
 
 const flip = (s: Side): Side => (s === 'left' ? 'right' : 'left');
 
@@ -157,6 +158,7 @@ export function useRunCamera(args: {
         const extras: BlockExtras = {};
         try {
           if (rec.setup && rec.block.kind === 'work' && presenceFrac !== undefined && !unverified.current) extras.presenceFrac = Math.round(presenceFrac * 100) / 100;
+          if (rec.setup && rec.block.kind === 'work') extras.activityCheck = activityCheckFor(presenceFrac, unverified.current);
           const sessionRecordId = cb.current.recordId(rec.blockIdx);
           if (blob.size && sessionRecordId) {
             const result = stateRef.current.results.find((r) => r.index === rec.blockIdx && r.attempt === rec.attempt);

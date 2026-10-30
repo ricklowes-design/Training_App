@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadProgramme } from '../test/fixtures';
 import { fullRun } from '../test/factories';
-import { evaluateCompletion } from './completion';
-import { buildPlan, findSession, standardPlan } from './plans';
+import type { BlockResult } from '../db/types';
+import { activityCheckFor, evaluateCompletion, practiceMinutes } from './completion';
+import { buildPlan, findSession, standardPlan, type RunBlock } from './plans';
 
 const p = loadProgramme();
 const plan = standardPlan(p, findSession(p, 'feinting', 7)!); // warmup, F2, rest, F7, FB, log
@@ -80,10 +81,10 @@ describe('completion rule (plan/14 §14.6 items 1–3 and 5)', () => {
     expect(evaluateCompletion({ ...base, results: fullRun(plan), pauses: [{ startMs: 0, endMs: 31 * 60_000 }] }).status).toBe('partial');
   });
 
-  it('with the camera on, a work block with an empty area counts as skipped (item 4)', () => {
+  it('with the camera on, a work block with an empty area is not credited (item 4), reported as a camera check (Brief R03)', () => {
     const results = fullRun(plan);
     results[1] = { ...results[1], presenceFrac: 0.5 };
-    expect(evaluateCompletion({ ...base, results })).toEqual({ status: 'partial', reasons: ['block 2 skipped'] });
+    expect(evaluateCompletion({ ...base, results })).toEqual({ status: 'partial', reasons: ['block 2: camera activity check could not confirm it'] });
     results[1] = { ...results[1], presenceFrac: 0.7 };
     expect(evaluateCompletion({ ...base, results }).status).toBe('completed');
   });
@@ -109,5 +110,29 @@ describe('completion rule (plan/14 §14.6 items 1–3 and 5)', () => {
     const common = { plan: r.plan.blocks, results, pauses: [], sessionLengthS: 2700, stopped: false, benchmarksLogged: logged };
     expect(evaluateCompletion({ ...common, partIndex: 0 }).status).toBe('completed');
     expect(evaluateCompletion({ ...common, partIndex: 1 }).status).toBe('partial');
+  });
+});
+
+describe('camera activity check (Brief R03)', () => {
+  const plan: RunBlock[] = [{ kind: 'work', minutes: 4, mode: 'timed', drillId: 'D1' }];
+  const ran = (presenceFrac?: number): BlockResult => ({ index: 0, kind: 'work', attempt: 1, plannedS: 240, elapsedS: 240, ranToEnd: true, doneEarly: false, skipped: false, mode: 'timed', presenceFrac });
+  const judge = (results: BlockResult[]) => evaluateCompletion({ plan, results, pauses: [], sessionLengthS: 240, stopped: false, benchmarksLogged: new Set() });
+
+  it('a block that ran its time but the camera could not confirm gets a technical reason, not "skipped"', () => {
+    const r = judge([ran(0.2)]);
+    expect(r.status).toBe('partial'); // the credit rule is unchanged until the owner decides
+    expect(r.reasons).toEqual(['block 1: camera activity check could not confirm it']);
+  });
+  it('a skipped block is still a skipped block', () => {
+    expect(judge([{ ...ran(), ranToEnd: false, elapsedS: 0, skipped: true }]).reasons).toEqual(['block 1 skipped']);
+  });
+  it('the check is stored apart from the decision; no camera data is "unavailable", never zero', () => {
+    expect(activityCheckFor(undefined, false)).toBe('unavailable');
+    expect(activityCheckFor(0.9, false)).toBe('confirmed');
+    expect(activityCheckFor(0.3, false)).toBe('notConfirmed');
+    expect(activityCheckFor(0.9, true)).toBe('cameraMoved');
+  });
+  it('practice minutes count every block that ran, whatever the outcome', () => {
+    expect(practiceMinutes([ran(0.2), { ...ran(), skipped: true }])).toBe(4);
   });
 });

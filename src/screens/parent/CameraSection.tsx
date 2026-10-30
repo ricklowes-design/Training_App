@@ -199,7 +199,7 @@ function Wizard({ family, deviceId, deviceLabel, onDone }: { family: DrillFamily
                 <li key={z} className="row spread" style={{ fontWeight: i === zoneIdx ? 800 : 400 }}>
                   <span style={{ color: COLOURS[i % COLOURS.length] }}>
                     ■ {z}
-                    {z === 'tripwire' ? ' (a strip across the lane about 1 m before the feint cone)' : i === 0 ? ' (where the player works; used for the presence rule)' : ''}
+                    {z === 'tripwire' ? ' (a strip across the lane about 1 m before the feint cone)' : i === 0 ? ' (where the player works; used for the camera activity check)' : ''}
                   </span>
                   <span>
                     {zones[i].length}/4{' '}

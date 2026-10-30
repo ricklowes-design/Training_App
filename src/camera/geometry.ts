@@ -122,7 +122,7 @@ export function calibrationCones(
   }
 }
 
-/** Zones the parent marks per drill family (task 15). The first is the area used for the presence rule. */
+/** Zones the parent marks per drill family (task 15). The first is the area used for the camera activity check. */
 export const FAMILY_ZONES: Record<'L1' | 'L2' | 'L3' | 'L4', { zones: string[]; tripwire: boolean }> = {
   L2: { zones: ['lane', 'her-left gate', 'her-right gate', 'stop zone'], tripwire: true },
   L1: { zones: ['lane', 'her-left lane edge', 'her-right lane edge', 'stop zone'], tripwire: true },

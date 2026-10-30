@@ -30,7 +30,7 @@ export type CheckId = (typeof CHECK_IDS)[number];
 
 export const CHECK_LABELS: Record<CheckId, string> = {
   recording: 'Camera recorded the block',
-  presence: 'Player seen in the drill area',
+  presence: 'Camera activity check (motion in the drill area)',
   analysis: 'After-block camera analysis',
   cueEngine: 'Cues shown',
   tripwire: 'Tripwire triggered the cues',
@@ -251,8 +251,8 @@ export function evaluateCheck(id: CheckId, e: BlockEvidence): CheckOutcome {
     case 'recording':
       return e.hasClip ? out(id, 'pass', 'A clip was saved.') : out(id, 'fail', 'No clip was saved.', cameraReasons(e));
     case 'presence': {
-      if (b.presenceFrac === undefined) return out(id, 'fail', 'Presence was not measured.', [...cameraReasons(e), 'Presence needs the drill area marked in the camera set-up and at least a few seconds of recording.']);
-      return out(id, grade(b.presenceFrac), `In the drill area ${pct(b.presenceFrac, 1)}% of the time.`, [...cameraReasons(e), 'The drill area drawn in the camera set-up may not match where the cones are now.']);
+      if (b.presenceFrac === undefined) return out(id, 'fail', 'The activity check did not run.', [...cameraReasons(e), 'The activity check needs the drill area marked in the camera set-up and at least a few seconds of recording.']);
+      return out(id, grade(b.presenceFrac), `Motion in the drill area ${pct(b.presenceFrac, 1)}% of the time.`, [...cameraReasons(e), 'The drill area drawn in the camera set-up may not match where the cones are now.']);
     }
     case 'analysis': {
       if (pendingAnalysis) return out(id, 'pending', 'Still checking the recording…');
