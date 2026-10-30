@@ -171,6 +171,17 @@ function SkillsTab() {
                     Coach note {fmtDate(note.date)}: “{note.body}”
                   </div>
                 ) : null}
+                {pr.skipped.length ? (
+                  <div className="row" data-testid="passed-over">
+                    {/* Passed over by a confirmed stage move; offered as optional repeats (owner decision 2026-10-30). */}
+                    <span className="muted">Passed over by the stage move, optional to do (extra):</span>
+                    {pr.skipped.map((n) => (
+                      <button key={n} className="btn small" onClick={() => go({ name: 'start', plan: repeatPlan(p, findSession(p, a.id, n)!) })}>
+                        S{n}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 {done.length ? (
                   <div className="row">
                     <span className="muted">Repeat a completed session (extra):</span>

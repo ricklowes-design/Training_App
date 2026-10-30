@@ -175,6 +175,7 @@ Not done in milestone 2:
 - 2026-10-30 Owner decision 2 (content 0.7.1): a light session still counts toward the week but no longer unlocks the next session; the summary says the same session stays next, and the Light switch on Home and in the builder says so before starting.
 - 2026-10-30 Owner decision 8: a test in a builder slot shorter or longer than the session's own test (2 minutes in 60-minute sessions, 4 in 30-minute ones) records its slot length and is compared, trended and counted toward a stage only with other tests of the same length; the start and builder tables say so. Standard-length results are unchanged and keep their history.
 - 2026-10-30 Owner decision 7 (content 0.7.2): when the camera's activity check could not confirm a block that ran its time, the summary asks 'If you did it, tap I did it'. One tap marks each such block as confirmed by the player (with the time), the session takes the outcome it would have had (so long pauses, skipped blocks and trial rules still apply), and the summary and History show it was the player's word. The camera measurement itself is kept unchanged.
+- 2026-10-30 Owner decision 4: sessions passed over by a confirmed stage move are listed on Progress → Skills under 'Passed over by the stage move, optional to do', one tap each; they run as extras, so they never change unlocks or the week.
 ## Manual checks pending (parent)
 - Turn on what's needed: with recording off, start a session; the drill's instructions screen says it uses camera recording; tap "Turn it on"; the note goes and that drill is recorded.
 - System test: Parent → System test. Fix any "Missing" items first, then "Switch everything on and start the test" and run all 8 drills. On the report, check each "Did not work" reason against its recording (Watch the recording), answer Your checks, then "Put the settings back". Footage thresholds (dark below 60/255, blur, movement) are first guesses: note any reason that does not match what the clip shows.
@@ -263,6 +264,7 @@ Plan update (parts 15–18), part 16 §12:
 - On the Chromebook with a USB keyboard: Space pauses and resumes a session, a quick S does nothing, holding S stops it; the Full screen button on the start screen fills the screen.
 - Ask the coach to read Parent → Export for the coach for one area and say, within a minute, what the focus is, how strong the evidence is, and what the question is.
 - Camera on, a quiet drill: if the summary asks about a block, tap I did it and check the session then shows completed and 'done, on the player's word'.
+- After the next confirmed skip-ahead: Progress → Skills shows the passed-over sessions as optional, and one starts as an extra.
 ## Deviations
 - 2026-10-30 Owner decision: plan/14.4 item 4 (camera presence when available) can now be satisfied by the player's own after-session confirmation, recorded as such.
 - 2026-10-30 Owner decision: stage-4 exit no longer requires a coach transfer observation (plan/03 criteria and part 15 D12 named one); the parent confirms after a coach feedback session instead.
