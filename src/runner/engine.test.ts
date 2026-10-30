@@ -170,3 +170,18 @@ describe('set announcements (plan/02 §2.6)', () => {
     expect(setAt(undefined, 10, 300)).toBeNull();
   });
 });
+
+describe('auto-pause when the page is hidden (audit 2026-10-29, task 11)', () => {
+  it('a 10-minute hidden pause makes the session partial with the pause reason', () => {
+    let s = initRun(plan, 0);
+    let t = 0;
+    ({ s, t } = run(s, t, 60_000));
+    s = pause(s, t);
+    t += 10 * 60_000;
+    s = resume(s, t);
+    ({ s } = run(s, t, t + 60 * 60_000));
+    const out = completion(s);
+    expect(out.status).toBe('partial');
+    expect(out.reasons.some((r) => /pause/.test(r))).toBe(true);
+  });
+});

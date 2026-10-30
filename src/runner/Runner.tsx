@@ -21,6 +21,7 @@ import { cueDrillFor, usesWall } from '../cue/resolve';
 import { EndCard } from './EndCard';
 import * as E from './engine';
 import { saveFailedText } from '../app/storage';
+import { useWakeLock } from '../app/useWakeLock';
 import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
 import { DigitFlasher, PictureQuiz, TimedRuns, VPullWindows } from './SpecialViews';
 import { CueBlock } from './CueBlock';
@@ -298,6 +299,19 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.results.length, s.phase === 'done', ids]);
+
+  // The screen stays on during a session; a hidden page (lid closed, screen off, another tab) pauses it,
+  // and the session waits on the PAUSED screen for a tap (audit task 11). The pause counts toward the pause limits.
+  useWakeLock(s.phase !== 'done');
+  useEffect(() => {
+    const onVis = () => {
+      const st = sRef.current;
+      if (document.visibilityState === 'hidden' && st.pausedAtMs === null && (st.phase === 'active' || st.phase === 'countdown')) apply(E.pause);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const apply = (fn: (st: E.RunState, n: number) => E.RunState | { state: E.RunState; events: E.RunEvent[] }) => {
     unlockAudio();

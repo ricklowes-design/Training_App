@@ -188,3 +188,22 @@ test('a failed end-of-session save shows Try again, and Try again reaches the su
   await button(card, 'Try again').click();
   await expect(page.getByRole('heading', { name: /Session saved/ })).toBeVisible();
 });
+
+test('a hidden page pauses the session; it waits on PAUSED for a tap (audit task 11)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await start(page, /Scanning · Baseline/);
+  await page.clock.runFor(12_000); // into the warm-up
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.clock.runFor(1_000);
+  await expect(page.getByText('PAUSED').first()).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.clock.runFor(5_000);
+  await expect(page.getByText('PAUSED').first()).toBeVisible(); // no automatic resume
+});

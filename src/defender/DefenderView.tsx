@@ -40,20 +40,30 @@ export function Defender3D({ getPose, onFallback, onFps }: { getPose: () => Defe
       const started = performance.now();
       let frames = 0;
       let windowStart = started;
+      let last = started;
+      let slowWindows = 0;
       const loop = () => {
         if (stop) return;
+        const now = performance.now();
+        // A long gap (page hidden, screen off, a GC pause) says nothing about the GPU: start a fresh window (audit task 11).
+        if (now - last > 250) {
+          frames = 0;
+          windowStart = now;
+        }
+        last = now;
         fit(); // the layout can settle after the scene starts
         scene.render(cb.current.getPose());
         frames++;
-        const now = performance.now();
         if (now - windowStart >= 2000) {
           const fps = Math.round((frames * 1000) / (now - windowStart));
           cb.current.onFps?.(fps);
-          // Judge after a short warm-up; a slow device falls back rather than show a stuttering defender.
+          // Judge after a short warm-up, and only after two slow windows in a row; a slow device falls back rather than stutter.
           if (now - started > 3000 && fps < MIN_FPS) {
-            cb.current.onFallback(`3D ran at ${fps} fps (below ${MIN_FPS})`);
-            return;
-          }
+            if (++slowWindows >= 2) {
+              cb.current.onFallback(`3D ran at ${fps} fps (below ${MIN_FPS})`);
+              return;
+            }
+          } else slowWindows = 0;
           frames = 0;
           windowStart = now;
         }
