@@ -15,7 +15,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { countsForWeek } from '../domain/records';
 import { nextForArea, weekStart, type Suggestion } from '../domain/sequencing';
 import { fmtDate, Seg } from '../ui/widgets';
-import { anchorDue, anchorRun, backupDue, planForSuggestion, planRoomFit, runRoute, trialFor, useAreaProgress, useSuggestion } from './helpers';
+import { anchorDue, anchorRun, backupDue, planForSuggestion, planRoomFit, ruleStatusFor, runRoute, trialFor, useAreaProgress, useSuggestion } from './helpers';
 
 function describe(p: ReturnType<typeof useData>['programme'], s: Suggestion): { title: string; detail: string; minutes: number } {
   if (s.kind === 'baseline') {
@@ -129,6 +129,12 @@ export function Home() {
   const isLight = light ?? lightDay;
   const guided = useMemo(() => guidedPlan(d, suggestion, others, minutes, isLight), [d, suggestion, others, minutes, isLight]); // eslint-disable-line react-hooks/exhaustive-deps
   const mainPlan = guided.plan;
+  // One upcoming stage step, and whether it waits on practice or on a parent's check (Brief R10).
+  const rule = suggestion?.areaId ? ruleStatusFor(d, suggestion.areaId) : null;
+  const nextStep =
+    rule && rule.criteriaText && !rule.withheld
+      ? tryFill(p.feedbackTemplates, rule.met ? 'nextStepParent' : 'nextStepPractice', { criteria: rule.criteriaText, qualifying: rule.qualifying, needed: rule.needed })
+      : null;
   const goals = suggestion ? todayGoals(p, (mainPlan ?? planForSuggestion(d, suggestion))?.blocks.map((b) => b.drillId).filter((x): x is string => !!x) ?? [], suggestion.areaId, settings.priorities) : [];
   const observations = useLiveQuery(() => db.metricObservations.toArray(), []);
   const why = useMemo(
@@ -227,6 +233,7 @@ export function Home() {
               <div className="card">{guided.reason ?? 'No session available at this length.'}</div>
             )}
             {goals.length ? <div style={{ fontSize: '1.3rem' }}>{tryFill(p.feedbackTemplates, 'homeToday', { goals: goals.join(' · ') })}</div> : null}
+            {nextStep ? <div className="muted" data-testid="next-step">{nextStep}</div> : null}
             <div className="muted">{improvement ?? tryFill(p.feedbackTemplates, 'homeNoImprovement', {})}</div>
             {why.length ? <div className="muted">{tryFill(p.feedbackTemplates, 'recommendWhy', { reasons: why.join('; ') })}</div> : null}
           </>

@@ -344,6 +344,13 @@ export interface TransferObs {
   areaId: string;
   behaviour: string;
   author: string;
+  /** Optional detail (Brief R12); older observations simply lack it. */
+  setting?: 'training' | 'match';
+  /** Times the behaviour was seen, out of the chances there were for it. */
+  seenTimes?: number;
+  chances?: number;
+  examples?: string;
+  confidence?: 'low' | 'medium' | 'high';
 }
 
 export interface Advancement {

@@ -8,7 +8,7 @@ import type { SessionRecord } from '../../db/types';
 import { resultText } from '../../domain/metrics';
 import { recordMilestones } from '../../domain/milestoneStore';
 import { areaName } from '../../domain/plans';
-import { countedResults } from '../../domain/records';
+import { countedResults, isRecorded } from '../../domain/records';
 import { canDemote, canPromote, demote, promote } from '../../domain/trial';
 import { DemoVideo, fmtTime, linkStart, parseTime, youtubeId } from '../../runner/DemoVideo';
 import type { Drill } from '../../content/types';
@@ -18,6 +18,7 @@ import { downloadText, fmtDate, Modal, StatusPill } from '../../ui/widgets';
 import { ruleStatusFor, useAreaProgress } from '../helpers';
 import { countsForUnlock } from '../../domain/records';
 import { contentWarnings } from '../../content/validate';
+import { transferLine } from './Coach';
 
 export function BackupSection() {
   const { settings, records, problemReports } = useData();
@@ -617,6 +618,14 @@ export function ExportSection() {
     .slice(0, 2);
   const status = ruleStatusFor(d, area);
   const drillObj = p.drills.find((x) => x.id === drill);
+  // The last 7 days of home practice: one occasion per training visit, even when one visit covered
+  // two areas (Brief R12).
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const week = records.filter((r) => r.date >= weekAgo && isRecorded(r) && r.kind !== 'systemTest');
+  const visits = new Set(week.map((r) => r.runId)).size;
+  const minutes = Math.round(week.filter((r) => r.areaId === area).reduce((t, r) => t + r.blocks.filter((b) => !b.skipped && !b.practice).reduce((s, b) => s + (b.elapsedS || 0), 0), 0) / 60);
+  const seen = d.transfers.filter((t) => t.areaId === area).sort((a, b) => b.seenOn.localeCompare(a.seenOn)).slice(0, 2);
+  const areaNameText = p.areas.find((a) => a.id === area)?.name ?? area;
   const text = [
     `${p.areas.find((a) => a.id === area)?.name} — Stage ${stage?.order} (${stage?.name}), next session ${pr?.next ?? '—'}`,
     drillObj ? `Drill asked about: ${drillObj.id} ${drillObj.name} — ${drillObj.prescription}` : null,
@@ -626,6 +635,11 @@ export function ExportSection() {
       ? last2.map((r) => `  ${fmtDate(r.date, { day: 'numeric', month: 'short', year: 'numeric' })}: ${resultText(r.values)} (layout v${r.conditions.layoutVersion}, level ${r.conditions.cueLevel}, scored by ${r.conditions.recordedBy})`)
       : ['  none yet']),
     status ? `Next criteria: ${status.criteriaText} — ${status.qualifying} of ${status.needed}${status.met ? ' (met, awaiting confirmation)' : ''}` : null,
+    `Home practice, last 7 days: ${visits} training visit${visits === 1 ? '' : 's'}; ${minutes} min on ${areaNameText}.`,
+    'Seen in training or a match:',
+    ...(seen.length ? seen.map((t) => `  ${transferLine(p, t)}`) : ['  nothing recorded yet, so whether this carries over to soccer is unknown']),
+    question ? null : `Suggested question: in training or a match, when there was a chance to use ${areaNameText.toLowerCase()}, did the player do it? About how many times, out of how many chances?`,
+    'This describes home practice only; it does not show that home practice caused any change in matches.',
   ]
     .filter(Boolean)
     .join('\n');

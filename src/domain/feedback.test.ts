@@ -91,3 +91,12 @@ describe('extended context key (part 15 D11)', () => {
     expect(lastComparable(ok, [bad])).toBeUndefined();
   });
 });
+
+describe('next stage step on Home (Brief R10)', () => {
+  it('says whether the step waits on practice or on a parent', async () => {
+    const { tryFill } = await import('./templates');
+    const t = loadProgramme().feedbackTemplates;
+    expect(tryFill(t, 'nextStepPractice', { criteria: 'SB >= 8/10 at 3 s', qualifying: 1, needed: 2 })).toBe('Next stage step: SB >= 8/10 at 3 s (done on 1 of 2 days).');
+    expect(tryFill(t, 'nextStepParent', { criteria: 'SB >= 8/10 at 3 s' })).toBe('Next stage step done: SB >= 8/10 at 3 s. Waiting for a parent to check and confirm.');
+  });
+});
