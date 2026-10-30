@@ -223,8 +223,3 @@ export function anchorPlan(p: Programme): RunPlan {
   });
   return { title: 'Anchor check', parts: [{ kind: 'anchor' }], blocks, totalMinutes: planMinutes(blocks), light: false, partner: false };
 }
-
-export function warmupMinutesFor(p: Programme, total: number): number {
-  const w = p.warmup;
-  return total >= 60 ? w.minutes60 : total >= 45 ? w.minutes45 : total >= 30 ? w.minutes30 : w.minutes20;
-}

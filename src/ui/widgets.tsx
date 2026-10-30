@@ -83,10 +83,6 @@ export function todayISO(d = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
-export function uid(): string {
-  return crypto.randomUUID();
-}
-
 export function downloadText(name: string, text: string, type = 'application/json'): void {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const a = document.createElement('a');
@@ -96,10 +92,6 @@ export function downloadText(name: string, text: string, type = 'application/jso
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-export function readFileText(file: File): Promise<string> {
-  return file.text();
 }
 
 /** A button that acts only after being held (default 0.8 s), so a stray tap cannot end a session (audit task 13).

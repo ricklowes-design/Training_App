@@ -54,11 +54,6 @@ type Recognition = {
   stop(): void;
 };
 
-export function speechAvailable(): boolean {
-  const w = window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
-  return !!(w.SpeechRecognition ?? w.webkitSpeechRecognition);
-}
-
 /** Listens for digits while a block runs; restarts itself when Chrome ends a recognition session. */
 export class DigitListener {
   readonly heard: Heard[] = [];

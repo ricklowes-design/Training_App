@@ -43,6 +43,8 @@ export async function setup(page: Page, opts: { name?: string; length?: string; 
 export async function openParent(page: Page, section?: string | RegExp): Promise<void> {
   await button(page, 'Parent mode').click();
   const pin = page.getByLabel('PIN', { exact: true });
+  // Parent mode loads on first use: wait for the PIN box or the parent screen.
+  await expect(pin.or(page.getByRole('heading', { name: 'Parent and coach mode' })).first()).toBeVisible();
   if (await pin.isVisible().catch(() => false)) {
     await pin.fill(PIN);
     await button(page, 'Open').click();

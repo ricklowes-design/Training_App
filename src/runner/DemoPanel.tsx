@@ -19,11 +19,6 @@ import { CueRules, talkThrough } from './CueRules';
 import { resolveTraining } from '../domain/trainingMode';
 import { say, stopSpeech } from '../audio/audio';
 
-export function benchmarkName(p: ReturnType<typeof useData>['programme'], id?: string): string {
-  if (!id) return '';
-  return p.benchmarks.find((b) => b.id === id)?.name ?? p.anchors.find((a) => a.id === id)?.name ?? id;
-}
-
 /** Demonstration view (plan/02 §2.5). One tap starts the block; it also starts on its own unless a video is playing. */
 export function DemoPanel(props: {
   block: RunBlock;

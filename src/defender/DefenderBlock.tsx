@@ -33,6 +33,16 @@ export function DefenderBlock(props: {
   const cb = useRef({ activeMs, onLog, onRepsDone, input, view, fallbackReason });
   cb.current = { activeMs, onLog, onRepsDone, input, view, fallbackReason };
 
+  // F is the parent's feint tap from a keyboard (audit task 17).
+  useEffect(() => {
+    if (config.trigger !== 'parentTrigger' || paused) return;
+    const down = (e: KeyboardEvent) => {
+      if (e.code === 'KeyF' && !e.repeat) tap.current = cb.current.activeMs();
+    };
+    window.addEventListener('keydown', down);
+    return () => window.removeEventListener('keydown', down);
+  }, [config.trigger, paused]);
+
   useEffect(() => {
     if (paused) {
       tap.current = undefined; // a tap made while paused is not a feint

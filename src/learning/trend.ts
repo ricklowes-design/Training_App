@@ -1,12 +1,12 @@
 // Trends and spaced review (task 7.6, part 18). A trend needs enough comparable points; the
 // criteria are shown with it so a recommendation can explain what it rests on.
 
-export type Trend = 'improving' | 'stable' | 'deteriorating' | 'insufficient';
+export type TrendDirection = 'improving' | 'stable' | 'deteriorating' | 'insufficient';
 
 export const MIN_POINTS = 4;
 
 /** Least-squares slope per point index, judged against the spread of the values. */
-export function trend(values: number[], higherIsBetter = true): { trend: Trend; slope?: number; n: number } {
+export function trend(values: number[], higherIsBetter = true): { trend: TrendDirection; slope?: number; n: number } {
   const n = values.length;
   if (n < MIN_POINTS) return { trend: 'insufficient', n };
   const mx = (n - 1) / 2;
@@ -21,7 +21,7 @@ export function trend(values: number[], higherIsBetter = true): { trend: Trend; 
   const sd = Math.sqrt(values.reduce((a, v) => a + (v - my) ** 2, 0) / n) || 1;
   const signed = higherIsBetter ? slope : -slope;
   // The fitted change over the window must exceed the spread of the values.
-  const t: Trend = signed * (n - 1) > sd ? 'improving' : signed * (n - 1) < -sd ? 'deteriorating' : 'stable';
+  const t: TrendDirection = signed * (n - 1) > sd ? 'improving' : signed * (n - 1) < -sd ? 'deteriorating' : 'stable';
   return { trend: t, slope, n };
 }
 

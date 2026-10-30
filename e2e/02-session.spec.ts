@@ -214,3 +214,21 @@ test('a hidden page pauses the session; it waits on PAUSED for a tap (audit task
   await page.clock.runFor(5_000);
   await expect(page.getByText('PAUSED').first()).toBeVisible(); // no automatic resume
 });
+
+test('keyboard: Space pauses and resumes; a short S does nothing; S held stops (audit task 17)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await start(page, /Scanning · Baseline/);
+  await page.clock.runFor(12_000); // into the warm-up
+  await page.keyboard.press('Space');
+  await expect(page.locator('.practice .clock')).toHaveText('PAUSED');
+  await page.keyboard.press('Space');
+  await expect(page.locator('.practice .clock')).not.toHaveText('PAUSED');
+  await page.keyboard.press('KeyS');
+  await page.clock.runFor(2_000);
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toHaveCount(0);
+  await page.keyboard.down('KeyS');
+  await page.clock.runFor(1_000);
+  await page.keyboard.up('KeyS');
+  await expect(page.getByRole('heading', { name: /Session saved/ })).toBeVisible();
+});

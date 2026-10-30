@@ -339,6 +339,41 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Keyboard (audit task 17): Space pauses and resumes; S held for 0.8 s stops, like the STOP button.
+  // Keys typed into a form field or on a focused button are left to that element.
+  useEffect(() => {
+    let stopTimer: ReturnType<typeof setTimeout> | undefined;
+    const typing = (t: EventTarget | null) => t instanceof HTMLElement && !!t.closest('input, textarea, select, button, [contenteditable]');
+    const down = (e: KeyboardEvent) => {
+      if (typing(e.target) || e.repeat) return;
+      const st = sRef.current;
+      if (st.phase === 'done') return;
+      if (e.code === 'Space' && (st.phase === 'active' || st.phase === 'countdown')) {
+        e.preventDefault();
+        apply(st.pausedAtMs === null ? E.pause : E.resume);
+      } else if (e.code === 'KeyS' && !stopTimer) {
+        stopTimer = setTimeout(() => {
+          apply(E.stop);
+          say('Stopped.', { interrupt: true });
+        }, 800);
+      }
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code === 'KeyS' && stopTimer) {
+        clearTimeout(stopTimer);
+        stopTimer = undefined;
+      }
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      if (stopTimer) clearTimeout(stopTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const apply = (fn: (st: E.RunState, n: number) => E.RunState | { state: E.RunState; events: E.RunEvent[] }) => {
     unlockAudio();
     const n = Date.now();

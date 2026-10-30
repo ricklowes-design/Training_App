@@ -57,11 +57,6 @@ export function anchorRun(d: AppData): RunPlan {
 }
 
 /** The advancement rule the area is working toward now, with its status. */
-export function useRuleStatus(areaId: string): RuleStatus | null {
-  const d = useData();
-  return useMemo(() => ruleStatusFor(d, areaId), [d, areaId]);
-}
-
 export function ruleStatusFor(d: AppData, areaId: string): RuleStatus | null {
   const p = d.programme;
   const placement = d.placements.find((x) => x.areaId === areaId);

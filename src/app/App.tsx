@@ -1,14 +1,11 @@
 import { flushQueue } from './notify';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { loadProgrammeFile, type ContentLoad } from '../content/load';
 import { db } from '../db/db';
 import { BaselineQuestions } from '../screens/BaselineQuestions';
-import { Builder } from '../screens/Builder';
 import { DrillView } from '../screens/DrillView';
 import { Home } from '../screens/Home';
-import { Parent } from '../screens/parent/Parent';
 import { PinGate } from '../screens/parent/PinGate';
-import { Progress } from '../screens/Progress';
 import { Runner } from '../runner/Runner';
 import { Setup } from '../screens/Setup';
 import { StartScreen } from '../screens/StartScreen';
@@ -45,6 +42,11 @@ export function ContentError({ errors }: { errors: string[] }) {
     </div>
   );
 }
+
+// Screens not needed to start training load on first use (audit task 17).
+const Parent = lazy(() => import('../screens/parent/Parent').then((m) => ({ default: m.Parent })));
+const Builder = lazy(() => import('../screens/Builder').then((m) => ({ default: m.Builder })));
+const Progress = lazy(() => import('../screens/Progress').then((m) => ({ default: m.Progress })));
 
 /** Routes that keep parent mode open. */
 const keepsParentOpen = (r: Route) => r.name === 'parent' || r.name === 'baselineQuestions' || (r.name === 'run' && r.plan.parts[0]?.kind === 'systemTest');
@@ -95,7 +97,11 @@ function Router() {
       screen = <Parent section={route.section} arg={route.arg} />;
       break;
   }
-  return <NavCtx.Provider value={{ route, go, parentUnlocked, setParentUnlocked }}>{screen}</NavCtx.Provider>;
+  return (
+    <NavCtx.Provider value={{ route, go, parentUnlocked, setParentUnlocked }}>
+      <Suspense fallback={<div className="page muted">Loading…</div>}>{screen}</Suspense>
+    </NavCtx.Provider>
+  );
 }
 
 export function App() {

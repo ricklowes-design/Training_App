@@ -20,17 +20,6 @@ export function classFromDims(lengthM: number, widthM: number): UsableSpaceClass
   return 'compact';
 }
 
-/** Shoelace area of a polygon in photo coordinates (0..1). */
-export function polygonArea(poly: Pt[]): number {
-  let a = 0;
-  for (let i = 0; i < poly.length; i++) {
-    const p = poly[i];
-    const q = poly[(i + 1) % poly.length];
-    a += p.x * q.y - q.x * p.y;
-  }
-  return Math.abs(a) / 2;
-}
-
 /**
  * Rough clear floor from the safe polygon. The camera sits at the lane end about 1.5 m up,
  * so how far up the picture the safe floor reaches stands in for clear length, and its

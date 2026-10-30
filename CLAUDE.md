@@ -36,7 +36,6 @@ A personal home soccer-training web app for one player, run by a parent, used in
 ## Commands
 - `npm run dev` — local preview
 - `npm run build` — production build
-- `npm run deploy` — publish to GitHub Pages
 - `npm test` — unit tests (sequencing and advancement rules, comparability/context keys, templates, session-duration arithmetic, the seeded `DefenderReactionEngine`, defender state machine, DB migrations, gate-event hysteresis, touch de-duplication, model validation gate and rollback must all have tests)
 
 ## PROGRESS.md format

@@ -54,13 +54,6 @@ export function comparability(a: BenchmarkResult, b: BenchmarkResult, opts: Comp
 
 export const sameConditions = (a: BenchmarkResult, b: BenchmarkResult) => comparability(a, b).ok;
 
-/** Results for one test, newest first. */
-export function historyFor(results: BenchmarkResult[], benchmarkId: string, drillId?: string): BenchmarkResult[] {
-  return results
-    .filter((r) => r.benchmarkId === benchmarkId && (drillId === undefined || r.drillId === drillId))
-    .sort((x, y) => y.date.localeCompare(x.date) || y.attempt - x.attempt);
-}
-
 /** The latest earlier result at the same conditions (the "last time" on the end-of-drill card). */
 export function lastComparable(now: BenchmarkResult, results: BenchmarkResult[]): BenchmarkResult | undefined {
   return results

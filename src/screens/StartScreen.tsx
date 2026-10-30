@@ -63,6 +63,12 @@ export function StartScreen({ plan }: { plan: RunPlan }) {
           <input type="checkbox" checked={isTrial} disabled={sugg.forced} onChange={(e) => setTrial(e.target.checked)} />
           Trial {sugg.reasons.length ? <span className="muted">({sugg.reasons.join(' ')})</span> : null}
         </label>
+        {/* Full screen needs a tap; Chrome does not allow it on its own (audit task 17). */}
+        {document.fullscreenEnabled && !document.fullscreenElement ? (
+          <button className="btn" onClick={() => void document.documentElement.requestFullscreen().catch(() => undefined)}>
+            Full screen
+          </button>
+        ) : null}
         <button
           className="btn go huge"
           disabled={!!planRoomFit(d, plan)}
