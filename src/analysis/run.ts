@@ -243,15 +243,20 @@ async function saveScanReps(clip: Clip, log: CueLogEntry[], reps: RepAnalysis[])
   await db.scanReps.bulkPut(rows);
 }
 
+const markClip = (id: string, analysis: NonNullable<Clip['analysis']>) => db.clips.update(id, { analysis }).then(() => undefined).catch(() => undefined);
+
 /** Queues the analysis of a recorded cue or defender block. Other blocks are recorded for replay only. */
 export function analyseClip(p: Programme, clip: Clip, _block: RunBlock, setup: CameraSetup, log: CueLogEntry[] | undefined, scenarios?: DefenderScenario[], windows?: Window[]): Promise<unknown> {
   const reps = scenarios?.length ? scenariosToLog(scenarios) : log;
   // Slalom runs and V-pull windows are analysed from their timed windows; other blocks without cues are replay only.
   const outcome = !!windows?.length && (setup.drillFamily === 'L1' || setup.drillFamily === 'L4');
-  if (!reps?.length && !outcome) return Promise.resolve();
-  // A failure is logged for the parent (Parent → History) and never blocks later clips.
+  if (!reps?.length && !outcome) return markClip(clip.id, { state: 'notAnalysed', at: new Date().toISOString() });
+  // A failure is logged for the parent (Parent → History), marked on the clip, and never blocks later clips.
   queue = queue
     .then(() => analyse(p, clip, setup, reps ?? [], scenarios, windows))
-    .catch((e) => logHistory('app', 'analysis failed', `${clip.blockLabel}: ${e instanceof Error ? e.message : String(e)}`).catch(() => undefined));
+    .catch((e) => {
+      const reason = e instanceof Error ? e.message : String(e);
+      return Promise.all([logHistory('app', 'analysis failed', `${clip.blockLabel}: ${reason}`), markClip(clip.id, { state: 'failed', reason, at: new Date().toISOString() })]).catch(() => undefined);
+    });
   return queue;
 }

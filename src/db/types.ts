@@ -422,6 +422,8 @@ export interface Clip {
   keep?: boolean;
   /** Active-time ms of the block at which recording started, to align with the cue log. */
   startActiveMs: number;
+  /** Where the camera analysis stands, when it is not simply pending or done (Brief R07). */
+  analysis?: { state: 'notAnalysed' | 'failed'; reason?: string; at: string };
 }
 
 export interface RepAnalysisRow {

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { db } from '../db/db';
 import type { BlockAnalysis, RepAnalysis } from './types';
+import { analysisState, analysisStateText } from './state';
 import { THRESHOLDS } from './compute';
 import { chancePct, chanceTail } from '../domain/chance';
 
@@ -285,13 +286,17 @@ export function useBlockAnalysis(sessionRecordId: string | undefined, blockIndex
 export function LiveScorecard({ sessionRecordId, blockIndex, attempt }: { sessionRecordId: string; blockIndex: number; attempt: number }) {
   const data = useLiveQuery(async () => {
     const clip = await db.clips.where('sessionRecordId').equals(sessionRecordId).filter((c) => c.blockIndex === blockIndex && c.attempt === attempt).first();
-    if (!clip) return { clip: false as const };
+    if (!clip) return { clip: undefined };
     const a = await db.blockAnalyses.get(clip.id);
     const reps = a ? (await db.repAnalyses.where('clipId').equals(clip.id).sortBy('repIndex')).map((r) => r.data) : [];
-    return { clip: true as const, a: a?.data, reps };
+    return { clip, a: a?.data, reps };
   }, [sessionRecordId, blockIndex, attempt]);
   if (!data?.clip) return null;
-  if (!data.a) return <p className="then">Recorded. The camera scorecard appears when the analysis finishes.</p>;
+  const st = analysisState(data.clip, data.a, data.reps ?? []);
+  if (st !== 'ready' || !data.a) {
+    const text = analysisStateText(st, data.clip);
+    return text ? <p className="then" data-testid="analysis-state" data-state={st}>{text}</p> : null;
+  }
   return (
     <div className="then">
       <RepStrip reps={data.reps} />

@@ -50,7 +50,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await expect(page.locator('.overlay-top')).toContainText('●'); // recording dot
     await page.waitForTimeout(30_000);
     await button(page, 'DONE').click();
-    await expect(page.locator('.endcard')).toContainText(/Recorded\. The camera scorecard appears when the analysis finishes\.|●|○/);
+    await expect(page.locator(".endcard")).toContainText(/Recorded\. The camera scorecard appears here when the analysis finishes|✓|✗|!|○|•|could not judge any rep/);
     await expect(page.locator('.endcard .repstrip')).toBeVisible({ timeout: 90_000 });
     await button(page, 'Repeat').click(); // stays in the session; then stop
     await holdStop(page);

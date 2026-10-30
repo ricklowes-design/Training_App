@@ -18,31 +18,36 @@ import { StatusPill } from '../ui/widgets';
 import { ruleStatusFor } from './helpers';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Scorecard } from '../analysis/Scorecard';
+import { analysisState, analysisStateText } from '../analysis/state';
 
 /** Camera scorecards for the run's analysed blocks (they may arrive a few minutes after the session). */
-function RunScorecards({ recordIds }: { recordIds: string[] }) {
+function RunScorecards({ recordIds, endedAt }: { recordIds: string[]; endedAt?: string }) {
   const rows = useLiveQuery(async () => {
     const clips = await db.clips.where('sessionRecordId').anyOf(recordIds).toArray();
     const out = [];
     for (const c of clips.sort((a, b) => a.blockIndex - b.blockIndex || a.attempt - b.attempt)) {
       const a = await db.blockAnalyses.get(c.id);
       const reps = a ? (await db.repAnalyses.where('clipId').equals(c.id).sortBy('repIndex')).map((r) => r.data) : [];
-      out.push({ c, a: a?.data, reps });
+      out.push({ c, a: a?.data, reps, late: !!a && !!endedAt && a.date > endedAt });
     }
     return out;
   }, [recordIds.join(',')]);
   if (!rows?.length) return null;
   return (
     <div className="stack">
-      {rows.map(({ c, a, reps }) => (
-        <div key={c.id}>
-          <h3>
-            Block {c.blockIndex + 1} · {c.blockLabel}
-            {c.attempt > 1 ? ` · attempt ${c.attempt}` : ''}
-          </h3>
-          {a ? <Scorecard analysis={a} reps={reps} /> : <p className="muted">Recorded{c.drillId ? '' : ''}. {reps.length ? '' : 'Analysis pending or not applicable (only cue blocks are analysed).'}</p>}
-        </div>
-      ))}
+      {rows.map(({ c, a, reps, late }) => {
+        const st = analysisState(c, a, reps);
+        return (
+          <div key={c.id}>
+            <h3>
+              Block {c.blockIndex + 1} · {c.blockLabel}
+              {c.attempt > 1 ? ` · attempt ${c.attempt}` : ''}
+              {late ? <span className="pill go"> new result</span> : null}
+            </h3>
+            {st === 'ready' && a ? <Scorecard analysis={a} reps={reps} /> : <p className="muted" data-testid="analysis-state" data-state={st}>{analysisStateText(st, c)}</p>}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -170,7 +175,7 @@ export function Summary({ runId }: { runId: string }) {
           Done
         </button>
       </div>
-      <RunScorecards recordIds={recs.map((r) => r.id)} />
+      <RunScorecards recordIds={recs.map((r) => r.id)} endedAt={recs.map((r) => r.endedAt).filter((x): x is string => !!x).sort().pop()} />
       {recs.map((rec) => (
         <div key={rec.id} className="card stack" style={{ marginBottom: 16 }}>
           <div className="row spread">
