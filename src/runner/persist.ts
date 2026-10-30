@@ -1,6 +1,6 @@
 import { APP_VERSION } from '../app/data';
 import { db } from '../db/db';
-import type { BenchmarkResult, BenchmarkValues, Conditions, SessionRecord } from '../db/types';
+import type { BenchmarkResult, BenchmarkValues, Conditions, SessionRecord, Settings, SwitchSnapshot } from '../db/types';
 import { evaluateCompletion } from '../domain/completion';
 import type { RunPlan } from '../domain/plans';
 import type { RunState } from './engine';
@@ -20,7 +20,19 @@ export function partMinutes(plan: RunPlan, partIndex: number): number {
   return own + shared / plan.parts.length;
 }
 
-export async function createRun(plan: RunPlan, trial: boolean, ctx: { contentVersion: string; layoutVersion: number; roomProfileId?: string; roomProfileVersion?: number }): Promise<RunIds> {
+export const switchSnapshot = (s: Settings): SwitchSnapshot => ({
+  at: new Date().toISOString(),
+  flags: { ...s.flags },
+  cueEngine: s.cueEngine,
+  cameraOn: s.camera.enabled,
+  pose: s.camera.pose,
+  analysisFps: s.camera.analysisFps,
+  wallMic: s.sound.wallMic !== false,
+  speech: s.sound.speech,
+  tones: s.sound.tones,
+});
+
+export async function createRun(plan: RunPlan, trial: boolean, ctx: { contentVersion: string; layoutVersion: number; roomProfileId?: string; roomProfileVersion?: number; switches?: SwitchSnapshot }): Promise<RunIds> {
   const runId = crypto.randomUUID();
   const date = new Date().toISOString();
   const records: SessionRecord[] = plan.parts.map((part, i) => ({
@@ -44,6 +56,7 @@ export async function createRun(plan: RunPlan, trial: boolean, ctx: { contentVer
     layoutVersion: ctx.layoutVersion,
     roomProfileId: ctx.roomProfileId,
     roomProfileVersion: ctx.roomProfileVersion,
+    switches: ctx.switches,
   }));
   await db.sessionRecords.bulkPut(records);
   return { runId, recordIds: records.map((r) => r.id) };

@@ -23,7 +23,7 @@ import { EndCard } from './EndCard';
 import * as E from './engine';
 import { saveFailedText } from '../app/storage';
 import { useWakeLock } from '../app/useWakeLock';
-import { createRun, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
+import { createRun, switchSnapshot, recordIdForBlock, saveBenchmark, saveProgress, saveRoomCheck, type RunIds } from './persist';
 import { DigitFlasher, PictureQuiz, TimedRuns, VPullWindows } from './SpecialViews';
 import { CueBlock } from './CueBlock';
 import { cueConfigFor, engineCueLevel } from '../cue/resolve';
@@ -236,7 +236,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   useEffect(() => {
     setSoundSettings(settings.sound, p.voiceStyles);
     unlockAudio();
-    createRun(plan, trial, { contentVersion: p.version, layoutVersion: layout?.version ?? 1, roomProfileId: data.roomProfile?.id, roomProfileVersion: data.roomProfile?.version }).then(setIds);
+    createRun(plan, trial, { contentVersion: p.version, layoutVersion: layout?.version ?? 1, roomProfileId: data.roomProfile?.id, roomProfileVersion: data.roomProfile?.version, switches: switchSnapshot(settings) }).then(setIds);
     return () => stopSpeech();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -200,8 +200,24 @@ export interface BlockResult {
   defender?: { view: 'player3d' | 'fallback2d'; archetype: string; reps: number; triggerSources: string[]; fallbackReason?: string; scenarioIds: string[] };
 }
 
+/** The switches a run started with, kept unchanged on its record (Brief R06): a report about the run
+ *  reads these, never the settings as they are now. */
+export interface SwitchSnapshot {
+  at: string;
+  flags: FeatureFlags;
+  cueEngine: boolean;
+  cameraOn: boolean;
+  pose: Settings['camera']['pose'];
+  analysisFps: Settings['camera']['analysisFps'];
+  wallMic: boolean;
+  speech: boolean;
+  tones: boolean;
+}
+
 export interface SessionRecord {
   id: string;
+  /** Switches at the start of the run (absent on records from before 2026-10-30). */
+  switches?: SwitchSnapshot;
   runId: string;
   kind: RecordKind;
   areaId?: string;

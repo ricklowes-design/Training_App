@@ -236,8 +236,10 @@ function Report({ runId }: { runId: string }) {
   if (!rec || !st) return <p className="muted">This test was not found.</p>;
   if (!loaded) return <p className="muted">Loading…</p>;
   const ball = loaded.balls.find((b) => b.id === settings.activeBallProfileId) ?? loaded.balls[0];
-  // Settings as the test ran them (switched on), or now if they were put back.
-  const flags = settings.systemTestRestore ? settings.flags : { ...settings.flags, ...Object.fromEntries(TEST_FLAGS.map((f) => [f, true])) };
+  // The switches the test ran with, from its own record (Brief R06); older records fall back to the
+  // settings as the test would have set them.
+  const sw = rec.switches;
+  const flags = sw?.flags ?? (settings.systemTestRestore ? settings.flags : { ...settings.flags, ...Object.fromEntries(TEST_FLAGS.map((f) => [f, true])) });
 
   const blocks: (BlockData & { title: string; tests: string; checks: string[]; layoutId: string })[] = st.blocks.map((sb, i) => {
     // The last real (not practice) attempt of this block.
@@ -256,20 +258,20 @@ function Report({ runId }: { runId: string }) {
       reps,
       scenarios: loaded.scenarios.filter((x) => x.blockIndex === i && (block === undefined || x.attempt === undefined || x.attempt === block.attempt)),
       ctx: {
-        cameraOn: settings.camera.enabled,
+        cameraOn: sw?.cameraOn ?? settings.camera.enabled,
         setup: !!setup,
         setupTripwire: !!setup?.tripwire?.length,
         setupGates: (setup?.zones.length ?? 0) > 1,
         setupSquare: !!setup?.zones[0],
-        pose: settings.camera.pose,
-        analysisFps: settings.camera.analysisFps,
+        pose: sw?.pose ?? settings.camera.pose,
+        analysisFps: sw?.analysisFps ?? settings.camera.analysisFps,
         flags,
         webgl: settings.capabilities?.webgl,
         defenderFps: settings.capabilities?.defenderFps,
         ballProfile: !!ball,
         ballBackgroundShare: ball?.backgroundMatchShare,
         wallUsable: !!d.roomProfile?.wallUsable,
-        wallMic: settings.sound.wallMic !== false,
+        wallMic: sw?.wallMic ?? settings.sound.wallMic !== false,
         roomCheck: rec.roomCheck?.status,
       },
     };

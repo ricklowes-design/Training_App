@@ -42,6 +42,20 @@ test('parent system test: lists the drills by cone layout, switches everything o
   const after = (await table<{ flags: Record<string, boolean>; camera: { enabled: boolean } }>(page, 'settings'))[0];
   expect(after.camera.enabled).toBe(false);
   expect(after.flags).toEqual(before.flags);
+  // Putting the settings back does not rewrite what the test ran with (Brief R06).
+  const [rec] = await table<{ switches?: { cameraOn: boolean; flags: Record<string, boolean> } }>(page, 'sessionRecords');
+  expect(rec.switches?.cameraOn).toBe(true);
+  expect(rec.switches?.flags.defender3d).toBe(true);
+});
+
+test('the parent hub leads with readiness and groups the tools (Brief R06)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await openParent(page);
+  await expect(page.getByTestId('ready-training')).toHaveAttribute('data-state', 'ready');
+  await expect(page.getByTestId('ready-recording')).toHaveAttribute('data-state', 'optional');
+  await expect(page.getByTestId('ready-recording')).toContainText('Training works without it');
+  for (const g of ['Training', 'Progress', 'Camera readiness', 'Advanced']) await expect(page.getByRole('heading', { name: g, exact: true })).toBeVisible();
 });
 
 test('the System test can switch on what it uses without starting', async ({ page }) => {
