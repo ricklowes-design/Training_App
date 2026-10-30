@@ -7,6 +7,7 @@ import { Builder } from '../screens/Builder';
 import { DrillView } from '../screens/DrillView';
 import { Home } from '../screens/Home';
 import { Parent } from '../screens/parent/Parent';
+import { PinGate } from '../screens/parent/PinGate';
 import { Progress } from '../screens/Progress';
 import { Runner } from '../runner/Runner';
 import { Setup } from '../screens/Setup';
@@ -44,12 +45,17 @@ export function ContentError({ errors }: { errors: string[] }) {
   );
 }
 
+/** Routes that keep parent mode open. */
+const keepsParentOpen = (r: Route) => r.name === 'parent' || r.name === 'baselineQuestions' || (r.name === 'run' && r.plan.parts[0]?.kind === 'systemTest');
+
 function Router() {
   const data = useData();
   const [route, setRoute] = useState<Route>(data.settings.firstRunDone ? { name: 'home' } : { name: 'setup' });
   const [parentUnlocked, setParentUnlocked] = useState(false);
   const [nonce, setNonce] = useState(0);
   const go = (r: Route) => {
+    // Parent mode locks again when the route leaves parent screens (a System test run returns to parent mode).
+    if (!keepsParentOpen(r)) setParentUnlocked(false);
     setNonce((n) => n + 1);
     setRoute(r);
     window.scrollTo(0, 0);
@@ -81,7 +87,8 @@ function Router() {
       screen = <Builder />;
       break;
     case 'baselineQuestions':
-      screen = <BaselineQuestions recordId={route.recordId} />;
+      // The placement answers are a parent decision: behind the PIN (audit 2026-10-29, task 1).
+      screen = parentUnlocked ? <BaselineQuestions recordId={route.recordId} /> : <PinGate onOk={() => setParentUnlocked(true)} />;
       break;
     case 'parent':
       screen = <Parent section={route.section} arg={route.arg} />;

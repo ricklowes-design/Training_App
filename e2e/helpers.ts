@@ -1,4 +1,11 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+/** The content version under test (read from the file, so a content bump does not break tests). */
+export const CONTENT_VERSION = (JSON.parse(readFileSync(resolve(process.cwd(), 'content/programme.json'), 'utf8')) as { version: string }).version;
+const reEsc = (x: string) => x.replace(/\./g, '\\.');
+export const CONTENT_VERSION_RE = reEsc(CONTENT_VERSION);
 
 export const PIN = '1234';
 export const START = new Date('2026-11-03T17:00:00'); // a Tuesday
@@ -103,13 +110,24 @@ export async function openFocus(page: Page): Promise<void> {
 }
 
 /** Lets a session run by itself to the end. Result cards are filled with one tap per number (5 unless the test says otherwise). */
-export async function runToEnd(page: Page, opts: { maxMinutes?: number; onForm?: (page: Page) => Promise<void>; onTimed?: (page: Page) => Promise<void> } = {}): Promise<void> {
+export async function runToEnd(page: Page, opts: { maxMinutes?: number; onForm?: (page: Page) => Promise<void>; onTimed?: (page: Page) => Promise<void>; stopAtPin?: boolean } = {}): Promise<void> {
   const max = (opts.maxMinutes ?? 70) * 2;
   for (let i = 0; i < max; i++) {
     if (await page.getByRole('heading', { name: /Session saved|baseline · parent questions/ }).isVisible().catch(() => false)) {
       // Let time flow again so new screens settle (Playwright waits for animation frames).
       await page.clock.resume();
       return;
+    }
+    // A finished baseline asks for the parent PIN before its questions.
+    const pin = page.getByLabel('PIN', { exact: true });
+    if (await pin.isVisible().catch(() => false)) {
+      if (opts.stopAtPin) {
+        await page.clock.resume();
+        return;
+      }
+      await pin.fill(PIN);
+      await button(page, 'Open').click();
+      continue;
     }
     const save = page.getByRole('button', { name: 'Confirm', exact: true });
     if (await save.isVisible().catch(() => false)) {

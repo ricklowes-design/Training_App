@@ -109,6 +109,11 @@ export function Home() {
       // storage blocked: the panel just won't be remembered
     }
   };
+  // A finished baseline waiting for the parent's placement answers (they sit behind the PIN).
+  const waitingBaseline =
+    suggestion?.kind === 'baseline' && !d.placements.some((x) => x.areaId === suggestion.areaId)
+      ? records.filter((r) => r.kind === 'baseline' && r.areaId === suggestion.areaId && r.status !== 'stopped').sort((a, b) => b.date.localeCompare(a.date))[0]
+      : undefined;
   const ws = weekStart(new Date(), settings.weekStartDay);
   const weekDone = records.filter((r) => countsForWeek(r) && new Date(r.date) >= ws);
   const anchor = anchorDue(d);
@@ -199,7 +204,14 @@ export function Home() {
               ) : null}
             </div>
             {lightDay ? <div className="muted">{tryFill(p.feedbackTemplates, kindToday === 'game' ? 'gameDay' : kindToday === 'rest' ? 'restDay' : 'lightDay', {})}</div> : null}
-            {mainPlan ? (
+            {waitingBaseline ? (
+              <div className="card row spread" data-testid="baseline-waiting">
+                <span style={{ fontSize: '1.2rem' }}>{tryFill(p.feedbackTemplates, 'baselineWaiting', {})}</span>
+                <button className="btn primary" onClick={() => go({ name: 'baselineQuestions', recordId: waitingBaseline.id })}>
+                  Parent: answer the questions
+                </button>
+              </div>
+            ) : mainPlan ? (
               <StartCard
                 key={`main-${suggestion.areaId}-${minutes}-${isLight}`}
                 plan={mainPlan}

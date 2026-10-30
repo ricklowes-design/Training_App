@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, start, startCard, table } from './helpers';
+import { boot, button, closeParent, CONTENT_VERSION, CONTENT_VERSION_RE, fillForm, home, openParent, patchSettings, place, runToEnd, setup, start, startCard, table } from './helpers';
 
 type Rec = { id: string; sessionNumber: number; trial: boolean; promotedAt?: string; demotedAt?: string; demoteReason?: string; unlockRetained?: boolean };
 
@@ -52,10 +52,10 @@ test('Keep this on the summary; Report a problem is saved for the coding agent',
   await button(page, 'Keep this').click();
   await expect(page.locator('.card', { hasText: 'Dribbling · Session 1' })).toContainText('Dribbling Session 2 is unlocked.');
   const [report] = await table<{ note: string; appVersion: string; contentVersion: string }>(page, 'problemReports');
-  expect(report).toMatchObject({ note: 'the timer skipped', appVersion: '0.1.0', contentVersion: '0.5.9' });
+  expect(report).toMatchObject({ note: 'the timer skipped', appVersion: '0.1.0', contentVersion: CONTENT_VERSION });
   await home(page);
   await openParent(page, /^Trials/);
-  await expect(page.getByText(/app 0\.1\.0 · content 0\.5\.9: the timer skipped/)).toBeVisible();
+  await expect(page.getByText(new RegExp(`app 0\\.1\\.0 · content ${CONTENT_VERSION_RE}: the timer skipped`))).toBeVisible();
 });
 
 test('Keep this drill on a trial end-of-drill card keeps that benchmark result only', async ({ page }) => {

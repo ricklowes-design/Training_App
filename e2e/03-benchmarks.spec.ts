@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { advance, boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, slalom, start, startBlockNow, startCard, table } from './helpers';
+import { PIN, advance, boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, slalom, start, startBlockNow, startCard, table } from './helpers';
 
 type Result = { benchmarkId: string; conditions: { layoutVersion: number; cueLevel: string; timing?: string }; values: Record<string, unknown> };
 
@@ -52,7 +52,11 @@ test('baseline: slalom timed by the app, parent questions, proposal and override
   await pick(form, 'Pattern L control errors', 1);
   await button(page, 'Confirm').click();
   await expect(page.locator('.endcard .now')).toHaveText('Pattern R 9.8 s · 2 err · Pattern L 11.2 s · 1 err');
-  await runToEnd(page);
+  await runToEnd(page, { stopAtPin: true });
+  // The placement answers are behind the parent PIN (audit task 1).
+  await expect(page.getByRole('heading', { name: 'Parent mode' })).toBeVisible();
+  await page.getByLabel('PIN', { exact: true }).fill(PIN);
+  await button(page, 'Open').click();
   // Parent questions.
   await expect(page.getByRole('heading', { name: 'Dribbling baseline · parent questions' })).toBeVisible();
   await expect(page.getByText('DB: Pattern R 9.8 s · 2 err · Pattern L 11.2 s · 1 err')).toBeVisible();
