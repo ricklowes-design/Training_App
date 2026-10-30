@@ -2,9 +2,17 @@ import type { BenchmarkResult } from '../db/types';
 
 // Benchmark trends only join results with the same context key (plan/05 §5.3, part 15 D11).
 
-export type Comparability = { ok: true } | { ok: false; reason: string };
+/** `legacy`: one result has no record of a context field the other has (made before that field was
+ *  stored). Unknown never matches known (Brief R02); such results stay visible, listed apart. */
+export type Comparability = { ok: true } | { ok: false; reason: string; legacy?: true };
+
+export interface CompareOptions {
+  /** Cue levels a stage rule explicitly treats as equivalent (content `cueLevels`); no others mix. */
+  cueLevels?: string[];
+}
 
 const EXTENDED: [keyof BenchmarkResult['conditions'], string][] = [
+  ['timing', 'timing method'],
   ['roomProfileVersion', 'room profile'],
   ['defenderArchetype', 'defender'],
   ['taskMode', 'task mode'],
@@ -15,7 +23,7 @@ const EXTENDED: [keyof BenchmarkResult['conditions'], string][] = [
 
 const cueText = (c: string) => (/^\d+(\.\d+)?$/.test(c) ? `cue ${c} s` : c);
 
-export function comparability(a: BenchmarkResult, b: BenchmarkResult): Comparability {
+export function comparability(a: BenchmarkResult, b: BenchmarkResult, opts: CompareOptions = {}): Comparability {
   if (a.benchmarkId !== b.benchmarkId) return { ok: false, reason: 'different tests' };
   // A result a parent marked unreliable (start tone missed, timed by hand...) joins no comparison.
   if (b.flagged) return { ok: false, reason: `marked unreliable (${b.flagged})` };
@@ -24,15 +32,21 @@ export function comparability(a: BenchmarkResult, b: BenchmarkResult): Comparabi
   if (a.conditions.layoutVersion !== b.conditions.layoutVersion) {
     return { ok: false, reason: `different room layout (v${b.conditions.layoutVersion} then, v${a.conditions.layoutVersion} now)` };
   }
-  if (a.conditions.cueLevel !== b.conditions.cueLevel) {
+  const equivalentCues = !!opts.cueLevels && opts.cueLevels.includes(a.conditions.cueLevel) && opts.cueLevels.includes(b.conditions.cueLevel);
+  if (a.conditions.cueLevel !== b.conditions.cueLevel && !equivalentCues) {
     return { ok: false, reason: `different cue level (${cueText(b.conditions.cueLevel)} then, ${cueText(a.conditions.cueLevel)} now)` };
   }
-  // Extended context key (part 15 D11): compared when both results carry the field, so results from
-  // before the plan update keep their trend unless something actually changed.
+  // Extended context key (part 15 D11). A field neither result has is not part of this test's context
+  // (so irrelevant fields don't fragment history); a field only one has is unknown on the other, and
+  // unknown never matches known (Brief R02).
   for (const [k, label] of EXTENDED) {
     const x = a.conditions[k];
     const y = b.conditions[k];
-    if (x !== undefined && y !== undefined && x !== y) return { ok: false, reason: `different ${label} (${y} then, ${x} now)` };
+    if (x === undefined && y === undefined) continue;
+    if (x === undefined || y === undefined) {
+      return { ok: false, legacy: true, reason: `${label} not recorded on ${y === undefined ? 'the earlier' : 'this'} result` };
+    }
+    if (x !== y) return { ok: false, reason: `different ${label} (${y} then, ${x} now)` };
   }
   return { ok: true };
 }

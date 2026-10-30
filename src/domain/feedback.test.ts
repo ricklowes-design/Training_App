@@ -66,7 +66,7 @@ describe('results and comparisons', () => {
 });
 
 describe('extended context key (part 15 D11)', () => {
-  it('mismatched room profile, defender, task mode or camera never join a trend; old results without the fields still do', async () => {
+  it('mismatched room profile, defender, task mode or camera never join a trend; unknown never matches known (Brief R02)', async () => {
     const { comparability } = await import('./comparability');
     const { result } = await import('../test/factories');
     const base = { layoutVersion: 1, cueLevel: '3', floor: 'hard', recorded: false, recordedBy: 'parent' as const };
@@ -75,7 +75,10 @@ describe('extended context key (part 15 D11)', () => {
     expect(comparability(r({ defenderArchetype: 'holding' }), r({ defenderArchetype: 'reactive' })).ok).toBe(false);
     expect(comparability(r({ taskMode: 'rebound' }), r({ taskMode: 'stationarySimulation' })).ok).toBe(false);
     expect(comparability(r({ cameraConfidence: 'ok' }), r({ cameraConfidence: 'low' })).ok).toBe(false);
-    expect(comparability(r({ roomProfileVersion: 'room-1@1' }), r({})).ok).toBe(true);
+    // An older result without the field is listed as legacy history, not joined.
+    expect(comparability(r({ roomProfileVersion: 'room-1@1' }), r({}))).toEqual({ ok: false, legacy: true, reason: 'room profile not recorded on the earlier result' });
+    // A field neither result has is not part of this test's context.
+    expect(comparability(r({}), r({})).ok).toBe(true);
   });
 
   it('a result marked unreliable joins no comparison, either way round', async () => {

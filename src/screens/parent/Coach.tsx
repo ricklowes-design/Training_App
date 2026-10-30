@@ -491,7 +491,18 @@ export function AdvancementSection() {
               {st.needed ? ` — qualifying tests on ${st.qualifying} of ${st.needed} different days` : ''}
               {st.rule.requiresTransfer ? ` · coach transfer note ${st.hasTransfer ? 'recorded' : 'needed'}` : ''}
             </p>
-            {st.selfScoredIgnored ? <p className="muted">{st.selfScoredIgnored} passing result(s) were scored by the player alone; they are shown but are not evidence for advancement.</p> : null}
+            {st.notCounted.length ? (
+              <div className="muted" data-testid="not-counted">
+                <p>Passing results not counted toward this stage:</p>
+                <ul>
+                  {st.notCounted.map((n) => (
+                    <li key={n.result.id}>
+                      {new Date(n.result.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}: {n.reason}. {n.next}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {st.met && skipFrom(a.id, st.rule.to) ? <p className="pill info">Skip ahead: confirming passes over sessions {skipFrom(a.id, st.rule.to)}; they stay available to repeat.</p> : null}
             {st.latest ? <p className="muted">Latest: {fmtDate(st.latest.date)} {resultText(st.latest.values)} (level {st.latest.conditions.cueLevel})</p> : null}
             {st.withheld ? <p className="pill warn">Withheld {fmtDate(st.withheld.date)}: {st.withheld.reason}</p> : null}

@@ -27,7 +27,12 @@ export async function setup(page: Page, opts: { name?: string; length?: string; 
   await button(page, 'Next: take a photo of the space').click();
   await button(page, 'Skip the photo').click();
   await button(page, 'Next: your training space').click();
-  for (let i = 0; i < 5; i++) await button(page, 'Next').click();
+  // One step per tap: wait for the step counter to move before the next tap.
+  for (let i = 0; i < 5; i++) {
+    const step = await page.getByText(/^Step \d+ of \d+$/).textContent();
+    await button(page, 'Next').click();
+    await expect(page.getByText(/^Step \d+ of \d+$/)).not.toHaveText(step ?? '');
+  }
   await page.getByLabel('Parent PIN (4 digits)').fill(PIN);
   await button(page, 'Finish set-up').click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(`${opts.name ?? 'Sam'} · Week of`);
