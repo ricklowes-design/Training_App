@@ -70,3 +70,23 @@ describe('advancement uses the same contract', () => {
     expect(st.selfScoredIgnored).toBe(1);
   });
 });
+
+describe('test slot length (owner decision 2026-10-30)', () => {
+  it('a 2- or 4-minute builder test never compares with the standard-length test', () => {
+    const std = sb('2026-11-04', 9);
+    const two = sb('2026-11-05', 9, { slotMinutes: 2 });
+    const four = sb('2026-11-06', 9, { slotMinutes: 4 });
+    expect(comparability(two, std)).toEqual({ ok: false, reason: 'different test length (standard length then, 2-minute slot now)' });
+    expect(comparability(four, two).ok).toBe(false);
+    expect(comparability(sb('2026-11-07', 8, { slotMinutes: 2 }), two).ok).toBe(true);
+  });
+  it('the builder marks slots that differ from the session test', async () => {
+    const { buildPlan, findSession } = await import('./plans');
+    const s = findSession(p, 'scanning', 4)!;
+    const plan30 = buildPlan(p, { minutes: 30, sessions: [s], light: false, partner: false });
+    const plan60 = buildPlan(p, { minutes: 60, sessions: [s, findSession(p, 'feinting', 4)!, findSession(p, 'dribbling', 4)!], light: false, partner: false });
+    const slots = (pl: typeof plan30) => (pl.ok ? pl.plan.blocks.filter((b) => b.kind === 'benchmark').map((b) => b.slotMinutes) : ['no plan']);
+    expect(slots(plan30)).toEqual([4]);
+    expect(slots(plan60).every((m) => m === 2)).toBe(true);
+  });
+});

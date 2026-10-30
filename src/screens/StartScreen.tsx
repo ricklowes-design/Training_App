@@ -38,7 +38,9 @@ export function StartScreen({ plan }: { plan: RunPlan }) {
               <tr key={i}>
                 <td>{i + 1}</td>
                 <td style={{ textTransform: b.kind === 'work' || b.kind === 'benchmark' || b.kind === 'anchor' ? 'none' : 'capitalize' }}>{name(b)}</td>
-                <td className="mono">{b.minutes} min</td>
+                <td className="mono">
+                  {b.minutes} min{b.slotMinutes ? <span className="muted"> · compared only with other {b.slotMinutes}-minute tests</span> : null}
+                </td>
               </tr>
             ))}
             <tr>

@@ -92,7 +92,7 @@ export function Builder() {
                     {b.kind === 'work'
                       ? `${areaName(p, b.areaId ?? '')} · ${b.drillId} ${p.drills.find((d) => d.id === b.drillId)?.name ?? ''}${b.params ? ` (${b.params})` : ''}`
                       : b.kind === 'benchmark'
-                        ? `${areaName(p, b.areaId ?? '')} benchmark ${b.benchmarkId}`
+                        ? `${areaName(p, b.areaId ?? '')} benchmark ${b.benchmarkId}${b.slotMinutes ? ` (compared only with other ${b.slotMinutes}-minute tests)` : ''}`
                         : b.kind}
                   </td>
                   <td className="mono">{b.minutes} min</td>

@@ -10,6 +10,8 @@ export interface RunBlock {
   partIndex?: number; // which part (area) of a multi-area run this belongs to
   drillId?: string; // 'choice' = the player picks at the demo view
   params?: string;
+  /** Builder test slot length, when it differs from the session's own test length. */
+  slotMinutes?: number;
   benchmarkId?: string;
   cueLevel?: string;
   alsoCueAccuracy?: boolean;
@@ -129,6 +131,8 @@ function fillSlot(p: Programme, slot: BuilderSlot, sessions: ContentSession[], l
         cueLevel: bm.cueLevel,
         alsoCueAccuracy: bm.alsoCueAccuracy,
         coachTransferRequested: bm.coachTransferRequested,
+        // A slot shorter or longer than the session's own test is a different test (owner decision 2026-10-30).
+        slotMinutes: slot.minutes !== bm.minutes ? slot.minutes : undefined,
       };
     }
     // No benchmark in this session: the slot repeats block A.

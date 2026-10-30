@@ -37,6 +37,11 @@ export function comparability(a: BenchmarkResult, b: BenchmarkResult, opts: Comp
   if (a.conditions.cueLevel !== b.conditions.cueLevel && !equivalentCues) {
     return { ok: false, reason: `different cue level (${cueText(b.conditions.cueLevel)} then, ${cueText(a.conditions.cueLevel)} now)` };
   }
+  // A 2- or 4-minute builder test slot is a different test from the standard one (owner decision 2026-10-30).
+  if (a.conditions.slotMinutes !== b.conditions.slotMinutes) {
+    const len = (m?: number) => (m ? `${m}-minute slot` : 'standard length');
+    return { ok: false, reason: `different test length (${len(b.conditions.slotMinutes)} then, ${len(a.conditions.slotMinutes)} now)` };
+  }
   // Extended context key (part 15 D11). A field neither result has is not part of this test's context
   // (so irrelevant fields don't fragment history); a field only one has is unknown on the other, and
   // unknown never matches known (Brief R02).

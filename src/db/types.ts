@@ -264,6 +264,8 @@ export interface Conditions {
   cameraConfidence?: 'none' | 'low' | 'ok';
   ballProfileId?: string;
   modelVersion?: string;
+  /** Minutes of a builder test slot that differs from the standard length; absent = standard. */
+  slotMinutes?: number;
 }
 
 /** Values per benchmark type. */

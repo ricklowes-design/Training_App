@@ -413,6 +413,7 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     // The base rules plus any personalised model the camera estimates used (part 18).
     modelVersion: camera.live ? modelVersionLabel(personalModels) : 'rules-1',
     ballProfileId: settings.flags.ballTracking && camera.live ? settings.activeBallProfileId : undefined,
+    slotMinutes: b.slotMinutes,
   });
 
   // Anchors A3/A4 and cue accuracy record whether the app's cue engine ran the cues.
