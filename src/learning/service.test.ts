@@ -74,3 +74,28 @@ describe('applying personalised models (part 18)', () => {
     expect(modelVersionLabel([])).toBe('rules-1');
   });
 });
+
+describe('evaluation protocol (Brief R11)', () => {
+  it('examples from one session never sit on both sides of the split', () => {
+    const exs = Array.from({ length: 60 }, (_, i) => ex(i, { sessionRecordId: `s${Math.floor(i / 4)}`, createdAt: `2026-11-${String(1 + Math.floor(i / 4)).padStart(2, '0')}` }));
+    const val = freezeValidation(exs, 'feintExecution', '2026-12-01')!;
+    const held = new Set(exs.filter((e) => val.exampleIds.includes(e.id)).map((e) => e.sessionRecordId));
+    const trainSessions = new Set(exs.filter((e) => !val.exampleIds.includes(e.id)).map((e) => e.sessionRecordId));
+    expect([...held].some((s) => trainSessions.has(s))).toBe(false);
+    // A later example from a held-out session does not train.
+    const late = ex(999, { sessionRecordId: [...held][0], features: { shift: 0 }, label: 'yes' });
+    const a = proposeCandidate({ component: 'feintExecution', feature: 'shift', base, examples: exs, validation: val, versions: [], now: 'x' })!;
+    const b = proposeCandidate({ component: 'feintExecution', feature: 'shift', base, examples: [...exs, late], validation: val, versions: [], now: 'x' })!;
+    expect(b.candidate.examplesUsed).toBe(a.candidate.examplesUsed);
+  });
+
+  it('a candidate cannot win by not predicting hard examples: coverage loss is rejected', () => {
+    // Training data only has the feature on some examples; the candidate uses a feature the reference also uses,
+    // but half the held-out examples lack it for the candidate's feature.
+    const exs = Array.from({ length: 60 }, (_, i) => ex(i, { features: i % 3 === 2 && i % 2 ? { shift: (i % 20) / 20 } : { shift: (i % 20) / 20, other: (i % 20) / 20 } }));
+    const val = freezeValidation(exs, 'feintExecution', '2026-12-01')!;
+    const r = proposeCandidate({ component: 'feintExecution', feature: 'other', base, examples: exs, validation: val, versions: [], now: 'x' })!;
+    expect(r.candidate.status).toBe('rejected');
+    expect(r.reason).toMatch(/coverage loss/);
+  });
+});

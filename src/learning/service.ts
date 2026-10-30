@@ -22,10 +22,17 @@ const usable = (ex: LearningExample, s?: LearningSettings) => {
   return ex.verified && ex.label !== undefined && (!reset || ex.createdAt > reset);
 };
 
-/** Freezes a representative validation set once (every third verified example, spread over sessions). */
+/** The recording an example came from: examples from one session never sit on both sides of a split (Brief R11). */
+const sessionOf = (e: LearningExample) => e.sessionRecordId ?? `example:${e.id}`;
+
+/** Freezes a representative validation set once: every third recorded session (oldest first), with all
+ *  of that session's verified examples, so reps from one session cannot be split between training and
+ *  evaluation (Brief R11; was every third example). */
 export function freezeValidation(examples: LearningExample[], component: LearningComponent, now: string): ValidationDataset | null {
   const pool = examples.filter((e) => e.component === component && e.verified && e.label !== undefined).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
-  const picked = pool.filter((_, i) => i % 3 === 2);
+  const sessions = [...new Set(pool.map(sessionOf))];
+  const held = new Set(sessions.filter((_, i) => i % 3 === 2));
+  const picked = pool.filter((e) => held.has(sessionOf(e)));
   if (picked.length < MIN_VALIDATION) return null;
   return { id: component, component, frozenAt: now, exampleIds: picked.map((e) => e.id) };
 }
@@ -42,6 +49,11 @@ export const predict = (m: ThresholdModel, ex: LearningExample) => {
   if (v === undefined) return undefined;
   return (m.direction === 1 ? v >= m.threshold : v < m.threshold) ? 'yes' : 'no';
 };
+
+/** Share of examples the model gives an answer for. */
+export function coverage(m: ThresholdModel, exs: LearningExample[]): number {
+  return exs.length ? exs.filter((e) => predict(m, e) !== undefined).length / exs.length : 0;
+}
 
 export function accuracy(m: ThresholdModel, exs: LearningExample[]): number {
   const judged = exs.filter((e) => predict(m, e) !== undefined);
@@ -97,14 +109,20 @@ export function proposeCandidate(args: {
   if (!validation) return null;
   const valIds = new Set(validation.exampleIds);
   const own = examples.filter((e) => e.component === component && usable(e, settings));
-  const train = own.filter((e) => !valIds.has(e.id));
   const val = examples.filter((e) => valIds.has(e.id));
+  // No example from a held-out session trains, even one added after the set was frozen.
+  const valSessions = new Set(val.map(sessionOf));
+  const train = own.filter((e) => !valIds.has(e.id) && !valSessions.has(sessionOf(e)));
   if (train.length < MIN_TRAINING || val.length < MIN_VALIDATION) return null;
   const m = fitThreshold(train, feature);
   const current = activeVersion(versions, component);
   const ref = current ? toModel(current) : base;
-  const acc = accuracy(m, val);
-  const refAcc = accuracy(ref, val);
+  // Both models are compared on the same examples, those both can judge; a candidate that answers
+  // fewer examples than the reference is reported as coverage loss, never as a win.
+  const both = val.filter((e) => predict(m, e) !== undefined && predict(ref, e) !== undefined);
+  const acc = accuracy(m, both);
+  const refAcc = accuracy(ref, both);
+  const coverageLoss = coverage(m, val) < coverage(ref, val);
   // Generalisation across sessions, lighting and layouts.
   const groups = new Map<string, LearningExample[]>();
   for (const e of val) {
@@ -113,7 +131,7 @@ export function proposeCandidate(args: {
   }
   const worstDrop = Math.max(0, ...[...groups.values()].filter((g) => g.length >= 3).map((g) => accuracy(ref, g) - accuracy(m, g)));
   const n = Math.max(0, ...versions.filter((v) => v.component === component).map((v) => v.n)) + 1;
-  const better = acc > refAcc && worstDrop <= MAX_GROUP_DROP;
+  const better = acc > refAcc && worstDrop <= MAX_GROUP_DROP && !coverageLoss;
   return {
     candidate: {
       id: `${component}@${n}`,
@@ -131,9 +149,11 @@ export function proposeCandidate(args: {
     },
     reason: better
       ? `held-out ${Math.round(acc * 100)}% vs ${Math.round(refAcc * 100)}%`
-      : worstDrop > MAX_GROUP_DROP
-        ? `worse by ${Math.round(worstDrop * 100)} points in one lighting/layout group`
-        : `held-out ${Math.round(acc * 100)}% did not beat ${Math.round(refAcc * 100)}%`,
+      : coverageLoss
+        ? `coverage loss: answers ${Math.round(coverage(m, val) * 100)}% of held-out examples, the current model ${Math.round(coverage(ref, val) * 100)}%`
+        : worstDrop > MAX_GROUP_DROP
+          ? `worse by ${Math.round(worstDrop * 100)} points in one lighting/layout group`
+          : `held-out ${Math.round(acc * 100)}% did not beat ${Math.round(refAcc * 100)}%`,
   };
 }
 
