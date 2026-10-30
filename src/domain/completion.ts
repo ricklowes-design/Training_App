@@ -30,7 +30,14 @@ export interface CompletionOutcome {
 export const MIN_PRESENCE_FRACTION = 0.7;
 
 const ranItsTime = (r: BlockResult) => r.ranToEnd || (r.mode === 'reps' && r.doneEarly && r.elapsedS >= REPS_DONE_MIN_FRACTION * r.plannedS);
-const activityNotConfirmed = (r: BlockResult) => r.presenceFrac !== undefined && r.presenceFrac < MIN_PRESENCE_FRACTION;
+const activityNotConfirmed = (r: BlockResult) => r.presenceFrac !== undefined && r.presenceFrac < MIN_PRESENCE_FRACTION && !r.activityConfirmedBy;
+
+/** Blocks that ran their time but the camera's activity check could not confirm (and nobody has yet). */
+export const unconfirmedBlocks = (results: BlockResult[]) => results.filter((r) => !r.skipped && !r.practice && ranItsTime(r) && activityNotConfirmed(r));
+
+/** The same blocks, as if the player confirmed them. */
+export const withPlayerConfirmation = (results: BlockResult[], at: string): BlockResult[] =>
+  results.map((r) => (unconfirmedBlocks([r]).length ? { ...r, activityConfirmedBy: 'player' as const, activityConfirmedAt: at } : r));
 
 export function blockRanFully(r: BlockResult): boolean {
   if (r.skipped || r.practice) return false;

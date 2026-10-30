@@ -1,5 +1,5 @@
 import type { BenchmarkResult, SessionRecord } from '../db/types';
-import { isCompletedStatus } from './completion';
+import { isCompletedStatus, unconfirmedBlocks, withPlayerConfirmation } from './completion';
 
 // What counts, and for what. These rules live in code (CLAUDE.md "Rules that must live in code").
 
@@ -26,4 +26,12 @@ export function resultCounts(res: BenchmarkResult, rec: SessionRecord | undefine
 export function countedResults(results: BenchmarkResult[], records: SessionRecord[]): BenchmarkResult[] {
   const byId = new Map(records.map((r) => [r.id, r]));
   return results.filter((res) => resultCounts(res, byId.get(res.sessionRecordId)));
+}
+
+/** The player confirms, after the session, the blocks the camera could not confirm (owner decision
+ *  2026-10-30). Each block records that it was the player's word; the session takes the outcome worked
+ *  out when it was saved, so no other rule (pauses, skipped blocks, trials) is bypassed. */
+export function confirmActivity(rec: SessionRecord, now: Date): SessionRecord {
+  if (!unconfirmedBlocks(rec.blocks).length || !rec.ifActivityConfirmed || rec.status === 'stopped') return rec;
+  return { ...rec, blocks: withPlayerConfirmation(rec.blocks, now.toISOString()), status: rec.ifActivityConfirmed.status, reasons: rec.ifActivityConfirmed.reasons, ifActivityConfirmed: undefined };
 }

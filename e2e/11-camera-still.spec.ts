@@ -42,4 +42,11 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await expect(card).toContainText(/Practice saved: \d+ minutes./);
     const [rec] = await table<{ blocks: Block[] }>(page, 'sessionRecords');
     expect(rec.blocks.find((b) => b.index === 1)!.presenceFrac).toBeLessThan(0.7);
+    // The player says they did it (owner decision 2026-10-30): the session completes, on the player's word.
+    await expect(card.getByTestId('activity-confirm')).toContainText('The camera could not confirm block 2');
+    await button(card, 'I did it').click();
+    await expect(card.getByTestId('activity-confirmed')).toContainText("done, on the player's word");
+    const [after] = await table<{ status: string; blocks: (Block & { activityConfirmedBy?: string })[] }>(page, 'sessionRecords');
+    expect(after.status).toBe('completed');
+    expect(after.blocks.find((b) => b.index === 1)!.activityConfirmedBy).toBe('player');
   });

@@ -189,6 +189,10 @@ export interface BlockResult {
   presenceFrac?: number;
   /** What the activity check could say, apart from the completion decision (Brief R03). */
   activityCheck?: import('../domain/completion').ActivityCheck;
+  /** The player said, after the session, that they did a block the camera could not confirm (owner
+   *  decision 2026-10-30). Recorded as the player's word, never as a camera result. */
+  activityConfirmedBy?: 'player';
+  activityConfirmedAt?: string;
   clipId?: string;
   /** Why the block's video was not kept (storage full…); the block itself is saved. */
   clipError?: string;
@@ -217,6 +221,8 @@ export interface SwitchSnapshot {
 export interface SessionRecord {
   id: string;
   /** Switches at the start of the run (absent on records from before 2026-10-30). */
+  /** The outcome if the player confirms the blocks the camera could not confirm (computed when saved). */
+  ifActivityConfirmed?: { status: SessionStatus; reasons: string[] };
   switches?: SwitchSnapshot;
   runId: string;
   kind: RecordKind;

@@ -136,3 +136,27 @@ describe('camera activity check (Brief R03)', () => {
     expect(practiceMinutes([ran(0.2), { ...ran(), skipped: true }])).toBe(4);
   });
 });
+
+describe('player confirms blocks the camera could not confirm (owner decision 2026-10-30)', () => {
+  const plan: RunBlock[] = [{ kind: 'work', minutes: 4, mode: 'timed', drillId: 'D1' }];
+  const ran = (presenceFrac?: number): BlockResult => ({ index: 0, kind: 'work', attempt: 1, plannedS: 240, elapsedS: 240, ranToEnd: true, doneEarly: false, skipped: false, mode: 'timed', presenceFrac });
+  it("the player's word completes the block, and is recorded as the player's", async () => {
+    const { withPlayerConfirmation } = await import('./completion');
+    const { confirmActivity } = await import('./records');
+    const { rec } = await import('../test/factories');
+    const results = [ran(0.2)];
+    const judge = (rs: BlockResult[]) => evaluateCompletion({ plan, results: rs, pauses: [], sessionLengthS: 240, stopped: false, benchmarksLogged: new Set() });
+    expect(judge(results).status).toBe('partial');
+    const ifConfirmed = judge(withPlayerConfirmation(results, ''));
+    expect(ifConfirmed.status).toBe('completed');
+    const r = rec({ status: 'partial', reasons: ['block 1: camera activity check could not confirm it'], blocks: results, ifActivityConfirmed: ifConfirmed });
+    const done = confirmActivity(r, new Date('2026-11-04T10:00:00Z'));
+    expect(done.status).toBe('completed');
+    expect(done.blocks[0]).toMatchObject({ activityConfirmedBy: 'player', activityConfirmedAt: '2026-11-04T10:00:00.000Z', presenceFrac: 0.2 });
+  });
+  it('does not bypass other reasons: a long pause still leaves the session partial', () => {
+    const results = [ran(0.2)];
+    const out = evaluateCompletion({ plan, results: results.map((r) => ({ ...r, activityConfirmedBy: 'player' as const })), pauses: [{ startMs: 0, endMs: 400_000 }], sessionLengthS: 240, stopped: false, benchmarksLogged: new Set() });
+    expect(out.status).toBe('partial');
+  });
+});

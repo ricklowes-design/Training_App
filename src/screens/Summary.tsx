@@ -6,7 +6,9 @@ import { db } from '../db/db';
 import type { SessionRecord } from '../db/types';
 import { plateau } from '../domain/advancement';
 import { lastComparable } from '../domain/comparability';
-import { isCompletedStatus, practiceMinutes } from '../domain/completion';
+import { isCompletedStatus, practiceMinutes, unconfirmedBlocks } from '../domain/completion';
+import { confirmActivity } from '../domain/records';
+import { notifyFinished } from '../app/notify';
 import { comparisonSentences } from '../domain/metrics';
 import { recordMilestones } from '../domain/milestoneStore';
 import { areaName } from '../domain/plans';
@@ -160,6 +162,15 @@ export function Summary({ runId }: { runId: string }) {
     await recordMilestones(d.programme);
   }
 
+  async function confirmBlocks(rec: SessionRecord) {
+    const blocks = unconfirmedBlocks(rec.blocks).map((b) => `block ${b.index + 1}`).join(', ');
+    const updated = confirmActivity(rec, new Date());
+    await db.sessionRecords.put(updated);
+    await logHistory('player', 'confirmed blocks the camera could not confirm', `${rec.areaId ?? rec.kind} S${rec.sessionNumber ?? ''}: ${blocks}`);
+    await recordMilestones(d.programme);
+    void notifyFinished(d.programme, [updated]).catch(() => undefined);
+  }
+
   async function sendReport(rec: SessionRecord) {
     await db.problemReports.add({
       sessionRecordId: rec.id,
@@ -198,6 +209,19 @@ export function Summary({ runId }: { runId: string }) {
           {rec.blocks.some((b) => b.clipError) ? (
             <p className="muted" data-testid="clip-errors">
               {[...new Set(rec.blocks.map((b) => b.clipError).filter(Boolean))].join(' ')} The session itself is saved.
+            </p>
+          ) : null}
+          {unconfirmedBlocks(rec.blocks).length && rec.ifActivityConfirmed ? (
+            <div className="row spread" data-testid="activity-confirm">
+              <span>{tryFill(d.programme.feedbackTemplates, 'activityConfirmPrompt', { blocks: unconfirmedBlocks(rec.blocks).map((b) => `block ${b.index + 1}`).join(', ') })}</span>
+              <button className="btn go" onClick={() => confirmBlocks(rec)}>
+                I did it
+              </button>
+            </div>
+          ) : null}
+          {rec.blocks.some((b) => b.activityConfirmedBy === 'player') ? (
+            <p className="muted" data-testid="activity-confirmed">
+              {tryFill(d.programme.feedbackTemplates, 'activityConfirmedByPlayer', { blocks: [...new Set(rec.blocks.filter((b) => b.activityConfirmedBy === 'player').map((b) => `Block ${b.index + 1}`))].join(', ') })}
             </p>
           ) : null}
           {rec.trial && !rec.promotedAt ? (

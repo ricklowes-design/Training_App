@@ -1,7 +1,7 @@
 import { APP_VERSION } from '../app/data';
 import { db } from '../db/db';
 import type { BenchmarkResult, BenchmarkValues, Conditions, SessionRecord, Settings, SwitchSnapshot } from '../db/types';
-import { evaluateCompletion } from '../domain/completion';
+import { evaluateCompletion, unconfirmedBlocks, withPlayerConfirmation } from '../domain/completion';
 import type { RunPlan } from '../domain/plans';
 import type { RunState } from './engine';
 
@@ -85,20 +85,25 @@ export async function saveProgress(state: RunState, ids: RunIds, benchmarksLogge
       const blocks = state.results.filter((r) => !multi || plan.blocks[r.index].partIndex === undefined || plan.blocks[r.index].partIndex === i);
       let status = rec.status;
       let reasons = rec.reasons;
+      let ifActivityConfirmed = rec.ifActivityConfirmed;
       if (final) {
-        const outcome = evaluateCompletion({
-          plan: plan.blocks,
-          results: state.results,
-          pauses: state.pauses,
-          sessionLengthS: plan.totalMinutes * 60,
-          stopped: state.stopped,
-          benchmarksLogged,
-          partIndex: multi ? i : undefined,
-        });
+        const judge = (results: typeof state.results) =>
+          evaluateCompletion({
+            plan: plan.blocks,
+            results,
+            pauses: state.pauses,
+            sessionLengthS: plan.totalMinutes * 60,
+            stopped: state.stopped,
+            benchmarksLogged,
+            partIndex: multi ? i : undefined,
+          });
+        const outcome = judge(state.results);
         status = outcome.status;
         reasons = outcome.reasons;
+        // What the player's confirmation of camera-unconfirmed blocks would change (owner decision 2026-10-30).
+        ifActivityConfirmed = unconfirmedBlocks(blocks).length ? judge(withPlayerConfirmation(state.results, '')) : undefined;
       }
-      const updated: SessionRecord = { ...rec, blocks, pauses: state.pauses, status, reasons, endedAt: final ? new Date().toISOString() : rec.endedAt };
+      const updated: SessionRecord = { ...rec, blocks, pauses: state.pauses, status, reasons, ifActivityConfirmed, endedAt: final ? new Date().toISOString() : rec.endedAt };
       await db.sessionRecords.put(updated);
       out.push(updated);
     }
