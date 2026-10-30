@@ -207,7 +207,7 @@ export function Home() {
               {lightDay || light ? (
                 <label className="check">
                   <input type="checkbox" checked={isLight} onChange={(e) => setLight(e.target.checked)} />
-                  Light
+                  Light{isLight ? <span className="muted"> · {tryFill(p.feedbackTemplates, 'lightNote', {})}</span> : null}
                 </label>
               ) : null}
             </div>

@@ -72,7 +72,9 @@ export function summaryLines(d: AppData, rec: SessionRecord): string[] {
     return lines.filter((x): x is string => !!x);
   }
   if (rec.kind === 'programme') {
-    if (rec.status === 'completed') {
+    if (rec.light && isCompletedStatus(rec.status)) {
+      lines.push(tryFill(t, 'lightSaved', { area, n: rec.sessionNumber ?? '' }));
+    } else if (rec.status === 'completed') {
       // Return after a gap of a week or more.
       const prev = d.records.filter((r) => r.id !== rec.id && countsForWeek(r) && r.date < rec.date).sort((a, b) => b.date.localeCompare(a.date))[0];
       // Calendar days between the two sessions (local dates), not 24-hour periods.
@@ -124,7 +126,7 @@ export function summaryLines(d: AppData, rec: SessionRecord): string[] {
       lines.push(tryFill(t, 'stillNeeded', { to, criteria: `${status.criteriaText} (${status.qualifying} of ${status.needed})` }));
     }
     // One unlock.
-    if (countedNow && rec.status === 'completed' && prog?.next && !prog.awaitingAdvancement) lines.push(tryFill(t, 'unlocked', { area, next: prog.next }));
+    if (countedNow && !rec.light && rec.status === 'completed' && prog?.next && !prog.awaitingAdvancement) lines.push(tryFill(t, 'unlocked', { area, next: prog.next }));
   }
   return lines.filter((x): x is string => !!x);
 }

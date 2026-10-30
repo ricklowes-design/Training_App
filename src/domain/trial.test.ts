@@ -73,3 +73,13 @@ describe('keeping a trial (audit task 17)', () => {
     expect(canPromote(trial, [trial]).ok).toBe(true);
   });
 });
+
+describe('light sessions (owner decision 2026-10-30)', () => {
+  it('count toward the week but never unlock', async () => {
+    const { countsForUnlock } = await import('./records');
+    const r = rec({ areaId: 'feinting', sessionNumber: 7, light: true });
+    expect(countsForUnlock(r)).toBe(false);
+    expect(countsForWeek(r)).toBe(true);
+    expect(countsForUnlock({ ...r, light: false })).toBe(true);
+  });
+});

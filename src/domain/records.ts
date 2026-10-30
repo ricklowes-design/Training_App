@@ -7,9 +7,10 @@ import { isCompletedStatus } from './completion';
 export const isRecorded = (r: SessionRecord) => (!r.trial || !!r.promotedAt) && !r.demotedAt;
 
 /** Unlocks only on completed / completedBenchmarkSkipped programme sessions that are recorded.
- *  A demoted record keeps its unlock when a later record depended on it. */
+ *  A light session never unlocks: it has no test, so the same session stays next (owner decision
+ *  2026-10-30). A demoted record keeps its unlock when a later record depended on it. */
 export const countsForUnlock = (r: SessionRecord) =>
-  r.kind === 'programme' && isCompletedStatus(r.status) && (!r.trial || !!r.promotedAt) && (!r.demotedAt || !!r.unlockRetained);
+  r.kind === 'programme' && isCompletedStatus(r.status) && !r.light && (!r.trial || !!r.promotedAt) && (!r.demotedAt || !!r.unlockRetained);
 
 /** Weekly totals: completed programme sessions only. Extras, anchors, baselines, partial, stopped and trials never count. */
 export const countsForWeek = (r: SessionRecord) => r.kind === 'programme' && isCompletedStatus(r.status) && isRecorded(r);

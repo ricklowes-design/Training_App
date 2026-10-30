@@ -57,7 +57,7 @@ test('builder: durations, area limits, totals, light; a 45-minute two-area sessi
   await expect(page.getByText('Planned 3 · Completed 2 · Minutes 45')).toBeVisible();
 });
 
-test('light 20-minute session: no benchmark, counts as completed', async ({ page }) => {
+test('light 20-minute session: no benchmark, counts toward the week but does not unlock (owner decision 2026-10-30)', async ({ page }) => {
   await ready(page);
   await place(page, 'Feinting', 7);
   await openFocus(page);
@@ -65,14 +65,19 @@ test('light 20-minute session: no benchmark, counts as completed', async ({ page
   await button(page, '20 min').click();
   await button(page, 'Feinting S7').click();
   await button(page, 'Light (no benchmark, longer rest)').click();
+  await expect(page.getByText('A light session counts toward the week but does not unlock the next session.')).toBeVisible();
   await expect(page.locator('table.data')).toContainText('mobility');
   await expect(page.locator('table.data')).not.toContainText('benchmark');
   await button(page, 'Continue').click();
   await page.getByRole('checkbox').uncheck();
   await button(page, 'Start').click();
   await runToEnd(page);
-  await expect(page.locator('.card', { hasText: 'Feinting · Session 7' })).toContainText('Feinting Session 7 complete');
+  const card = page.locator('.card', { hasText: 'Feinting · Session 7' });
+  await expect(card).toContainText('Light session saved. It counts toward the week; Feinting Session 7 stays next, to be done in full.');
+  await expect(card).not.toContainText('is unlocked');
   expect(await table(page, 'benchmarkResults')).toHaveLength(0);
+  await home(page);
+  await expect(page.getByText('1 of 3 planned done')).toBeVisible();
 });
 
 /** Answers the picture on screen correctly: the touch goes away from the defenders. */

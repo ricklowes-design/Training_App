@@ -1,3 +1,4 @@
+import { tryFill } from '../domain/templates';
 import { useState } from 'react';
 import { useData } from '../app/data';
 import { useNav } from '../app/nav';
@@ -74,6 +75,7 @@ export function Builder() {
             Intensity
           </span>
           <Seg value={light ? 'light' : 'normal'} onChange={(v) => setLight(v === 'light')} options={[{ value: 'normal', label: 'Normal' }, { value: 'light', label: 'Light (no benchmark, longer rest)' }]} />
+          {light ? <span className="muted">{tryFill(p.feedbackTemplates, 'lightNote', {})}</span> : null}
         </div>
         <p className="muted">The builder always uses the next unlocked session in each area; it never lets you pick ahead.</p>
       </div>
