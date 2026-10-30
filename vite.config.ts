@@ -1,13 +1,13 @@
-/// <reference types="vitest" />
-import { defineConfig, type Plugin } from 'vite';
+import { type Plugin } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8')) as { version: string };
+const pkg = JSON.parse(readFileSync(resolve(import.meta.dirname, 'package.json'), 'utf8')) as { version: string };
 // The installed MediaPipe version names the service worker's WebAssembly cache, so an upgrade never reuses old files.
-const mpVersion = (JSON.parse(readFileSync(resolve(__dirname, 'node_modules/@mediapipe/tasks-vision/package.json'), 'utf8')) as { version: string }).version;
-const CONTENT_FILE = resolve(__dirname, 'content/programme.json');
+const mpVersion = (JSON.parse(readFileSync(resolve(import.meta.dirname, 'node_modules/@mediapipe/tasks-vision/package.json'), 'utf8')) as { version: string }).version;
+const CONTENT_FILE = resolve(import.meta.dirname, 'content/programme.json');
 
 /**
  * Programme content lives in content/programme.json and is fetched at run time,
@@ -38,7 +38,7 @@ function programmeContent(): Plugin {
  * MediaPipe's WebAssembly files (ES-module build) are served from /mediapipe/
  * so pose analysis needs no CDN; the model files come from Google's storage.
  */
-const MP_DIR = resolve(__dirname, 'node_modules/@mediapipe/tasks-vision/wasm');
+const MP_DIR = resolve(import.meta.dirname, 'node_modules/@mediapipe/tasks-vision/wasm');
 const MP_FILES = ['vision_wasm_module_internal.js', 'vision_wasm_module_internal.wasm'];
 function mediapipeWasm(): Plugin {
   return {
@@ -73,7 +73,7 @@ function serviceWorker(): Plugin {
       const files = Object.keys(bundle).filter((f) => !f.endsWith('.map') && !f.startsWith('mediapipe/'));
       const shell = ['./', ...files.map((f) => './' + f), './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
       const version = `${pkg.version}-${Date.now()}`;
-      const src = readFileSync(resolve(__dirname, 'src/sw-template.js'), 'utf8')
+      const src = readFileSync(resolve(import.meta.dirname, 'src/sw-template.js'), 'utf8')
         .replace('__VERSION__', JSON.stringify(version))
         .replace('__SHELL__', JSON.stringify(shell))
         .replace('__MP_VERSION__', JSON.stringify(mpVersion));
