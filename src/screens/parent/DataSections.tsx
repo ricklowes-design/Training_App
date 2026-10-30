@@ -9,7 +9,7 @@ import { resultText } from '../../domain/metrics';
 import { recordMilestones } from '../../domain/milestoneStore';
 import { areaName } from '../../domain/plans';
 import { countedResults } from '../../domain/records';
-import { canDemote, demote, promote } from '../../domain/trial';
+import { canDemote, canPromote, demote, promote } from '../../domain/trial';
 import { DemoVideo, fmtTime, linkStart, parseTime, youtubeId } from '../../runner/DemoVideo';
 import type { Drill } from '../../content/types';
 import { DrillAnimation } from '../../ui/DrillAnimation';
@@ -170,6 +170,7 @@ export function TrialsSection() {
   const d = useData();
   const { records, settings, problemReports, programme: p } = d;
   const [demoting, setDemoting] = useState<SessionRecord | null>(null);
+  const [keepError, setKeepError] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [until, setUntil] = useState(settings.trialUntil ?? '');
   const now = new Date();
@@ -198,6 +199,7 @@ export function TrialsSection() {
       <div className="card">
         <h2>Trials (not counted)</h2>
         {trials.length === 0 ? <p className="muted">None.</p> : null}
+        {keepError ? <p className="error-box" data-testid="keep-error">{keepError}</p> : null}
         <ul className="clean">
           {trials.map((r) => (
             <li key={r.id} className="row spread">
@@ -207,6 +209,9 @@ export function TrialsSection() {
               <button
                 className="btn small primary"
                 onClick={async () => {
+                  const can = canPromote(r, records);
+                  if (!can.ok) return setKeepError(can.reason);
+                  setKeepError(null);
                   await db.sessionRecords.put(promote(r, new Date()));
                   await logHistory('parent', 'keep trial', label(r));
                   await recordMilestones(p);

@@ -11,6 +11,7 @@ import { areaName, planMinutes } from '../../domain/plans';
 import { resultText } from '../../domain/metrics';
 import { fmtDate, Modal, Seg } from '../../ui/widgets';
 import { ruleStatusFor } from '../helpers';
+import { localDate } from '../../domain/dates';
 
 const AUTHOR_OPTIONS = [
   { value: 'coach via parent', label: 'Coach via parent' },
@@ -575,7 +576,7 @@ export function AdvancementSection() {
 export function TransferSection() {
   const { programme: p, transfers } = useData();
   const [areaId, setAreaId] = useState(p.areas[0].id);
-  const [seenOn, setSeenOn] = useState(new Date().toISOString().slice(0, 10));
+  const [seenOn, setSeenOn] = useState(localDate());
   const [behaviour, setBehaviour] = useState('');
   const [author, authorPicker] = useAuthor();
   return (

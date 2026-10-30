@@ -10,6 +10,7 @@ import { tryFill } from '../domain/templates';
 import { trendFor } from '../domain/trend';
 import { TrendChart } from '../ui/TrendChart';
 import { fmtClock, fmtDate, Seg } from '../ui/widgets';
+import { localDay } from '../domain/dates';
 
 const condText = (r: BenchmarkResult) => `${r.conditions.layoutVersion === 0 ? 'anchor layout' : `layout v${r.conditions.layoutVersion}`} · level ${r.conditions.cueLevel}`;
 const line = (r: BenchmarkResult) =>
@@ -35,7 +36,7 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
   // When the picked date's nearest result is at other conditions, say why it is not compared.
   let refusal: string | null = null;
   if (!then && pickKind === 'date' && date) {
-    const nearest = all.filter((r) => r.id !== now.id && r.date.slice(0, 10) <= date)[0];
+    const nearest = all.filter((r) => r.id !== now.id && localDay(r.date) <= date)[0];
     const c = nearest ? comparability(now, nearest) : null;
     refusal = c && !c.ok ? (tryFill(t, 'comparisonRefused', { reason: c.reason }) ?? c.reason) : 'No result on or before that date.';
   } else if (!then) {

@@ -3,6 +3,8 @@ import { db } from '../db/db';
 import type { SessionRecord, Settings } from '../db/types';
 import { areaName } from '../domain/plans';
 import { tryFill } from '../domain/templates';
+import { localDate, localDay } from '../domain/dates';
+import { logHistory } from './data';
 
 // Completion messages to a chat webhook (plan/14, opt-in): the Chromebook posts when a session
 // ends, so no server is needed. Only one small record per completed session leaves the device:
@@ -28,7 +30,7 @@ export function configured(n: NotifySettings | undefined): boolean {
   return TELEGRAM_TOKEN.test(n.telegramToken ?? '') && /^-?\d+$/.test(n.telegramChatId ?? '');
 }
 
-export const paused = (n: NotifySettings | undefined, now = new Date()) => !!n?.pausedUntil && now.toISOString().slice(0, 10) <= n.pausedUntil;
+export const paused = (n: NotifySettings | undefined, now = new Date()) => !!n?.pausedUntil && localDate(now) <= n.pausedUntil;
 
 /** The completion message for a finished record, or null when nothing should be sent (partial, stopped, trial, extra). */
 export function completionMessage(p: Programme, r: SessionRecord, firstName?: string): QueuedMessage | null {
@@ -44,7 +46,7 @@ export function completionMessage(p: Programme, r: SessionRecord, firstName?: st
     id: r.id,
     text,
     createdAt: new Date().toISOString(),
-    record: { date: r.date.slice(0, 10), areaId: r.areaId, sessionNumber: r.sessionNumber, status: r.status, minutes: r.plannedMinutes },
+    record: { date: localDay(r.date), areaId: r.areaId, sessionNumber: r.sessionNumber, status: r.status, minutes: r.plannedMinutes },
   };
 }
 
@@ -54,7 +56,7 @@ export async function sendText(n: NotifySettings, text: string, fetchImpl: typeo
     const body = new FormData();
     body.append('content', text);
     const res = await fetchImpl(n.webhookUrl!, { method: 'POST', body });
-    if (!res.ok) throw new Error(`Discord answered ${res.status}`);
+    check('Discord', res);
     return;
   }
   const res = await fetchImpl(`https://api.telegram.org/bot${n.telegramToken}/sendMessage`, {
@@ -62,26 +64,42 @@ export async function sendText(n: NotifySettings, text: string, fetchImpl: typeo
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: n.telegramChatId, text }),
   });
-  if (!res.ok) throw new Error(`Telegram answered ${res.status}`);
+  check('Telegram', res);
 }
 
-/** Sends what is queued, oldest first, stopping at the first failure (kept for next time). */
+/** A service's refusal of one message (4xx other than 429): retrying would never help. */
+export class RefusedError extends Error {
+  constructor(readonly status: number) {
+    super(`refused (${status})`);
+  }
+}
+const check = (service: string, res: Response) => {
+  if (res.ok) return;
+  if (res.status >= 400 && res.status < 500 && res.status !== 429) throw new RefusedError(res.status);
+  throw new Error(`${service} answered ${res.status}`);
+};
+
+/** Sends what is queued, oldest first, stopping at the first failure (kept for next time). A message the
+ *  service refuses is dropped and logged, so it cannot block the queue (audit task 17). */
 export async function flushQueue(fetchImpl: typeof fetch = fetch): Promise<{ sent: number; left: number }> {
   const s = await db.settings.get('main');
   const n = s?.notify;
   if (!s?.flags.notifications || !configured(n) || paused(n) || !n?.queue?.length) return { sent: 0, left: n?.queue?.length ?? 0 };
   let sent = 0;
-  const queue = [...n.queue];
-  while (queue.length) {
+  const done = new Set<string>();
+  for (const m of n.queue) {
     try {
-      await sendText(n, queue[0].text, fetchImpl);
-    } catch {
-      break;
+      await sendText(n, m.text, fetchImpl);
+      sent++;
+    } catch (e) {
+      if (!(e instanceof RefusedError)) break;
+      await logHistory('app', 'session message refused', String(e.status)).catch(() => undefined);
     }
-    queue.shift();
-    sent++;
+    done.add(m.id);
   }
+  // Re-read: a message queued while sending stays.
   const latest = await db.settings.get('main');
+  const queue = (latest?.notify?.queue ?? []).filter((m) => !done.has(m.id));
   await db.settings.update('main', { notify: { ...(latest?.notify ?? n), queue } });
   return { sent, left: queue.length };
 }

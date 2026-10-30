@@ -29,11 +29,19 @@ export function onsetFrame(s: OnsetState, samples: ArrayLike<number>, tMs: numbe
 /** Listens to the microphone and calls onBang for each bang; returns a stop function. */
 export async function listenForBangs(onBang: (atPerfMs: number) => void, isOutputBusy: () => boolean): Promise<() => void> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
-  const ctx = new AudioContext();
-  const src = ctx.createMediaStreamSource(stream);
-  const an = ctx.createAnalyser();
-  an.fftSize = 1024;
-  src.connect(an);
+  let ctx: AudioContext;
+  let an: AnalyserNode;
+  try {
+    ctx = new AudioContext();
+    const src = ctx.createMediaStreamSource(stream);
+    an = ctx.createAnalyser();
+    an.fftSize = 1024;
+    src.connect(an);
+  } catch (e) {
+    // Never leave the microphone on when listening could not start (audit task 17).
+    stream.getTracks().forEach((x) => x.stop());
+    throw e;
+  }
   const buf = new Float32Array(an.fftSize);
   let st = initOnset();
   const t = setInterval(() => {

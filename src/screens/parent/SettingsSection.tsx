@@ -8,6 +8,7 @@ import { db } from '../../db/db';
 import type { Settings } from '../../db/types';
 import { Seg, Stepper } from '../../ui/widgets';
 import { UnitsChoice } from './RoomProfiles';
+import { localDate } from '../../domain/dates';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -188,7 +189,7 @@ export function SettingsSection() {
                   aria-label={`Day ${iso}`}
                   value={cur}
                   onChange={(e) => {
-                    const rest = (settings.availability ?? []).filter((x) => x.date !== iso && x.date >= new Date().toISOString().slice(0, 10));
+                    const rest = (settings.availability ?? []).filter((x) => x.date !== iso && x.date >= localDate());
                     const kind = e.target.value as '' | 'rest' | 'light' | 'game';
                     save({ availability: kind ? [...rest, { date: iso, kind }].sort((a, b) => a.date.localeCompare(b.date)) : rest });
                   }}
@@ -379,7 +380,7 @@ function NotificationsCard() {
               onClick={() => {
                 const d = new Date();
                 d.setDate(d.getDate() + pauseDays - 1);
-                void save({ pausedUntil: d.toISOString().slice(0, 10), pauseReason: reason });
+                void save({ pausedUntil: localDate(d), pauseReason: reason });
               }}
             >
               Pause

@@ -72,3 +72,36 @@ describe('completion messages (plan/14)', () => {
     expect(await sent(true, 'n2')).toMatch(/^Sam: /);
   });
 });
+
+describe('session message queue (audit task 17)', () => {
+  it('a refused message is dropped and logged; it does not block the next one', async () => {
+    const queue = [
+      { id: 'bad', text: 'x', createdAt: '', record: {} as never },
+      { id: 'good', text: 'y', createdAt: '', record: {} as never },
+    ];
+    await db.settings.put({ ...DEFAULT_SETTINGS, flags: { ...DEFAULT_SETTINGS.flags, notifications: true }, notify: { ...discord, queue } });
+    let n = 0;
+    const f = (async () => new Response('{}', { status: n++ === 0 ? 400 : 200 })) as unknown as typeof fetch;
+    expect(await flushQueue(f)).toEqual({ sent: 1, left: 0 });
+    expect((await db.history.toArray()).some((h) => h.action === 'session message refused')).toBe(true);
+  });
+
+  it('a busy service (429) keeps the message for next time', async () => {
+    const queue = [{ id: 'a', text: 'x', createdAt: '', record: {} as never }];
+    await db.settings.put({ ...DEFAULT_SETTINGS, flags: { ...DEFAULT_SETTINGS.flags, notifications: true }, notify: { ...discord, queue } });
+    const f = (async () => new Response('{}', { status: 429 })) as unknown as typeof fetch;
+    expect(await flushQueue(f)).toEqual({ sent: 0, left: 1 });
+  });
+
+  it('a message queued while sending is kept', async () => {
+    const queue = [{ id: 'a', text: 'x', createdAt: '', record: {} as never }];
+    await db.settings.put({ ...DEFAULT_SETTINGS, flags: { ...DEFAULT_SETTINGS.flags, notifications: true }, notify: { ...discord, queue } });
+    const f = (async () => {
+      const s = (await db.settings.get('main'))!;
+      await db.settings.update('main', { notify: { ...s.notify!, queue: [...s.notify!.queue!, { id: 'b', text: 'z', createdAt: '', record: {} as never }] } });
+      return new Response('{}', { status: 200 });
+    }) as unknown as typeof fetch;
+    await flushQueue(f);
+    expect((await db.settings.get('main'))!.notify!.queue!.map((m) => m.id)).toEqual(['b']);
+  });
+});

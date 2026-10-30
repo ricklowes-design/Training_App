@@ -12,7 +12,7 @@ import { recordMilestones } from '../domain/milestoneStore';
 import { areaName } from '../domain/plans';
 import { countedResults, countsForWeek } from '../domain/records';
 import { areaProgress } from '../domain/sequencing';
-import { promote } from '../domain/trial';
+import { canPromote, promote } from '../domain/trial';
 import { tryFill } from '../domain/templates';
 import { StatusPill } from '../ui/widgets';
 import { ruleStatusFor } from './helpers';
@@ -135,6 +135,7 @@ export function Summary({ runId }: { runId: string }) {
   const recs = d.records.filter((r) => r.runId === runId);
   const [report, setReport] = useState('');
   const [reported, setReported] = useState(false);
+  const [keepError, setKeepError] = useState<string | null>(null);
   const spoken = useRef(false);
 
   useEffect(() => {
@@ -150,6 +151,8 @@ export function Summary({ runId }: { runId: string }) {
   if (!recs.length) return <div className="page">Saving…</div>;
 
   async function keep(rec: SessionRecord) {
+    const can = canPromote(rec, d.records);
+    if (!can.ok) return setKeepError(can.reason);
     await db.sessionRecords.put(promote(rec, new Date()));
     await logHistory('player', 'keep trial', `${rec.areaId ?? rec.kind} S${rec.sessionNumber ?? ''} kept`);
     await recordMilestones(d.programme);
@@ -200,6 +203,7 @@ export function Summary({ runId }: { runId: string }) {
               <button className="btn primary" onClick={() => keep(rec)}>
                 Keep this
               </button>
+              {keepError ? <span className="muted" data-testid="keep-error">{keepError}</span> : null}
             </div>
           ) : null}
           {rec.trial ? (

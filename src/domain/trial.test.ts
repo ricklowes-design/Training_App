@@ -63,3 +63,13 @@ describe('trial mode (plan/13 §13.5)', () => {
     expect(forced.forced).toBe(true);
   });
 });
+
+describe('keeping a trial (audit task 17)', () => {
+  it('refuses when the same session is already counted', async () => {
+    const { canPromote } = await import('./trial');
+    const counted = rec({ id: 'a', areaId: 'feinting', sessionNumber: 4 });
+    const trial = rec({ id: 'b', areaId: 'feinting', sessionNumber: 4, trial: true });
+    expect(canPromote(trial, [counted, trial])).toEqual({ ok: false, reason: 'Session 4 is already counted.' });
+    expect(canPromote(trial, [trial]).ok).toBe(true);
+  });
+});

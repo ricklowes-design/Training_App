@@ -1,5 +1,6 @@
 import type { SessionRecord, Settings } from '../db/types';
 import { countsForUnlock } from './records';
+import { localDate } from './dates';
 
 // Trial mode (plan/13 §13.5).
 
@@ -25,7 +26,7 @@ export interface TrialSuggestion {
 export function trialSuggestion(input: TrialSuggestionInput): TrialSuggestion {
   const { drillIds, records, settings, appVersion, contentVersion, now } = input;
   const reasons: string[] = [];
-  const forced = !!settings.trialUntil && now.toISOString().slice(0, 10) <= settings.trialUntil;
+  const forced = !!settings.trialUntil && localDate(now) <= settings.trialUntil;
   if (forced) reasons.push(`All sessions are trials until ${settings.trialUntil}.`);
 
   const done = new Set(records.flatMap((r) => r.blocks.map((b) => b.drillId).filter(Boolean)));
@@ -36,6 +37,15 @@ export function trialSuggestion(input: TrialSuggestionInput): TrialSuggestion {
     reasons.push('First session after a content change.');
   }
   return { forced, suggested: forced || reasons.length > 0, reasons };
+}
+
+/** A kept trial must not count a session that is already counted (audit task 17). */
+export function canPromote(rec: SessionRecord, records: SessionRecord[]): { ok: true } | { ok: false; reason: string } {
+  if (rec.kind === 'programme' && rec.areaId && rec.sessionNumber !== undefined) {
+    const dup = records.some((r) => r.id !== rec.id && r.areaId === rec.areaId && r.sessionNumber === rec.sessionNumber && countsForUnlock(r));
+    if (dup) return { ok: false, reason: `Session ${rec.sessionNumber} is already counted.` };
+  }
+  return { ok: true };
 }
 
 /** "Keep this": promote a trial. It keeps its date; its status was set by the completion rules when saved. */

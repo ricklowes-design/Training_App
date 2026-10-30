@@ -1,4 +1,5 @@
 import type { BenchmarkResult } from '../db/types';
+import { localDate, localDay } from './dates';
 
 // Benchmark trends only join results with the same context key (plan/05 §5.3, part 15 D11).
 
@@ -75,15 +76,16 @@ export function pickComparison(now: BenchmarkResult, results: BenchmarkResult[],
     .filter((r) => r.id !== now.id && sameConditions(now, r) && r.date <= now.date)
     .sort((x, y) => y.date.localeCompare(x.date) || y.attempt - x.attempt);
   if (pick.kind === 'last') return earlier.find((r) => r.date < now.date || r.attempt < now.attempt);
+  // Local calendar days throughout (a picked date is already one).
   const target =
     pick.kind === 'date'
       ? pick.date
       : (() => {
           const d = new Date(now.date);
           d.setMonth(d.getMonth() - pick.months);
-          return d.toISOString();
+          return localDate(d);
         })();
   // The latest result on or before the target date; if none, the earliest one after it.
-  const onOrBefore = earlier.find((r) => r.date.slice(0, 10) <= target.slice(0, 10));
+  const onOrBefore = earlier.find((r) => localDay(r.date) <= target);
   return onOrBefore ?? earlier[earlier.length - 1];
 }

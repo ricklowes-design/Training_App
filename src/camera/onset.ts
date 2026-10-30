@@ -25,7 +25,7 @@ export const ONSET = {
 
 export class OnsetDetector {
   private hist: { t: number; l: number; r: number }[] = [];
-  private pending: { onsetMs: number; above: number } | null = null;
+  private pending: { onsetMs: number; above: number; level: number } | null = null;
   private lastOnsetMs = -Infinity;
   readonly onsets: Onset[] = [];
 
@@ -39,12 +39,13 @@ export class OnsetDetector {
       const mean = base.reduce((a, b) => a + b, 0) / base.length;
       const sd = Math.sqrt(base.reduce((a, b) => a + (b - mean) ** 2, 0) / base.length);
       const level = Math.max(mean + ONSET.sd * sd, mean + ONSET.minRise);
-      if (left + right > level) this.pending = { onsetMs: tMs, above: 1 };
+      if (left + right > level) this.pending = { onsetMs: tMs, above: 1, level };
       return null;
     }
     const p = this.pending;
     if (tMs - p.onsetMs < ONSET.directionMs) {
-      if (left + right > 0) p.above++;
+      // Only frames still above the onset level count toward a real onset (audit task 17).
+      if (left + right > p.level) p.above++;
       return null;
     }
     this.pending = null;
