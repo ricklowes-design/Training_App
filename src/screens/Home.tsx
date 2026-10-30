@@ -47,7 +47,7 @@ function StartCard({ plan, title, detail, minutes, big, label }: { plan: RunPlan
       <div className="col" style={{ flex: 1, gap: 6 }}>
         <h2 style={{ margin: 0 }}>{title}</h2>
         <div>{detail}</div>
-        <div className="muted">{minutes} min · solo{d.settings.partnerAvailable ? ' or partner' : ''}</div>
+        <div className="muted">{minutes} min training + setup · solo{d.settings.partnerAvailable ? ' or partner' : ''}</div>
         {unfit ? <div className="pill warn">{unfit}</div> : null}
         <TurnOnNeeded blocks={plan.blocks} what="This session" />
         <label className="check" style={{ fontSize: '0.95rem' }}>

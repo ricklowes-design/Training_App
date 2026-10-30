@@ -99,10 +99,10 @@ export function Builder() {
               <tr>
                 <td />
                 <td>
-                  <strong>Total</strong>
+                  <strong>Total training</strong>
                 </td>
                 <td className="mono">
-                  <strong>{result.plan.totalMinutes} min</strong>
+                  <strong>{result.plan.totalMinutes} min + setup</strong>
                 </td>
               </tr>
             </tbody>

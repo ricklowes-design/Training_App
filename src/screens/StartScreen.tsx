@@ -44,14 +44,16 @@ export function StartScreen({ plan }: { plan: RunPlan }) {
             <tr>
               <td />
               <td>
-                <strong>Total</strong>
+                <strong>Total training</strong>
               </td>
               <td className="mono">
-                <strong>{plan.totalMinutes} min</strong>
+                <strong>{plan.totalMinutes} min + setup</strong>
               </td>
             </tr>
           </tbody>
         </table>
+        {/* Planned training time, not a promised finish (Brief R08). */}
+        <p className="muted" data-testid="time-note">Training time only: cone set-up, instructions and the end-of-drill cards add a few minutes.</p>
         {planRoomFit(d, plan) ? <p className="pill warn">{planRoomFit(d, plan)}</p> : null}
         <TurnOnNeeded blocks={plan.blocks} what="This session" />
         {kind === 'extra' || kind === 'anchor' ? <p className="muted">This is an extra: it does not unlock a session or count toward the week.</p> : null}
