@@ -124,7 +124,8 @@ export function BenchmarkForm(props: {
     });
     setFromCamera(true);
   }, [cam?.correct, cam?.early, cam?.looks]);
-  const [by, setBy] = useState<Conditions['recordedBy']>(conditions.recordedBy);
+  // Nothing is pre-selected unless the app scored the result itself: the parent or player taps who scored it.
+  const [by, setBy] = useState<Conditions['recordedBy'] | null>(conditions.recordedBy === 'app' ? 'app' : null);
   const [saving, setSaving] = useState(false);
   const set = (next: BenchmarkValues) => {
     touched.current = true;
@@ -132,7 +133,7 @@ export function BenchmarkForm(props: {
   };
   // A4 looks are optional: blank looks are dropped rather than blocking the confirm.
   const toSave: BenchmarkValues = v.kind === 'A4' && Number.isNaN(v.looks ?? Number.NaN) ? { kind: 'A4', correct: v.correct } : v;
-  const ready = complete(toSave);
+  const ready = complete(toSave) && by !== null;
 
   let body: JSX.Element | null = null;
   if (v.kind === 'SB') {
@@ -229,7 +230,7 @@ export function BenchmarkForm(props: {
       {body}
       <div className="row">
         <span className="muted">Scored by</span>
-        <Seg value={by} onChange={setBy} options={[{ value: 'parent', label: 'Parent' }, { value: 'self', label: 'Player' }]} />
+        <Seg<Conditions['recordedBy'] | ''> value={by ?? ''} onChange={(v) => setBy(v || null)} options={[{ value: 'parent', label: 'Parent' }, { value: 'self', label: 'Player' }]} />
       </div>
       <div className="row spread">
         {onSkip ? (
@@ -246,7 +247,7 @@ export function BenchmarkForm(props: {
             if (saving || !ready) return; // one result per tap, even on a double tap
             setSaving(true);
             onCameraUsed?.(fromCamera);
-            onSave(toSave, by);
+            onSave(toSave, by!);
           }}
         >
           {saveLabel ?? 'Confirm'}

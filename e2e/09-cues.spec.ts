@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, arrowCues, boot, captureSpeech, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table } from './helpers';
+import { advance, arrowCues, boot, captureSpeech, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table, scoredBy } from './helpers';
 
 type Block = { index: number; drillId?: string; cueLevel?: string; cueLog?: { cueMs?: number; repStartMs: number; value?: string }[] };
 
@@ -180,6 +180,7 @@ test('a camera estimate from this block starts the SB card when every rep was ju
   await expect(page.locator('.count', { hasText: 'Correct decisions /10' })).toBeVisible();
   await expect(page.getByText(/Camera estimate from this block \(all 10 reps judged\)/)).toBeVisible();
   await expect(page.locator('.count[data-blank]')).toHaveCount(0);
+  await scoredBy(page);
   await button(page, 'Confirm').click();
   const res = await table<{ benchmarkId: string; values: { correct: number }; prefilledFrom?: string }>(page, 'benchmarkResults');
   expect(res.find((x) => x.benchmarkId === 'SB')).toMatchObject({ values: { correct: 6 }, prefilledFrom: 'camera' });

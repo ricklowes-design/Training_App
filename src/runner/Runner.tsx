@@ -9,7 +9,6 @@ import { APP_VERSION, useData } from '../app/data';
 import { useNav } from '../app/nav';
 import { db } from '../db/db';
 import type { BenchmarkResult, BenchmarkValues, Conditions } from '../db/types';
-import { countedResults } from '../domain/records';
 import { recordMilestones } from '../domain/milestoneStore';
 import type { RunBlock, RunPlan } from '../domain/plans';
 import { fmtClock } from '../ui/widgets';
@@ -58,8 +57,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   // Parent → System test: never counts; its defender reps and tallies stay out of learning and progress.
   const systemTest = plan.parts[0]?.kind === 'systemTest';
   const [saved, setSaved] = useState<BenchmarkResult[]>([]);
-  const [times, setTimes] = useState<Record<number, { right: number; left: number }>>({});
-  const [digitsShown, setDigitsShown] = useState<Record<number, number[]>>({});
+  // Keyed by block and attempt: a Repeat runs its own timer and starts with an empty form (audit task 4).
+  const [times, setTimes] = useState<Record<string, { right: number; left: number }>>({});
+  const [digitsShown, setDigitsShown] = useState<Record<string, number[]>>({});
   const [skippedBench, setSkippedBench] = useState<Set<string>>(new Set());
   const [quizRounds, setQuizRounds] = useState<number[]>([]);
   const [now, setNow] = useState(Date.now());
@@ -457,8 +457,6 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
     const benchSkipKey = `${s.blockIdx}:${s.attempt}`;
     const needsMain = benchKind && !thisAttemptSaved.some((r) => r.benchmarkId === benchKind) && !skippedBench.has(benchSkipKey);
     const needsCA = block.alsoCueAccuracy && !thisAttemptSaved.some((r) => r.benchmarkId === 'CA') && !skippedBench.has(benchSkipKey + ':CA');
-    const counted = countedResults(data.results, data.records);
-    const lastOf = (id: string) => [...counted].reverse().find((r) => r.benchmarkId === id);
     // A defender block without a camera result: one optional result card for the block's decisions (D10: blank, one confirm).
     if (block.params?.startsWith('diagnostic') && !tallied.has(benchSkipKey)) {
       return (
@@ -499,11 +497,11 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       const kind: FormKind = needsMain ? benchKind : 'CA';
       const id = needsMain ? benchKind : 'CA';
       const cueLevel = block.kind === 'anchor' ? anchorCueLevel(block) : kind === 'CA' ? caCueLevel(block) : block.cueLevel ?? 'std';
-      const last = lastOf(id);
       const workDrills = s.plan.blocks.filter((b) => b.kind === 'work' && b.partIndex === block.partIndex && b.drillId).map((b) => b.drillId as string);
       const caDrill = workDrills[0];
-      const cond = { ...conditionsFor(block, last?.conditions.recordedBy ?? 'parent'), cueLevel };
-      const shown = digitsShown[s.blockIdx];
+      // "Scored by" is chosen on the card each time; never carried over from an earlier session.
+      const cond = { ...conditionsFor(block, 'parent'), cueLevel };
+      const shown = digitsShown[`${s.blockIdx}:${s.attempt}`];
       return (
         <div className="page">
           <div className="stack">
@@ -513,8 +511,8 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
               kind={kind}
               title={kind === 'CA' ? `Cue accuracy · ${caDrill ?? ''}` : blockName(block)}
               conditions={cond}
-              initial={initialValues(kind, cueLevel, times[s.blockIdx])}
-              hasEstimate={!!times[s.blockIdx] && (kind === 'DB' || kind === 'A1')}
+              initial={initialValues(kind, cueLevel, times[`${s.blockIdx}:${s.attempt}`])}
+              hasEstimate={!!times[`${s.blockIdx}:${s.attempt}`] && (kind === 'DB' || kind === 'A1')}
               camera={(PREFILL_KINDS as readonly string[]).includes(kind) && blockAnalysis?.clip ? cameraPrefill(kind as PrefillKind, blockAnalysis.a, blockAnalysis.reps) : null}
               onCameraUsed={(used) => (cameraUsed.current = used)}
               onSave={(values, by) => logBenchmark(block, id, values, by, kind === 'CA' ? caDrill : block.kind === 'anchor' ? block.drillId : undefined, cameraUsed.current ? 'camera' : undefined)}
@@ -585,15 +583,15 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
   const defCfg = defenderConfigFor_(block);
   const cueCfg = defCfg ? null : cueConfigFor_(block);
   const benchId = block.kind === 'benchmark' ? block.benchmarkId : block.kind === 'anchor' ? block.anchorId : undefined;
-  if (benchId && TIMED_RUN_KINDS.has(benchId) && !times[s.blockIdx] && s.pausedAtMs === null) {
+  if (benchId && TIMED_RUN_KINDS.has(benchId) && !times[`${s.blockIdx}:${s.attempt}`] && s.pausedAtMs === null) {
     return (
       <TimedRuns
         headUp={block.cueLevel === 'headup'}
         activeMs={activeMs}
         onFinished={(t, digits, windows) => {
           setExtras(`${s.blockIdx}:${s.attempt}`, { windows });
-          setTimes((x) => ({ ...x, [s.blockIdx]: t }));
-          setDigitsShown((x) => ({ ...x, [s.blockIdx]: digits }));
+          setTimes((x) => ({ ...x, [`${s.blockIdx}:${s.attempt}`]: t }));
+          setDigitsShown((x) => ({ ...x, [`${s.blockIdx}:${s.attempt}`]: digits }));
           apply(E.done);
         }}
       />

@@ -100,7 +100,16 @@ export async function fillForm(page: Page, value = 5): Promise<Locator> {
   }
   const times = page.locator('.stepper[data-blank]');
   for (let n = await times.count(); n > 0; n = await times.count()) await times.first().getByRole('button', { name: /start$/ }).click();
+  await scoredBy(page);
   return page.getByRole('button', { name: 'Confirm', exact: true });
+}
+
+/** Taps "Scored by: Parent" on a result card (nothing is pre-selected, audit task 4). */
+export async function scoredBy(page: Page, who: 'Parent' | 'Player' = 'Parent'): Promise<void> {
+  const row = page.locator('.row', { hasText: 'Scored by' }).last();
+  if (!(await row.isVisible().catch(() => false))) return;
+  if (await row.locator('button[aria-pressed="true"]').count()) return; // already chosen on this card
+  await row.getByRole('button', { name: who, exact: true }).click();
 }
 
 /** Opens the "Choose a focus" panel on the home screen when it is closed. */

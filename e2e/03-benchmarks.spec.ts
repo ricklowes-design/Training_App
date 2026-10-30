@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { PIN, advance, boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, slalom, start, startBlockNow, startCard, table } from './helpers';
+import { PIN, advance, boot, button, closeParent, fillForm, home, openParent, patchSettings, place, runToEnd, setup, slalom, start, startBlockNow, startCard, table, scoredBy } from './helpers';
 
 type Result = { benchmarkId: string; conditions: { layoutVersion: number; cueLevel: string; timing?: string }; values: Record<string, unknown> };
 
@@ -50,6 +50,7 @@ test('baseline: slalom timed by the app, parent questions, proposal and override
   await stepTo(form, 'Pattern L time (s)', 11.2);
   await pick(form, 'Pattern R control errors', 2);
   await pick(form, 'Pattern L control errors', 1);
+  await scoredBy(page);
   await button(page, 'Confirm').click();
   await expect(page.locator('.endcard .now')).toHaveText('Pattern R 9.8 s · 2 err · Pattern L 11.2 s · 1 err');
   await runToEnd(page, { stopAtPin: true });
@@ -105,6 +106,7 @@ test('slalom benchmark: faster with more errors is never called an improvement; 
         await stepTo(form, 'Pattern L time (s)', l);
         await pick(form, 'Pattern R control errors', errs);
         await pick(form, 'Pattern L control errors', 1);
+        await scoredBy(p);
         await button(p, 'Confirm').click();
       },
     });
@@ -185,4 +187,40 @@ test('skipping the benchmark gives "completed, benchmark skipped" and still unlo
   await expect(card).toContainText('Session complete with the benchmark skipped. Session 4 is unlocked.');
   await home(page);
   await expect(startCard(page, 'Ball control · Stage 1 · Session 4')).toBeVisible();
+});
+
+test('a repeated slalom benchmark times again and starts with an empty card; "Scored by" must be tapped', async ({ page }) => {
+  test.setTimeout(240_000);
+  await ready(page);
+  await place(page, 'Dribbling', 3);
+  await start(page, 'Dribbling · Stage 1 · Session 3');
+  const toTimer = async () => {
+    for (let i = 0; i < 80 && (await page.locator('.practice .drill').textContent().catch(() => '')) !== 'Pattern R'; i++) {
+      const go = page.getByRole('button', { name: '▶ Start block' });
+      if (await go.isVisible().catch(() => false)) await go.click();
+      const cones = page.getByRole('button', { name: '✓ Cones are out: show the instructions' });
+      if (await cones.isVisible().catch(() => false)) await cones.click();
+      const next = page.getByRole('button', { name: /^Next/ });
+      if (await next.isVisible().catch(() => false)) await next.click();
+      await page.clock.runFor(15_000);
+    }
+    await expect(page.locator('.practice .drill')).toHaveText('Pattern R');
+  };
+  await toTimer();
+  await slalom(page, 9.8, 11.2);
+  const form = page.locator('.card', { hasText: 'Slalom time and control' });
+  await pick(form, 'Pattern R control errors', 1);
+  await pick(form, 'Pattern L control errors', 1);
+  // Nothing pre-selected for who scored it.
+  await expect(button(page, 'Confirm')).toBeDisabled();
+  await scoredBy(page);
+  await button(page, 'Confirm').click();
+  await button(page, 'Repeat').click();
+  // The timer runs again for the repeat (it is not skipped with attempt 1's times).
+  await toTimer();
+  await slalom(page, 12, 13);
+  await expect(form.locator('.count[data-blank]')).toHaveCount(2);
+  await expect(button(page, 'Confirm')).toBeDisabled();
+  // The time on the card is this attempt's, not attempt 1's 9.8 s.
+  await expect(form.locator('.stepper').first()).not.toContainText('9.8');
 });
