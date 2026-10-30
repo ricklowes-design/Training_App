@@ -1,3 +1,4 @@
+import { ErrorScreen } from './ErrorBoundary';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { Programme } from '../content/types';
@@ -97,34 +98,39 @@ export function useData(): AppData {
 
 export function DataProvider({ base, children, loading }: { base: Programme; children: ReactNode; loading: ReactNode }) {
   const all = useLiveQuery(async () => {
-    const [settings, player, layouts, records, results, placements, overrides, customDrills, notes, transfers, advancements, extraCriteria, milestones, demoClipIds, problemReports, history, cueDrillOverrides, cameraSetups, roomProfiles, focusRows] =
-      await Promise.all([
-        db.settings.get('main'),
-        db.player.get('main'),
-        db.layouts.orderBy('version').toArray(),
-        db.sessionRecords.orderBy('date').toArray(),
-        db.benchmarkResults.orderBy('date').toArray(),
-        db.placements.toArray(),
-        db.overrides.toArray(),
-        db.customDrills.toArray(),
-        db.coachNotes.toArray(),
-        db.transferObs.toArray(),
-        db.advancements.toArray(),
-        db.extraCriteria.toArray(),
-        db.milestones.toArray(),
-        db.demoClips.toCollection().primaryKeys(),
-        db.problemReports.toArray(),
-        db.history.toArray(),
-        db.cueDrills.toArray(),
-        db.cameraSetups.toArray(),
-        db.roomProfiles.toArray(),
-        db.focusMetricConfigs.toArray(),
-      ]);
-    return { settings, player, layouts, records, results, placements, overrides, customDrills, notes, transfers, advancements, extraCriteria, milestones, demoClipIds, problemReports, history, cueDrillOverrides, cameraSetups, roomProfiles, focusRows };
+    try {
+      const [settings, player, layouts, records, results, placements, overrides, customDrills, notes, transfers, advancements, extraCriteria, milestones, demoClipIds, problemReports, history, cueDrillOverrides, cameraSetups, roomProfiles, focusRows] =
+        await Promise.all([
+          db.settings.get('main'),
+          db.player.get('main'),
+          db.layouts.orderBy('version').toArray(),
+          db.sessionRecords.orderBy('date').toArray(),
+          db.benchmarkResults.orderBy('date').toArray(),
+          db.placements.toArray(),
+          db.overrides.toArray(),
+          db.customDrills.toArray(),
+          db.coachNotes.toArray(),
+          db.transferObs.toArray(),
+          db.advancements.toArray(),
+          db.extraCriteria.toArray(),
+          db.milestones.toArray(),
+          db.demoClips.toCollection().primaryKeys(),
+          db.problemReports.toArray(),
+          db.history.toArray(),
+          db.cueDrills.toArray(),
+          db.cameraSetups.toArray(),
+          db.roomProfiles.toArray(),
+          db.focusMetricConfigs.toArray(),
+        ]);
+      return { settings, player, layouts, records, results, placements, overrides, customDrills, notes, transfers, advancements, extraCriteria, milestones, demoClipIds, problemReports, history, cueDrillOverrides, cameraSetups, roomProfiles, focusRows, error: undefined };
+    } catch (e) {
+      // A storage failure shows a message instead of "Loading…" for ever (audit task 9).
+      return { error: e instanceof Error ? e.message : String(e) };
+    }
   });
 
   const value = useMemo<AppData | null>(() => {
-    if (!all || !all.settings) return null;
+    if (!all || all.error !== undefined || !('settings' in all) || !all.settings) return null;
     return {
       base,
       programme: withFocusOverrides(applyOverrides(base, all.overrides, all.customDrills, all.cueDrillOverrides), all.focusRows),
@@ -152,6 +158,7 @@ export function DataProvider({ base, children, loading }: { base: Programme; chi
     };
   }, [all, base]);
 
+  if (all?.error !== undefined) return <ErrorScreen message={all.error} lead="The app's storage could not be read. Close other tabs of this app, then reload. Saved sessions are still on this Chromebook." />;
   if (!value) return <>{loading}</>;
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

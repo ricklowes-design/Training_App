@@ -131,6 +131,10 @@ export class TrainingDB extends Dexie {
 }
 
 export const db = new TrainingDB();
+// Another open tab of the app is blocking an upgrade (Dexie closes on versionchange itself).
+db.on('blocked', () => {
+  if (typeof alert === 'function') alert('Close other tabs of this app so it can update, then reload.');
+});
 
 /** Tables included in the JSON backup. Demo clips and recorded clips are not included; small photos in profiles are embedded as base64. */
 export const BACKUP_TABLES = [

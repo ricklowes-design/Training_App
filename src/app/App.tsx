@@ -17,6 +17,7 @@ import { DataProvider, ensureSettings, useData } from './data';
 import { checkCapabilities } from './capabilities';
 import { pruneClips } from '../camera/clips';
 import { NavCtx, type Route } from './nav';
+import { ErrorScreen } from './ErrorBoundary';
 
 function Loading() {
   return (
@@ -100,6 +101,7 @@ function Router() {
 export function App() {
   const [content, setContent] = useState<ContentLoad | null>(null);
   const [ready, setReady] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   useEffect(() => {
     loadProgrammeFile().then(setContent);
@@ -118,9 +120,11 @@ export function App() {
           await db.settings.update('main', { persistGranted: granted });
         }
       })
+      .catch((e) => setStartError(e instanceof Error ? e.message : String(e)))
       .finally(() => setReady(true));
   }, []);
 
+  if (startError) return <ErrorScreen message={startError} lead="The app's storage could not be opened. Close other tabs of this app, then reload. Saved sessions are still on this Chromebook." />;
   if (!content || !ready) return <Loading />;
   if (!content.ok) return <ContentError errors={content.errors} />;
   return (

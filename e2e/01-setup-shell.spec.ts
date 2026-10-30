@@ -195,3 +195,25 @@ test('PWA: manifest, service worker and offline reload', async ({ page, context 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Sam · Week of/);
   await context.setOffline(false);
 });
+
+test('storage that cannot be opened shows a message, not "Loading…" for ever (audit task 9)', async ({ page }) => {
+  // A same-origin page that does not run the app, so nothing holds the database open.
+  await page.goto('/manifest.webmanifest');
+  // A database newer than this app can read (as after a failed or foreign upgrade).
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        indexedDB.deleteDatabase('home-training').onsuccess = () => {
+          const r = indexedDB.open('home-training', 9999);
+          r.onupgradeneeded = () => r.result.createObjectStore('settings');
+          r.onsuccess = () => {
+            r.result.close();
+            resolve();
+          };
+        };
+      }),
+  );
+  await page.goto('/');
+  await expect(page.getByTestId('error-screen')).toContainText("The app's storage could not be opened.");
+  await expect(page.getByRole('button', { name: 'Download a backup' })).toBeVisible();
+});
