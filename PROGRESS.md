@@ -300,18 +300,11 @@ Plan update (parts 15–18), part 16 §12:
 - 2026-10-28 Live sensing beyond the plan's list (CLAUDE.md: framing check, tripwire, feint onset): at the parent's request the microphone's loudness is used live in wall drills to show the cue on the ball's bang. It only measures loudness frame by frame; no audio is recorded, kept or sent; off in Settings → Sound.
 
 ## Decisions for the owner
-- 1. Three stage advancement rules need passes on one day only (dribbling st3→st4, control st2→st3, control st3→st4). Intended, or should they be 2? (Fix 3; the Brief leaves it to the owner. Shown on Parent → Content.)
-- 5. Self-host the MediaPipe models in the app (offline analysis, one fewer outbound call; Apache-2.0)? (Fix 7.5)
-- R01 (content 0.6.1): approve the new main measures for C6 (controlled first touch) and F7 (target hit), and the mode-specific teaching copy for F4–F7 and C6, with the coach.
-- R02: which manual test protocols count as verified; whether the cue levels each stage rule lists are meant to be interchangeable; what evidence validates each automatic (camera) measure. Older results without a recorded context field no longer join new trends or stage counts until you decide otherwise.
-- R03: may a parent's manual confirmation give programme credit for a block the camera's activity check could not confirm? Until you decide, such a block still leaves the session partial, as before.
-- R09: a metric-specific repeatability rule (needs a short pilot of repeated tests) before the app may say 'improving'.
-- R08: approve structured dose/protocol fields for drills (sets or reps or timed work, rest, quality stop, easier/harder) and how the builder scales dose; whether 2- and 4-minute benchmark slots are the same test.
-- Dependencies: whether to move to Vite 6+/Vitest 4 to clear the remaining dev-only npm audit advisories (they affect only the local dev server and test runner, not the published app).
-- R11: sample sizes and acceptable error for personalised models, to be set after a multi-session hand-labelled pilot (the current minimums of 10 held-out / 12 training examples are unchanged).
-- R12: whether a transfer note needs to be recent or specific (for example with chances counted) to count as stage-4 evidence; today any note counts, as before.
-- 2. Light builder sessions turn benchmarks into rest and still unlock as completed: intended?
-- 3. A multi-area run counts one session per area toward the week (the coach export now counts it as one training visit): intended?
-- 4. Sessions passed over by a confirmed skip-ahead: offer them to repeat, or change the wording?
+Open:
+- R01 (content 0.6.1): coach approval of the new main measures for C6 (controlled first touch) and F7 (target hit), and of the new teaching text for F4–F7 and C6. Not answered on 2026-10-30.
+- R08: structured drill dose (sets or reps, rest, quality stop, easier/harder) and how the builder scales it, with the coach. (The 2- and 4-minute test question is decided: kept apart.)
+- R11 personalisation: explained to the owner 2026-10-30; stays off. Sample sizes come after a hand-labelled pilot if it is ever wanted.
 - Score checks (support-1): review the step sizes after a month of real results: camera agreement within one rep, earlier results not more than ~10% (at least one point) better, practice accuracy not more than 20 points below the claimed share.
 - Later (owner decision 10, kept for when wanted): a short repeatability pilot (each main test repeated a few times over one or two sessions) to set, per test, how big a change must be before the app may say 'improving'. Until then the app keeps the cautious wording ('better this attempt', 'recent results better than earlier ones').
+
+Decided 2026-10-30 (owner): 1 two days for every stage rule; 2 light sessions don't unlock; 3 two-area runs count per area (kept); 4 passed-over sessions offered as optional extras; 5 models hosted in the app; 6a player scores count when backed, otherwise after a parent's check; 6b passes at one setting only; 6c camera scores validated tests on its own; 7 the player confirms blocks the camera could not, recorded as theirs; 8 builder tests of another length kept apart; 10 cautious wording kept (pilot noted above); 12 no coach transfer notes; 13 tool upgrade after the above.
