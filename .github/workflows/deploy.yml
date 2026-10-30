@@ -35,7 +35,8 @@ jobs:
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: build
+    # Published updates must pass the browser tests too (Brief R04); a failed or cancelled e2e job skips the deploy.
+    needs: [build, e2e]
     runs-on: ubuntu-latest
     permissions:
       pages: write
