@@ -41,6 +41,8 @@ export interface CueLogEntry {
   tripwireMs?: number;
   missedTripwire?: boolean;
   cueMs?: number; // absent on a no-cue catch trial
+  /** When the cue was actually painted on screen (active ms); the analysis times reactions from it (audit task 16). */
+  shownMs?: number;
   value?: string;
   number?: number;
   side?: Side; // for blocked-on-the-shaping-side catch trials

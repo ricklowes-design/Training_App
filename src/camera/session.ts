@@ -121,6 +121,8 @@ export class CameraSession {
   private stopped: Promise<void> = Promise.resolve();
   /** Called once if the camera's video track ends (unplugged, or taken by another app). */
   onEnded?: () => void;
+  /** Active block time when the recorder actually started (audit task 16). */
+  private startActive: number | undefined;
 
   private constructor(stream: MediaStream, video: HTMLVideoElement) {
     this.stream = stream;
@@ -200,6 +202,9 @@ export class CameraSession {
       if (rec.state !== 'inactive') rec.stop();
     };
     rec.ondataavailable = (e) => e.data.size && this.chunks.push(e.data);
+    // The clip's frame 0 is when recording really began, not when the block became active.
+    this.startActive = undefined;
+    rec.addEventListener('start', () => (this.startActive = this.activeMs()), { once: true });
     rec.start(1000);
     this.startLoop();
   }
@@ -213,23 +218,26 @@ export class CameraSession {
   }
 
   /** Stops the block's recording. Returns the clip and the share of samples with movement in the drill area. */
-  async endBlock(): Promise<{ blob: Blob; mime: string; presenceFrac: number | undefined }> {
+  async endBlock(): Promise<{ blob: Blob; mime: string; presenceFrac: number | undefined; startActiveMs: number }> {
     this.stopLoop();
     const rec = this.recorder;
     this.recorder = null;
-    if (!rec) return { blob: new Blob(), mime: '', presenceFrac: undefined };
+    if (!rec) return { blob: new Blob(), mime: '', presenceFrac: undefined, startActiveMs: 0 };
     if (rec.state !== 'inactive') rec.stop();
     // Never wait forever: a recorder that already stopped (or never reports it) gives up after 3 s.
     await Promise.race([this.stopped, new Promise<void>((r) => setTimeout(r, 3000))]);
     const presenceFrac = this.presence.samples >= 10 ? this.presence.present / this.presence.samples : undefined;
-    return { blob: new Blob(this.chunks, { type: rec.mimeType }), mime: rec.mimeType, presenceFrac };
+    return { blob: new Blob(this.chunks, { type: rec.mimeType }), mime: rec.mimeType, presenceFrac, startActiveMs: Math.max(0, Math.round(this.startActive ?? 0)) };
   }
 
   private startLoop(): void {
     const id = ++this.loopId;
-    const step = () => {
+    const step = (_now?: number, meta?: VideoFrameCallbackMetadata) => {
       if (id !== this.loopId) return;
-      this.onFrame();
+      // Time the frame was captured, not when the callback ran (audit task 16).
+      // Only a plausible lag is used: some cameras report capture times on another clock.
+      const lag = meta?.captureTime !== undefined ? performance.now() - meta.captureTime : 0;
+      this.onFrame(lag > 0 && lag < 500 ? lag : 0);
       if ('requestVideoFrameCallback' in this.video) this.video.requestVideoFrameCallback(step);
       else setTimeout(step, 33);
     };
@@ -240,9 +248,9 @@ export class CameraSession {
     this.loopId++;
   }
 
-  private onFrame(): void {
+  private onFrame(lagMs = 0): void {
     if (this.recorder?.state === 'paused') return;
-    const now = this.activeMs();
+    const now = this.activeMs() - lagMs;
     const g = smallGray(this.video, this.small);
     const prev = this.prev;
     this.prev = g;

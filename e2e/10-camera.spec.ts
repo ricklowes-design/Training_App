@@ -67,7 +67,10 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
       expect(e.cueMs!).toBeGreaterThanOrEqual(e.tripwireMs!); // never before the tripwire
       expect(e.cueMs! - e.tripwireMs!).toBeLessThanOrEqual(450);
     }
-    const clips = await table<{ id: string; blockLabel: string; mime: string }>(page, 'clips');
+    const clips = await table<{ id: string; blockLabel: string; mime: string; startActiveMs: number }>(page, 'clips');
+    // The clip's frame 0 is when recording really began (audit task 16).
+    expect(clips[0].startActiveMs).toBeGreaterThan(0);
+    expect(clips[0].startActiveMs).toBeLessThan(1000);
     expect(clips.some((c) => c.blockLabel === 'F5' && c.mime.startsWith('video/webm'))).toBe(true);
     expect((await table(page, 'blockAnalyses')).length).toBeGreaterThanOrEqual(1);
 

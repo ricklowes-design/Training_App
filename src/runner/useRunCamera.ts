@@ -153,7 +153,7 @@ export function useRunCamera(args: {
     const rec = recording.current;
     if (rec && (rec.key !== key || s.phase !== 'active')) {
       recording.current = null;
-      const done = cs.endBlock().then(async ({ blob, mime, presenceFrac }) => {
+      const done = cs.endBlock().then(async ({ blob, mime, presenceFrac, startActiveMs }) => {
         const extras: BlockExtras = {};
         try {
           if (rec.setup && rec.block.kind === 'work' && presenceFrac !== undefined && !unverified.current) extras.presenceFrac = Math.round(presenceFrac * 100) / 100;
@@ -172,7 +172,7 @@ export function useRunCamera(args: {
               date: new Date().toISOString(),
               durationS: result?.elapsedS ?? 0,
               cameraSetupId: rec.setup?.id,
-              startActiveMs: 0,
+              startActiveMs,
             };
             try {
               await db.clips.put(clip);

@@ -154,3 +154,14 @@ describe('rep and block analysis', () => {
     expect(b.flaggedRepIndexes[0]).toBe(5);
   });
 });
+
+describe('cue paint time (audit 2026-10-29, task 16)', () => {
+  it('reactions are timed from when the cue was painted, when that is known', () => {
+    const log: CueLogEntry[] = [{ rep: 0, repStartMs: 0, trigger: 'timed', cueMs: 1000, shownMs: 1060, value: 'LEFT', plannedDelayMs: 1000 }];
+    // Movement starts 300 ms after the paint (360 ms after the schedule).
+    const fr = frames(0, 3000, 30, (t) => ({ area: t >= 1360 ? 0.2 : 0.004, zones: { 'her-left gate': t >= 1600 && t < 1800 ? 0.4 : 0, 'her-right gate': 0 } }));
+    const [r] = analyseReps(fr, log, { kind: 'scan', mirror: false, blockEndMs: 3000, fps: 30 }, ['her-left gate', 'her-right gate']);
+    expect(r.cueTimeMs).toBe(1060);
+    expect(r.onsetMs! - r.cueTimeMs!).toBeLessThan(340);
+  });
+});

@@ -284,7 +284,7 @@ export function analyseReps(frames: FrameData[], log: CueLogEntry[], ctx: Analys
     const flags: string[] = [];
     const r: RepAnalysis = {
       repIndex: e.rep,
-      cueTimeMs: e.cueMs,
+      cueTimeMs: e.shownMs ?? e.cueMs,
       cueValue: e.value,
       catchType: e.catchType,
       zoneEvents: allEvents.filter((z) => z.tMs >= e.repStartMs && z.tMs < end),
@@ -297,7 +297,8 @@ export function analyseReps(frames: FrameData[], log: CueLogEntry[], ctx: Analys
     const usesPose = ctx.kind === 'feint' || ctx.kind === 'scan';
     const posed = poseCoverage(repFrames, ctx.kind === 'scan' ? shouldersVisible : hipsVisible);
     const anyPose = repFrames.some((f) => f.pose !== undefined);
-    const cueAt = e.cueMs ?? (e.catchType === 'noCue' ? e.repStartMs + e.plannedDelayMs : undefined);
+    // Reactions are timed from when the cue was painted, when known (audit task 16); the gap to cueMs shows main-thread lag.
+    const cueAt = e.shownMs ?? e.cueMs ?? (e.catchType === 'noCue' ? e.repStartMs + e.plannedDelayMs : undefined);
 
     // Gate passage after the cue decides the exit side where gates are marked.
     const gateAfter = r.zoneEvents.find((z) => cueAt !== undefined && z.tMs >= cueAt && gateSide(z.zone));
@@ -331,8 +332,9 @@ export function analyseReps(frames: FrameData[], log: CueLogEntry[], ctx: Analys
         r.exitShiftHipWidths = ff.exit;
         r.preCueMovement = (ff.fake ?? 0) >= (ctx.thresholds?.fakeMinHipWidths ?? THRESHOLDS.fakeMinHipWidths);
         // Evidence, not mind-reading: the final exit run began before the defender's move could have been seen.
-        if (r.exitMs !== undefined && e.cueMs !== undefined && r.exitMs + r.timingUncertaintyMs < e.cueMs + THRESHOLDS.perceptionMinMs) {
-          r.possibleEarlyRouteCommitment = `final exit movement began ${e.cueMs - r.exitMs} ms before the defender moved (±${r.timingUncertaintyMs} ms)`;
+        const shown = e.shownMs ?? e.cueMs;
+        if (r.exitMs !== undefined && shown !== undefined && r.exitMs + r.timingUncertaintyMs < shown + THRESHOLDS.perceptionMinMs) {
+          r.possibleEarlyRouteCommitment = `final exit movement began ${shown - r.exitMs} ms before the defender moved (±${r.timingUncertaintyMs} ms)`;
         }
       }
       if (anyPose && ctx.kind === 'scan') {

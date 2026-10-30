@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, useLayoutEffect } from 'react';
 import { say, tone } from '../audio/audio';
 import { CueDisplay } from '../cue/CueDisplay';
 import { initCue, tickCue, type CueConfig, type CueInput, type CueLogEntry, type CueState } from '../cue/engine';
@@ -44,6 +44,21 @@ export function CueBlock(props: {
     }, 20);
     return () => clearInterval(t);
   }, [paused]);
+
+  // Record when each cue was actually painted, after the browser drew it (audit task 16).
+  const shownRep = state.current.view && state.current.log.length ? state.current.log[state.current.log.length - 1].rep : null;
+  useLayoutEffect(() => {
+    if (shownRep === null) return;
+    const raf = requestAnimationFrame(() => {
+      const st = state.current;
+      const entry = st.log.find((e) => e.rep === shownRep);
+      if (!entry || entry.cueMs === undefined || entry.shownMs !== undefined) return;
+      const shownMs = Math.round(cb.current.activeMs());
+      state.current = { ...st, log: st.log.map((e) => (e === entry ? { ...e, shownMs } : e)) };
+      cb.current.onLog(state.current.log);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [shownRep]);
 
   const s = state.current;
   const reps = s.config.reps;
