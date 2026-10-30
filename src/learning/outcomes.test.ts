@@ -73,3 +73,54 @@ describe('learning from these labels (simulated player)', () => {
     expect(r.candidate.params.threshold).toBeLessThanOrEqual(0.2);
   });
 });
+
+describe('reading or luck (owner request 2026-10-30)', () => {
+  it('50/50 drill: 6 of 10 right is what luck gives; 9 of 10 is reading', async () => {
+    const { readingVsLuck } = await import('./outcomes');
+    const luck = readingVsLuck(6, 10, 2);
+    expect(luck.expectedByLuck).toBe(5);
+    expect(luck.reading).toBe(false);
+    const read = readingVsLuck(9, 10, 2);
+    expect(read.reading).toBe(true);
+    expect(read.readShare).toBeCloseTo(0.8);
+    // Of the right moves, the lucky guesses: 0.2 × 0.5 = 0.1 of reps, against 0.8 real reads.
+    expect(read.rightWasRead).toBeCloseTo(0.8 / 0.9);
+  });
+  it('the same 8 of 10 means more on a 3-choice drill than on a 50/50 one', async () => {
+    const { readingVsLuck } = await import('./outcomes');
+    expect(readingVsLuck(8, 10, 3).rightWasRead).toBeGreaterThan(readingVsLuck(8, 10, 2).rightWasRead);
+    // On a 50/50 drill luck reaches 8 or more of 10 in 5.5% of blocks: not clear enough. On 3 choices, 0.3%.
+    expect(readingVsLuck(8, 10, 2).luckChance).toBeCloseTo(56 / 1024, 4);
+    expect(readingVsLuck(8, 10, 2).reading).toBe(false);
+    expect(readingVsLuck(8, 10, 3).reading).toBe(true);
+  });
+  it('right moves from a 50/50 block count by the chance they were reads', () => {
+    const reps = [...Array.from({ length: 9 }, (_, i) => rep(i, true, 0.3)), rep(9, false, 0.05)];
+    const ex = outcomeExamples(input(reps, { cueValues: 2 }));
+    expect(ex.find((e) => e.label === 'yes')!.weight).toBeCloseTo(0.89, 2);
+    expect(ex.find((e) => e.label === 'no')!.weight).toBe(1);
+    expect(outcomeExamples(input(Array.from({ length: 10 }, (_, i) => rep(i, i < 6, 0.3)), { cueValues: 2 }))).toEqual([]);
+  });
+});
+
+describe('calibration status: speech only until personalisation is set (owner request 2026-10-30)', () => {
+  it('counts the sessions still needed from what each session gave, and none once a threshold was tested', async () => {
+    const { scanCalibration, CALIBRATION_TARGET } = await import('./status');
+    const reps = Array.from({ length: 10 }, (_, i) => rep(i, true, 0.3));
+    const ex = [0, 1].flatMap((s) => outcomeExamples(input(reps, { clipId: `c${s}`, sessionRecordId: `s${s}` })));
+    const st = scanCalibration(ex, []);
+    expect(st).toMatchObject({ established: false, examples: 20, perSession: 10, sessionsLeft: Math.ceil((CALIBRATION_TARGET - 20) / 10) });
+    const tested = scanCalibration(ex, [{ id: 'scanPattern@1', component: 'scanPattern', n: 1, createdAt: '', kind: 'personalised', params: { threshold: 0.2, direction: 1 }, examplesUsed: 20, status: 'rejected' }]);
+    expect(tested).toMatchObject({ established: true, sessionsLeft: 0 });
+  });
+  it('once set, the calibration drill no longer asks for hearing the numbers', async () => {
+    const { missingFor } = await import('../domain/needs');
+    const { loadProgramme } = await import('../test/fixtures');
+    const { calibrationPlan } = await import('../domain/plans');
+    const p = loadProgramme();
+    const plan = calibrationPlan(p)!;
+    const s = { camera: { enabled: true }, cueEngine: true, flags: { speechDiagnostic: false }, sound: { speech: true, tones: true } } as never;
+    expect(missingFor(p, plan.blocks, s, false)).toContain('speechDiagnostic');
+    expect(missingFor(p, plan.blocks, { ...(s as object), scanCalibratedAt: '2026-11-20' } as never, false)).not.toContain('speechDiagnostic');
+  });
+});

@@ -55,9 +55,12 @@ export function coverage(m: ThresholdModel, exs: LearningExample[]): number {
   return exs.length ? exs.filter((e) => predict(m, e) !== undefined).length / exs.length : 0;
 }
 
+/** Weighted share of examples the model gets right (an example counts by its weight, default 1). */
 export function accuracy(m: ThresholdModel, exs: LearningExample[]): number {
   const judged = exs.filter((e) => predict(m, e) !== undefined);
-  return judged.length ? judged.filter((e) => predict(m, e) === e.label).length / judged.length : 0;
+  const w = (e: LearningExample) => e.weight ?? 1;
+  const total = judged.reduce((t, e) => t + w(e), 0);
+  return total ? judged.filter((e) => predict(m, e) === e.label).reduce((t, e) => t + w(e), 0) / total : 0;
 }
 
 /** The threshold on one feature that best separates the verified labels. */

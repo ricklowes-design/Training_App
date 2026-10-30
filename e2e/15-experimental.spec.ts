@@ -139,6 +139,8 @@ test('head-turn learning from what the player did: examples collected from a sca
   await place(page, 'Scanning', 1);
   // Home offers the calibration while the camera has few head-turn examples.
   await expect(page.getByTestId('calibration-offer')).toContainText('call out the number you see');
+  // Speech is needed only for a few sessions: with no examples yet, about 30 / 10 = 3.
+  await expect(page.getByTestId('calibration-offer')).toContainText("needed for about 3 more sessions; once personalisation is set, it isn't needed any more");
   // Stand-in for an analysed S2 block: 10 reps, 8 right decisions; right ones with a small head turn.
   await page.evaluate(
     () =>
@@ -157,6 +159,8 @@ test('head-turn learning from what the player did: examples collected from a sca
   );
   await openParent(page, /^Learning/);
   await expect(page.getByTestId('sources-scanPattern')).toContainText('right/wrong moves 10');
+  await expect(page.getByTestId('calibration-status')).toContainText('10 of about 30 examples');
+  await expect(page.getByTestId('calibration-status')).toContainText('needed for about 2 more calibration sessions');
   await expect(button(page, /Start head-turn calibration/)).toBeVisible();
   const ex = await table<{ id: string; label: string; labelSource: string; features: { headTurn: number } }>(page, 'learningExamples');
   expect(ex.filter((e) => e.label === 'yes').every((e) => e.features.headTurn === 0.22)).toBe(true);

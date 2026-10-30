@@ -5,7 +5,9 @@ import { calibrationPlan } from '../../domain/plans';
 import { autoLearnScan, harvestOutcomeExamples } from '../../learning/harvest';
 import { logHistory, useData } from '../../app/data';
 import { db } from '../../db/db';
-import type { LearningComponent, LearningSettings } from '../../db/types';
+import type { LearningComponent, LearningExample, LearningSettings, ModelVersion } from '../../db/types';
+import { tryFill } from '../../domain/templates';
+import { CALIBRATION_TARGET, scanCalibration } from '../../learning/status';
 import { activate, activeVersion, freezeValidation, proposeCandidate, rollback, type ThresholdModel } from '../../learning/service';
 import { fmtDate } from '../../ui/widgets';
 
@@ -19,6 +21,25 @@ const COMPONENTS: { id: LearningComponent; label: string; feature?: string; base
 ];
 
 /** Parent → Learning (task 7.7): what is personalised, what it rests on, and how to pause, reset or roll back. */
+/** Where the head-turn calibration stands: sessions of call-outs still needed, or set (owner request 2026-10-30). */
+function CalibrationLine({ examples, versions }: { examples: LearningExample[]; versions: ModelVersion[] }) {
+  const { settings, programme: p } = useData();
+  const st = scanCalibration(examples, versions);
+  if (settings.scanCalibratedAt || st.established) {
+    return (
+      <p className="note-box" data-testid="calibration-status">
+        {tryFill(p.feedbackTemplates, 'calibrationDone', { date: fmtDate(settings.scanCalibratedAt ?? versions.find((v) => v.component === 'scanPattern')?.createdAt ?? new Date().toISOString()) })}
+      </p>
+    );
+  }
+  return (
+    <p className="note-box" data-testid="calibration-status">
+      Head-turn calibration: {st.examples} of about {CALIBRATION_TARGET} examples (about {st.perSession} a session). Calling out numbers with speech is needed for about {st.sessionsLeft} more calibration
+      session{st.sessionsLeft === 1 ? '' : 's'}; once the first personalised threshold has been tested, it is not needed any more.
+    </p>
+  );
+}
+
 const SOURCE_LABEL: Record<string, string> = { flaggedRepReview: 'your reviews', callOut: 'called-out numbers', taskOutcome: 'right/wrong moves', blindCalibration: 'blind calibration', coachVerification: 'coach' };
 
 export function LearningSection() {
@@ -81,7 +102,8 @@ export function LearningSection() {
                   .join(' · ')}
               </p>
             ) : null}
-            {c.id === 'scanPattern' && calibrate ? (
+            {c.id === 'scanPattern' ? <CalibrationLine examples={examples} versions={versions} /> : null}
+            {c.id === 'scanPattern' && calibrate && !settings.scanCalibratedAt ? (
               <div className="row">
                 <button className="btn small" onClick={() => go({ name: 'start', plan: calibrate })}>
                   Start head-turn calibration ({calibrate.totalMinutes} min)
@@ -126,6 +148,10 @@ export function LearningSection() {
                       if (!r) return setMsg({ ...msg, [c.id]: 'No candidate: paused, no frozen validation set, or too few verified examples.' });
                       const next = activate(versions, r.candidate);
                       await db.modelVersions.bulkPut(next);
+                      if (c.id === 'scanPattern' && !settings.scanCalibratedAt) {
+                        await db.settings.update('main', { scanCalibratedAt: new Date().toISOString(), flags: { ...settings.flags, speechDiagnostic: false } });
+                        await logHistory('app', 'learning', 'Head-turn personalisation set: calling out numbers is no longer needed; hearing the numbers switched off');
+                      }
                       await logHistory('parent', 'learning', `${c.label}: candidate v${r.candidate.n} ${r.candidate.status} (${r.reason})`);
                       setMsg({ ...msg, [c.id]: `Candidate v${r.candidate.n} ${r.candidate.status === 'active' ? 'activated' : 'not used'}: ${r.reason}.` });
                     }}

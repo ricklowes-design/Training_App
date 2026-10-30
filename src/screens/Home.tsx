@@ -10,6 +10,7 @@ import { useRoomProfile } from '../app/room';
 import { areaName, buildPlan, calibrationPlan, digitDiagnosticPlan, findSession, noBallPlan, type RunPlan } from '../domain/plans';
 import { lastCredibleImprovement, todayGoals } from '../domain/focus';
 import { tryFill } from '../domain/templates';
+import { scanCalibration } from '../learning/status';
 import { reasonsFor } from '../domain/recommend';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { countsForWeek } from '../domain/records';
@@ -130,8 +131,8 @@ export function Home() {
   const guided = useMemo(() => guidedPlan(d, suggestion, others, minutes, isLight), [d, suggestion, others, minutes, isLight]); // eslint-disable-line react-hooks/exhaustive-deps
   const mainPlan = guided.plan;
   // While personalisation is on and the camera has few head-turn examples, offer the calibration drill.
-  const scanExamples = useLiveQuery(() => db.learningExamples.where('component').equals('scanPattern').count(), []) ?? 0;
-  const calibrate = settings.flags.learning && d.placements.some((x) => x.areaId === 'scanning') && scanExamples < 30 ? calibrationPlan(p) : null;
+  const scanState = useLiveQuery(async () => scanCalibration(await db.learningExamples.where('component').equals('scanPattern').toArray(), await db.modelVersions.where('component').equals('scanPattern').toArray()), []);
+  const calibrate = settings.flags.learning && !settings.scanCalibratedAt && scanState && !scanState.established && d.placements.some((x) => x.areaId === 'scanning') ? calibrationPlan(p) : null;
   // One upcoming stage step, and whether it waits on practice or on a parent's check (Brief R10).
   const rule = suggestion?.areaId ? ruleStatusFor(d, suggestion.areaId) : null;
   const nextStep =
@@ -239,7 +240,7 @@ export function Home() {
             {nextStep ? <div className="muted" data-testid="next-step">{nextStep}</div> : null}
             {calibrate ? (
               <div className="card row spread" data-testid="calibration-offer">
-                <span>{tryFill(p.feedbackTemplates, 'calibrationOffer', { minutes: calibrate.totalMinutes })}</span>
+                <span>{tryFill(p.feedbackTemplates, 'calibrationOffer', { minutes: calibrate.totalMinutes, sessions: `${scanState!.sessionsLeft} more session${scanState!.sessionsLeft === 1 ? '' : 's'}` })}</span>
                 <button className="btn" onClick={() => go({ name: 'start', plan: calibrate })}>
                   Calibrate
                 </button>

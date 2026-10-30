@@ -21,7 +21,7 @@ export const NEED_LABELS: Record<NeedKey, string> = {
   speechDiagnostic: 'hearing the numbers called out',
 };
 
-type NeedSettings = Pick<Settings, 'camera' | 'cueEngine' | 'flags' | 'sound'>;
+type NeedSettings = Pick<Settings, 'camera' | 'cueEngine' | 'flags' | 'sound'> & Partial<Pick<Settings, 'scanCalibratedAt'>>;
 
 const recordable = (b: RunBlock) => b.kind === 'work' || b.kind === 'benchmark' || b.kind === 'anchor';
 
@@ -59,7 +59,8 @@ export function isOn(k: NeedKey, s: NeedSettings): boolean {
 /** The switches the blocks use that are off now (each once, in a stable order). */
 export function missingFor(p: Programme, blocks: RunBlock[], s: NeedSettings, wallUsable: boolean | undefined): NeedKey[] {
   const used = new Set(blocks.flatMap((b) => blockUses(p, b, wallUsable)));
-  return (Object.keys(NEED_LABELS) as NeedKey[]).filter((k) => used.has(k) && !isOn(k, s));
+  // Hearing the numbers is needed only until the head-turn personalisation is set (owner request 2026-10-30).
+  return (Object.keys(NEED_LABELS) as NeedKey[]).filter((k) => used.has(k) && !isOn(k, s) && !(k === 'speechDiagnostic' && s.scanCalibratedAt));
 }
 
 /** The settings patch that turns these on. */

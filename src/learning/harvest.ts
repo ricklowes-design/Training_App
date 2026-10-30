@@ -76,6 +76,12 @@ export async function autoLearnScan(): Promise<string | null> {
   const r = proposeCandidate({ component: 'scanPattern', feature: 'headTurn', base: SCAN_BASE, examples, validation: set, versions, settings: ls, now: new Date().toISOString() });
   if (!r) return null;
   await db.modelVersions.bulkPut(activate(versions, r.candidate));
+  // The first tested threshold sets the personalisation: speech call-outs are no longer needed, and
+  // listening (which sends audio to Google) is switched off (owner request 2026-10-30).
+  if (!s.scanCalibratedAt) {
+    await db.settings.update('main', { scanCalibratedAt: new Date().toISOString(), flags: { ...s.flags, speechDiagnostic: false } });
+    await logHistory('app', 'learning', 'Head-turn personalisation set: calling out numbers is no longer needed; hearing the numbers switched off');
+  }
   const what = `Scanning look: candidate v${r.candidate.n} ${r.candidate.status === 'active' ? 'activated' : 'not used'} (${r.reason})`;
   await logHistory('app', 'learning', what);
   return what;

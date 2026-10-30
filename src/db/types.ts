@@ -132,6 +132,8 @@ export interface Settings {
   };
   /** Dates marked in the availability calendar (YYYY-MM-DD): a rest day, a light day or a game. */
   availability?: { date: string; kind: 'rest' | 'light' | 'game' }[];
+  /** When the head-turn personalisation was first set; speech call-outs are no longer needed after it. */
+  scanCalibratedAt?: string;
 }
 
 export interface CameraSettings {
@@ -792,6 +794,8 @@ export interface LearningExample {
    *  decision on a cue shown behind, from blocks well above guessing (owner decision 2026-10-30). */
   labelSource?: 'flaggedRepReview' | 'blindCalibration' | 'coachVerification' | 'callOut' | 'taskOutcome';
   verified: boolean;
+  /** How much this example counts (0–1; absent = 1): a right move counts by the chance it was a real read. */
+  weight?: number;
   sessionRecordId?: string;
   context: { layoutVersion?: number; roomProfileVersion?: string; lighting?: string };
   inValidationSet: boolean;
