@@ -8,16 +8,23 @@ import { chancePct, chanceTail } from '../domain/chance';
 const pct = (x?: number) => (x === undefined ? '—' : `${Math.round(100 * x)}%`);
 
 /** Rep strip (plan/13 §13.2): green = correct; amber = possible early route commitment (with evidence); red = wrong; grey = unable to assess; white = not judged by the camera. */
+/** Each rep's state as a symbol and words, not only a colour (Brief R15). */
+export function repState(r: RepAnalysis): { symbol: string; text: string; colour: string } {
+  if (r.status === 'unableToAssess') return { symbol: '○', text: 'unable to assess', colour: '#6b7684' };
+  if (r.decisionCorrect === false) return { symbol: '✗', text: 'wrong way', colour: '#ff5c5c' };
+  if (r.possibleEarlyRouteCommitment) return { symbol: '!', text: 'possibly early', colour: '#ffb020' };
+  if (r.decisionCorrect) return { symbol: '✓', text: 'right way', colour: '#3ddc84' };
+  return { symbol: '•', text: 'not judged', colour: '#f5f7fa' };
+}
+
 export function RepStrip({ reps }: { reps: RepAnalysis[] }) {
   return (
-    <div className="repstrip" aria-label="Reps">
+    <div className="repstrip" role="list" aria-label="Reps">
       {reps.map((r) => {
-        const early = !!r.possibleEarlyRouteCommitment;
-        const colour =
-          r.status === 'unableToAssess' ? '#6b7684' : r.decisionCorrect === false ? '#ff5c5c' : early ? '#ffb020' : r.decisionCorrect ? '#3ddc84' : '#f5f7fa';
+        const st = repState(r);
         return (
-          <span key={r.repIndex} style={{ color: colour }} title={`rep ${r.repIndex + 1}`}>
-            {r.status === 'unableToAssess' ? '○' : '●'}
+          <span key={r.repIndex} role="listitem" style={{ color: st.colour }} title={`rep ${r.repIndex + 1}: ${st.text}`} aria-label={`rep ${r.repIndex + 1}: ${st.text}`}>
+            {st.symbol}
           </span>
         );
       })}

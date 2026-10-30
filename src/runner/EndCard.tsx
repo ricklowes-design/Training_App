@@ -47,7 +47,10 @@ export function EndCard(props: {
     if (left === 0) onNext();
   }, [left, onNext]);
 
-  const current = attempts[attempts.length - 1];
+  // Practice rounds are never scored attempts (Brief R15): listed apart, never as "attempt 0".
+  const scored = attempts.filter((a) => !a.practice);
+  const practised = attempts.filter((a) => a.practice && !a.skipped);
+  const current = scored[scored.length - 1] ?? attempts[attempts.length - 1];
   const lines: string[] = [];
   let thenLine: string | null = null;
 
@@ -107,7 +110,7 @@ export function EndCard(props: {
       ) : null}
       {recordId && current ? <LiveScorecard sessionRecordId={recordId} blockIndex={current.index} attempt={current.attempt} /> : null}
       {thenLine ? <div className="then">{thenLine}</div> : null}
-      {attempts.length > 1 ? (
+      {scored.length > 1 ? (
         <div className="then">
           Earlier today:{' '}
           {saved.length > 1
@@ -115,10 +118,15 @@ export function EndCard(props: {
                 .slice(0, -1)
                 .map((s, i) => `attempt ${i + 1}: ${resultLines(s.values).map((l) => l.text).join(' · ')}`)
                 .join(' | ')
-            : attempts
+            : scored
                 .slice(0, -1)
                 .map((a) => `attempt ${a.attempt}: ${a.skipped ? 'skipped' : fmtClock(a.elapsedS)}`)
                 .join(' | ')}
+        </div>
+      ) : null}
+      {practised.length ? (
+        <div className="then" data-testid="practice-rounds">
+          Practice (not scored): {practised.length} round{practised.length === 1 ? '' : 's'}
         </div>
       ) : null}
       <div className="row">

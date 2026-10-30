@@ -26,8 +26,9 @@ function BenchmarkHistory({ id, drillId }: { id: string; drillId?: string }) {
   const [date, setDate] = useState('');
   const t = p.feedbackTemplates;
   const now = all[0];
-  if (!now) return <p>No results yet.</p>;
   const name = p.benchmarks.find((b) => b.id === id)?.name ?? p.anchors.find((a) => a.id === id)?.name ?? id;
+  // An empty history says what to do next (Brief R15).
+  if (!now) return <p data-testid="no-results">{tryFill(t, 'noResultsYet', { test: name }) ?? 'No results yet.'}</p>;
 
   const pick: ComparePick = pickKind === 'last' ? { kind: 'last' } : pickKind === 'm1' ? { kind: 'monthsAgo', months: 1 } : pickKind === 'm3' ? { kind: 'monthsAgo', months: 3 } : { kind: 'date', date: date || now.date };
   const then = pickKind === 'date' && !date ? undefined : pickComparison(now, all, pick);

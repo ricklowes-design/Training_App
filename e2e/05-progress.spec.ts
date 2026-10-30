@@ -11,7 +11,7 @@ test('Week tab: an empty week is one line, with the previous week beneath', asyn
   await ready(page);
   await button(page, 'Progress').click();
   await expect(page.getByRole('heading', { name: 'Week of Nov 2, 2026' })).toBeVisible();
-  await expect(page.getByText('No completed sessions this week.')).toBeVisible();
+  await expect(page.getByText('No completed sessions this week yet. The next one is on Home.')).toBeVisible();
   await expect(page.getByText(/Previous week \(Oct 26\): none/)).toBeVisible();
   await expect(page.getByText('Last 8 weeks')).toHaveCount(0);
   await expect(page.getByText(/Planned 3/)).toHaveCount(0);

@@ -210,6 +210,13 @@ test('cones, then instructions with the game purpose, then "Try it": 3 slow reps
   await expect(page.getByText('Try it')).toHaveCount(0);
   const recs = await table<{ blocks: { attempt: number; practice?: boolean }[] }>(page, 'sessionRecords');
   expect(recs.length === 0 || recs[0].blocks.every((b) => b.attempt > 0 || b.practice)).toBe(true);
+  // The end-of-drill card lists the practice apart, never as "attempt 0" (Brief R15).
+  await advance(page, 10_500 + 5 * 60_000);
+  await button(page, 'DONE').click();
+  await expect(page.locator('.endcard')).toBeVisible();
+  await expect(page.locator('.endcard')).toContainText('attempt 1 today');
+  await expect(page.locator('.endcard')).not.toContainText('attempt 0');
+  await expect(page.getByTestId('practice-rounds')).toContainText('Practice (not scored): 1 round');
 });
 
 test('with a wall: the wall version of the steps (kick at the wall, check your shoulder, receive the bounce)', async ({ page }) => {

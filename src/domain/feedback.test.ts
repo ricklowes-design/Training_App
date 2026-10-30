@@ -10,7 +10,7 @@ const t = loadProgramme().feedbackTemplates;
 describe('templates', () => {
   it('fills the plan/05 examples', () => {
     expect(fill(t, 'completed', { area: 'Feinting', n: 7, blocks: 4, minutes: 20 })).toBe('Feinting Session 7 complete: all 4 blocks, 20 minutes.');
-    expect(fill(t, 'noSessionsThisWeek', {})).toBe('No completed sessions this week.');
+    expect(fill(t, 'noSessionsThisWeek', {})).toBe('No completed sessions this week yet. The next one is on Home.');
   });
 
   it('refuses to fill with a missing value', () => {

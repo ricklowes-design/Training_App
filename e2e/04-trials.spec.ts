@@ -25,7 +25,7 @@ test('trial is suggested on a first drill run; a trial counts for nothing until 
   await expect(startCard(page, 'Dribbling · Stage 1 · Session 1')).toBeVisible();
   await expect(page.getByText('0 of 3 planned done')).toBeVisible();
   await button(page, 'Progress').click();
-  await expect(page.getByText('No completed sessions this week.')).toBeVisible();
+  await expect(page.getByText('No completed sessions this week yet. The next one is on Home.')).toBeVisible();
   // Keep it from Parent → Trials: it keeps its date and unlocks.
   await button(page, 'Home').click();
   await openParent(page, /^Trials/);
