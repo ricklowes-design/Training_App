@@ -16,6 +16,7 @@ import { scriptFor } from '../../ui/drillScripts';
 import { downloadText, fmtDate, Modal, StatusPill } from '../../ui/widgets';
 import { ruleStatusFor, useAreaProgress } from '../helpers';
 import { countsForUnlock } from '../../domain/records';
+import { contentWarnings } from '../../content/validate';
 
 export function BackupSection() {
   const { settings, records, problemReports } = useData();
@@ -98,6 +99,16 @@ export function ContentSection() {
           {base.benchmarks.length} benchmarks, {base.anchors.length} anchors. Coach overrides active: {overrides.filter((o) => !o.revertedAt).length}; custom drills: {customDrills.length}.
         </p>
         <p className="muted">{base.note}</p>
+        {contentWarnings(base).length ? (
+          <div className="note-box" data-testid="content-warnings">
+            <strong>To check with the coach</strong>
+            <ul>
+              {contentWarnings(base).map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
       {p.areas.map((a) => (
         <div key={a.id} className="card">

@@ -42,3 +42,14 @@ describe('content validation', () => {
     if (!r.ok) expect(r.errors.join()).toMatch(/drill "Z9" does not exist/);
   });
 });
+
+describe('content warnings', () => {
+  it('lists stage rules that need fewer than two days, not exit rules', async () => {
+    const { contentWarnings } = await import('./validate');
+    const { loadProgramme } = await import('../test/fixtures');
+    const w = contentWarnings(loadProgramme());
+    expect(w.length).toBe(3);
+    expect(w.every((x) => !x.includes('→exit'))).toBe(true);
+    expect(w[0]).toMatch(/needs passes on 1 day; stage advancement usually needs two different days/);
+  });
+});

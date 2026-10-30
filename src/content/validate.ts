@@ -326,6 +326,17 @@ function crossCheck(p: Programme, errs: string[]): void {
   }
 }
 
+/** Things that load but deserve a look (shown on Parent → Content, never stop the app). */
+export function contentWarnings(p: Programme): string[] {
+  const out: string[] = [];
+  for (const r of p.advancementRules) {
+    // Part 15 D12 asks for evidence on two different days; a stage rule asking for fewer is listed for the coach.
+    if (r.to !== 'exit' && r.consecutive < 2)
+      out.push(`Advancement ${r.areaId} ${r.from}→${r.to} needs passes on ${r.consecutive} day${r.consecutive === 1 ? '' : 's'}; stage advancement usually needs two different days. Ask the coach whether this is intended.`);
+  }
+  return out;
+}
+
 export type ValidationResult = { ok: true; programme: Programme } | { ok: false; errors: string[] };
 
 /** Line and column of a character offset, for JSON syntax errors. */
