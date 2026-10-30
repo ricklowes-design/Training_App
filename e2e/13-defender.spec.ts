@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, fillForm, home, patchSettings, place, runToEnd, setup, start, startBlockNow, table } from './helpers';
+import { advance, boot, button, fillForm, home, patchSettings, place, runToEnd, setup, start, startBlockNow, table , holdStop } from './helpers';
 
 // The 3D defender in scored reactive drills (part 15 D3, tasks 2.2–2.4).
 
@@ -30,7 +30,7 @@ test('a reactive drill shows the 3D defender from the player view, with no arrow
   await expect(page.locator('.practice.defender')).toContainText(/rep \d+ of 16/);
   // The whole block (scenarios, tally, observations) is checked in the 2D test below: software WebGL
   // in the test browser is too slow to fast-forward a full block at 60 frames a second.
-  await button(page, 'STOP').click();
+  await holdStop(page);
 });
 
 test('without WebGL the drill falls back to word/arrow cues, recorded under the cue engine level', async ({ page }) => {
@@ -112,5 +112,5 @@ test('PAUSE keeps the same 3D canvas (no new WebGL context per pause) and shows 
   await button(page, /^RESUME|^Resume/).click();
   await expect(page.locator('.paused-overlay')).toHaveCount(0);
   await expect(canvas).toHaveAttribute('data-marker', 'first');
-  await button(page, 'STOP').click();
+  await holdStop(page);
 });

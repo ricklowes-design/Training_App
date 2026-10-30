@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openParent, patchSettings, place, setup, start, startBlockNow, table } from './helpers';
+import { advance, boot, button, openParent, patchSettings, place, setup, start, startBlockNow, table , holdStop } from './helpers';
 
 // The realistic defender (recorded human movement), off by default.
 
@@ -39,7 +39,7 @@ test('when on, a reactive drill uses it and records the renderer with each rep',
   await page.waitForTimeout(2000); // the 3D module and the clips load in real time
   for (let i = 0; i < 6; i++) await page.clock.runFor(1000);
   await expect(page.locator('.practice.defender')).toContainText(/rep \d+ of 16/);
-  await button(page, 'STOP').click();
+  await holdStop(page);
   const scen = await table<{ rendererVersion: string }>(page, 'defenderScenarios');
   expect(scen.length).toBeGreaterThan(0);
   expect(scen.every((x) => x.rendererVersion.includes('recorded-motion'))).toBe(true);

@@ -10,7 +10,7 @@ import type { Drill } from '../content/types';
 import { layoutSummary } from '../domain/layout';
 import { localiseText } from '../domain/units';
 import type { RunBlock } from '../domain/plans';
-import { fmtDate } from '../ui/widgets';
+import { fmtDate, HoldButton } from '../ui/widgets';
 import { DemoVideo } from './DemoVideo';
 import { blockLayout, ConeSetup } from './ConeSetup';
 import { cueDrillFor } from '../cue/resolve';
@@ -172,9 +172,7 @@ export function DemoPanel(props: {
               <button className="btn" onClick={onSkip}>
                 Skip block
               </button>
-              <button className="btn danger" onClick={onStop}>
-                STOP
-              </button>
+              <HoldButton className="btn danger" label="STOP" onHold={onStop} />
             </div>
           </div>
         </div>
@@ -299,9 +297,7 @@ export function DemoPanel(props: {
             <button className="btn" onClick={onSkip}>
               Skip block
             </button>
-            <button className="btn danger" onClick={onStop}>
-              STOP
-            </button>
+            <HoldButton className="btn danger" label="STOP" onHold={onStop} />
           </div>
         </div>
       </div>

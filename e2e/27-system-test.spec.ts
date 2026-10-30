@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openParent, place, setup, start, table } from './helpers';
+import { advance, boot, button, openParent, place, setup, start, table , holdStop } from './helpers';
 
 test('parent system test: lists the drills by cone layout, switches everything on, runs, reports, and puts the settings back', async ({ page }) => {
   await boot(page, { clock: false });
@@ -23,7 +23,7 @@ test('parent system test: lists the drills by cone layout, switches everything o
   expect(on.flags.defender3d && on.flags.liveOnsetDetector && on.flags.ballTracking).toBe(true);
   expect(on.systemTestRestore).toBeTruthy();
 
-  await button(page, 'STOP').click();
+  await holdStop(page);
   // Straight to the report (never the session summary), every block listed.
   const report = page.getByTestId('system-test-report');
   await expect(report).toBeVisible({ timeout: 15_000 });

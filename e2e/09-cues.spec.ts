@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, arrowCues, boot, captureSpeech, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table, scoredBy } from './helpers';
+import { advance, arrowCues, boot, captureSpeech, button, fillForm, home, openFocus, openParent, patchSettings, place, setup, start, startBlockNow, table, scoredBy , holdStop } from './helpers';
 
 type Block = { index: number; drillId?: string; cueLevel?: string; cueLog?: { cueMs?: number; repStartMs: number; value?: string }[] };
 
@@ -38,7 +38,7 @@ test('arrow cues fill the screen in a cue drill; the cue log is saved with the b
   await advance(page, 60_000, 250);
   await button(page, 'DONE').click();
   await button(page, /^Next/).click();
-  await button(page, 'STOP').click(); // from the next demo view
+  await holdStop(page); // from the next demo view
   await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible();
   const [rec] = await table<{ blocks: Block[] }>(page, 'sessionRecords');
   const f5 = rec.blocks.find((b) => b.drillId === 'F5')!;

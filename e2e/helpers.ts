@@ -104,6 +104,11 @@ export async function fillForm(page: Page, value = 5): Promise<Locator> {
   return page.getByRole('button', { name: 'Confirm', exact: true });
 }
 
+/** STOP is press-and-hold (audit task 13); Enter on the focused button acts at once. */
+export async function holdStop(page: Page | Locator): Promise<void> {
+  await button(page, 'STOP').press('Enter');
+}
+
 /** Taps "Scored by: Parent" on a result card (nothing is pre-selected, audit task 4). */
 export async function scoredBy(page: Page, who: 'Parent' | 'Player' = 'Parent'): Promise<void> {
   const row = page.locator('.row', { hasText: 'Scored by' }).last();

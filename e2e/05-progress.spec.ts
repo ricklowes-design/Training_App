@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, closeParent, fillForm, home, openFocus, openParent, patchSettings, place, runToEnd, setup, start, startCard } from './helpers';
+import { advance, boot, button, closeParent, fillForm, home, openFocus, openParent, patchSettings, place, runToEnd, setup, start, startCard , holdStop } from './helpers';
 
 async function ready(page: Page) {
   await boot(page);
@@ -30,12 +30,12 @@ test('Week tab counts completed sessions only; partial, stopped, extras and tria
   // Stopped.
   await start(page, 'Dribbling · Stage 1 · Session 2');
   await advance(page, 20_000);
-  await button(page, 'STOP').click();
+  await holdStop(page);
   await home(page);
   // A trial.
   await start(page, 'Dribbling · Stage 1 · Session 2', { trial: true });
   await advance(page, 20_000);
-  await button(page, 'STOP').click();
+  await holdStop(page);
   await home(page);
   // An extra: the no-ball quiz.
   await openFocus(page);

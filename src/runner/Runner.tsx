@@ -11,7 +11,7 @@ import { db } from '../db/db';
 import type { BenchmarkResult, BenchmarkValues, Conditions } from '../db/types';
 import { recordMilestones } from '../domain/milestoneStore';
 import type { RunBlock, RunPlan } from '../domain/plans';
-import { fmtClock } from '../ui/widgets';
+import { fmtClock, HoldButton } from '../ui/widgets';
 import { BenchmarkForm, initialValues, type FormKind } from './BenchmarkForm';
 import { DemoPanel } from './DemoPanel';
 import { blockLayout, conesChanged } from './ConeSetup';
@@ -440,16 +440,16 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       Skip warm-up
     </button>
   );
+  // Press and hold (0.8 s): a stray tap cannot end the session; not a confirmation dialog (audit task 13).
   const stopBtn = (
-    <button
+    <HoldButton
       className="btn danger"
-      onClick={() => {
+      label="STOP"
+      onHold={() => {
         apply(E.stop);
         say('Stopped.', { interrupt: true });
       }}
-    >
-      STOP
-    </button>
+    />
   );
 
   // ----- Demo view -----

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, captureSpeech, demoShowing, home, place, runToEnd, setup, start, startBlockNow, startCard, table } from './helpers';
+import { advance, boot, button, captureSpeech, demoShowing, home, place, runToEnd, setup, start, startBlockNow, startCard, table , holdStop } from './helpers';
 
 type Rec = { areaId: string; sessionNumber: number; status: string; reasons: string[]; trial: boolean; blocks: { index: number; attempt: number; note?: string; doneEarly: boolean; skipped: boolean }[] };
 
@@ -85,7 +85,11 @@ test('STOP ends the session as stopped, not counted', async ({ page }) => {
   await ready(page);
   await start(page, 'Dribbling · Stage 1 · Session 1');
   await advance(page, 30_000);
+  // A short tap does nothing: STOP is press-and-hold (audit task 13).
   await button(page, 'STOP').click();
+  await page.clock.runFor(2_000);
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toHaveCount(0);
+  await holdStop(page);
   await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible();
   const card = page.locator('.card', { hasText: 'Dribbling · Session 1' });
   await expect(card).toContainText('stopped — not counted');
@@ -181,7 +185,7 @@ test('a failed end-of-session save shows Try again, and Try again reaches the su
   await start(page, /Scanning · Baseline/);
   await page.clock.runFor(5_000);
   await page.evaluate(() => ((window as unknown as { __failNextFinalSave: boolean }).__failNextFinalSave = true));
-  await button(page, 'STOP').click();
+  await holdStop(page);
   await page.clock.resume();
   const card = page.getByTestId('save-error');
   await expect(card).toContainText('This session could not be saved yet (test: save failed). Tap Try again.');

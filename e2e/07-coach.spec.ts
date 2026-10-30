@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advance, boot, button, closeParent, home, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startBlockNow, startCard, table, scoredBy } from './helpers';
+import { advance, boot, button, closeParent, home, openParent, parentMenu, patchSettings, place, runToEnd, setup, start, startBlockNow, startCard, table, scoredBy , holdStop } from './helpers';
 
 async function ready(page: Page) {
   await boot(page);
@@ -30,7 +30,7 @@ test('plan/06 §6.6: a coach note and a cue change show in the drill’s demo vi
   await button(page, '✓ Cones are out: show the instructions').click();
   await expect(page.getByText('Half-size circle, exit touch before the plant foot lands')).toBeVisible();
   await expect(page.getByText('Coach note (Nov 3): “Smaller scissors, faster exit touch.”')).toBeVisible();
-  await button(page, 'STOP').click();
+  await holdStop(page);
   await home(page);
   // History lists the change with the previous text; revert restores it.
   await openParent(page, /^History/);

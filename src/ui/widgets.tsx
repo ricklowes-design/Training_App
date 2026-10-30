@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { SessionStatus } from '../db/types';
 
@@ -99,4 +100,41 @@ export function downloadText(name: string, text: string, type = 'application/jso
 
 export function readFileText(file: File): Promise<string> {
   return file.text();
+}
+
+/** A button that acts only after being held (default 0.8 s), so a stray tap cannot end a session (audit task 13).
+ *  Enter or Space on the focused button acts at once (keyboard users). The accessible name stays `label`. */
+export function HoldButton({ ms = 800, onHold, className = 'btn', label, hint = 'hold' }: { ms?: number; onHold: () => void; className?: string; label: string; hint?: string }) {
+  const timer = useRef<number | undefined>(undefined);
+  const [holding, setHolding] = useState(false);
+  const cancel = () => {
+    setHolding(false);
+    window.clearTimeout(timer.current);
+  };
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className={`${className} hold-btn${holding ? ' holding' : ''}`}
+      style={{ ['--hold-ms' as string]: `${ms}ms` }}
+      onPointerDown={() => {
+        setHolding(true);
+        timer.current = window.setTimeout(() => {
+          setHolding(false);
+          onHold();
+        }, ms);
+      }}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onPointerCancel={cancel}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onHold();
+        }
+      }}
+    >
+      {label} <span className="hold-hint">· {hint}</span>
+    </button>
+  );
 }

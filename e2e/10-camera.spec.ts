@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { cameraSetup } from './camera-helpers';
 import { movingVideo } from './fake-video';
-import { advance, arrowCues, boot, button, home, openParent, place, setup, start, startBlockNow, table } from './helpers';
+import { advance, arrowCues, boot, button, home, openParent, place, setup, start, startBlockNow, table , holdStop } from './helpers';
 
 // Fake webcam: a moving picture with a tripwire flash every 4 s.
 const baseArgs = [
@@ -53,7 +53,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await expect(page.locator('.endcard')).toContainText(/Recorded\. The camera scorecard appears when the analysis finishes\.|●|○/);
     await expect(page.locator('.endcard .repstrip')).toBeVisible({ timeout: 90_000 });
     await button(page, 'Repeat').click(); // stays in the session; then stop
-    await button(page, 'STOP').click();
+    await holdStop(page);
     await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Camera scorecard' }).first()).toBeVisible({ timeout: 30_000 });
 
@@ -120,7 +120,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await button(page, 'DONE').click();
     await expect(page.locator('.endcard')).toBeVisible({ timeout: 20_000 });
     await button(page, 'Repeat').click(); // the next showing reopens the camera
-    await button(page, 'STOP').click();
+    await holdStop(page);
     await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible({ timeout: 30_000 });
     const clips = await table<{ blob: unknown }>(page, 'clips');
     expect(clips.length).toBe(1); // what was recorded before the unplug is kept

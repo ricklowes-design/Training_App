@@ -227,3 +227,12 @@ table.data th { color: var(--muted); font-weight: 600; }
   inset: 0;
   z-index: 2;
 }
+
+/* Hold-to-STOP: a fill grows while the button is held (audit task 13). */
+.hold-btn { position: relative; overflow: hidden; }
+.hold-btn::after { content: ''; position: absolute; left: 0; bottom: 0; height: 100%; width: 0; background: currentColor; opacity: 0.25; pointer-events: none; }
+.hold-btn.holding::after { width: 100%; transition: width var(--hold-ms, 800ms) linear; }
+.hold-hint { font-size: 0.6em; opacity: 0.8; font-weight: 600; }
+/* A fast second tap on DONE must not land on the card that replaces it: the card's buttons take taps after 0.4 s. */
+.endcard .actions { animation: tap-guard 0.4s steps(1, end); }
+@keyframes tap-guard { from { pointer-events: none; } to { pointer-events: auto; } }
