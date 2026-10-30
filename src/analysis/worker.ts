@@ -64,6 +64,8 @@ function gray(bitmap: ImageBitmap): Gray {
   return toGray(ctx.getImageData(0, 0, W, H).data, W, H);
 }
 
+let skippedFrames = 0;
+
 self.onmessage = async (ev: MessageEvent<ToWorker>) => {
   const m = ev.data;
   try {
@@ -73,6 +75,7 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
       zonesAll = m.zones;
       ball = m.ball ? { colour: m.ball.colour, size: sizeModel(m.ball.sizeSamples, m.ball.width), profileId: m.ball.profileId, tracker: new BallTracker(), canvas: new OffscreenCanvas(BW, BH), frames: 0 } : null;
       frames = [];
+      skippedFrames = 0;
       prev = null;
       lastTs = -1;
       started = performance.now();
@@ -127,6 +130,7 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
     } else if (m.type === 'finish') {
       const reps = analyseReps(frames, m.log, m.ctx, m.gateZones);
       const block = analyseBlock(reps, { poseUsed: !!landmarker, analysedFps: m.ctx.fps, analysisMs: Math.round(performance.now() - started) });
+      if (skippedFrames) block.skippedFrames = skippedFrames;
       // Slalom runs and V-pull windows (plan/12 §12.3).
       const polygons = Object.fromEntries(zonesAll.map((z) => [z.name, z.polygon]));
       if (m.windows?.length && m.ctx.kind === 'slalom')
@@ -171,6 +175,17 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
       post({ type: 'bench', model: m.model, fps: Math.round((10 * m.bitmaps.length) / secs) / 10, delegate, frames: m.bitmaps.length, detected });
     }
   } catch (e) {
+    // One bad frame is skipped, not fatal: free it and acknowledge, so the sender never waits forever (audit task 7).
+    if (m.type === 'frame') {
+      try {
+        m.bitmap.close();
+      } catch {
+        /* already closed */
+      }
+      skippedFrames++;
+      post({ type: 'ack' });
+      return;
+    }
     post({ type: 'error', message: e instanceof Error ? e.message : String(e) });
   }
 };

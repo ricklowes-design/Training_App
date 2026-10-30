@@ -63,6 +63,10 @@ export interface BlockAnalysis {
   flaggedRepIndexes: number[];
   /** Personalised model versions this analysis used (part 18); absent = base rules only. History is never re-scored. */
   modelVersions?: string[];
+  /** Base model versions used (pinned pose and ball detector files); absent on analyses before 2026-10-30. */
+  baseModels?: string[];
+  /** Frames the worker could not analyse and skipped. */
+  skippedFrames?: number;
   /** Slalom runs (plan/12 §12.3): start tone → stop zone, lane-edge entries. Estimates. */
   slalom?: import('./outcome').SlalomRun[];
   /** V-pull windows: ball direction reversals in the square and balls lost from it. Estimates. */

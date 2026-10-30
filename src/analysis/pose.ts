@@ -3,10 +3,9 @@ import type { Pose } from './compute';
 
 // Pose Landmarker (VIDEO mode) for use inside a worker. GPU delegate when available.
 
-export const MODEL_URL = {
-  lite: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
-  full: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task',
-};
+import { BALL_MODEL_URL, MODEL_URL } from './models';
+
+export { MODEL_URL };
 
 export async function createPose(model: 'lite' | 'full', wasmBase: string): Promise<{ landmarker: PoseLandmarker; delegate: 'GPU' | 'CPU' }> {
   const fileset = await FilesetResolver.forVisionTasks(wasmBase, true);
@@ -34,7 +33,7 @@ export function toPose(lm: { x: number; y: number; visibility?: number }[] | und
 
 // Ball detector model (experimental, off by default; part 17 task 6.1). EfficientDet-Lite0 from
 // MediaPipe (Apache-2.0), COCO class "sports ball". Downloaded from Google's model storage once.
-export const BALL_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/latest/efficientdet_lite0.tflite';
+export { BALL_MODEL_URL };
 
 export async function createBallDetector(wasmBase: string): Promise<{ detector: import('@mediapipe/tasks-vision').ObjectDetector; delegate: 'GPU' | 'CPU' }> {
   const { ObjectDetector } = await import('@mediapipe/tasks-vision');

@@ -4,6 +4,8 @@ import { scenariosToLog } from '../defender/analysisLog';
 import type { Programme } from '../content/types';
 import type { CueLogEntry } from '../cue/engine';
 import { db } from '../db/db';
+import { logHistory } from '../app/data';
+import { MODEL_VERSION } from './models';
 import { personalisedThresholds } from '../learning/service';
 import type { CameraSetup, Clip } from '../db/types';
 import type { RunBlock } from '../domain/plans';
@@ -25,7 +27,13 @@ export const wasmBase = () => new URL('./mediapipe/', document.baseURI).href;
 let queue: Promise<unknown> = Promise.resolve();
 
 export function newWorker(): Worker {
-  return new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+  return makeWorker();
+}
+
+let makeWorker = (): Worker => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+/** Tests only: a fake worker. */
+export function setWorkerFactory(f: () => Worker): void {
+  makeWorker = f;
 }
 
 function call(worker: Worker, msg: ToWorker, transfer: Transferable[] = []): void {
@@ -94,6 +102,16 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
   const worker = newWorker();
   let inFlight = 0;
   let wake: (() => void) | null = null;
+  // A crash, a model that never loads or a frame that never comes back must not stall the queue (audit task 7).
+  let crash!: (e: Error) => void;
+  const crashed = new Promise<never>((_, reject) => (crash = reject));
+  crashed.catch(() => undefined); // observed through the races below
+  worker.onerror = (ev) => {
+    ev.preventDefault?.();
+    crash(new Error(ev.message || 'The analysis worker stopped.'));
+  };
+  const limit = <T,>(p: Promise<T>, ms: number, what: string): Promise<T> =>
+    Promise.race([p, crashed, new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${what} took too long`)), ms))]);
   const result = new Promise<Extract<FromWorker, { type: 'result' }>>((resolve, reject) => {
     worker.onmessage = (ev: MessageEvent<FromWorker>) => {
       const m = ev.data;
@@ -104,12 +122,17 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
       else if (m.type === 'error') reject(new Error(m.message));
     };
   });
-  const ready = new Promise<void>((resolve) => {
+  result.catch(() => undefined); // awaited later through limit()
+  const ready = new Promise<Extract<FromWorker, { type: 'ready' }>>((resolve, reject) => {
     const prev = worker.onmessage;
     worker.onmessage = (ev) => {
-      if ((ev.data as FromWorker).type === 'ready') {
+      const m = ev.data as FromWorker;
+      if (m.type === 'ready') {
         worker.onmessage = prev;
-        resolve();
+        resolve(m);
+      } else if (m.type === 'error') {
+        worker.onmessage = prev;
+        reject(new Error(m.message));
       } else prev?.call(worker, ev);
     };
   });
@@ -123,15 +146,18 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
       zones: [...setup.zones],
       ball: bp || neural ? { profileId: bp?.id ?? 'model-only', colour: bp?.colour, sizeSamples: bp?.sizeSamples ?? [], width: bp?.frameWidth ?? 320, neural } : undefined,
     });
-    await ready;
+    const r = await limit(ready, 60_000, 'Loading the pose model');
+    // Why pose was off, for Parent → History and the System test report.
+    if (r.error) void logHistory('app', 'analysis model', `${clip.blockLabel}: ${r.error}`).catch(() => undefined);
     // With pose, play at normal speed; zone and motion work alone keeps up at double speed.
     const rate = pose === 'off' ? 2 : 1;
-    await playFrames(clip.blob, fps, rate, async (tMs, bmp) => {
-      if (inFlight >= MAX_IN_FLIGHT) await new Promise<void>((r) => (wake = r));
+    const playMs = (clip.durationS * 1000) / rate + 60_000;
+    await limit(playFrames(clip.blob, fps, rate, async (tMs, bmp) => {
+      if (inFlight >= MAX_IN_FLIGHT) await limit(new Promise<void>((r) => (wake = r)), 10_000, 'Analysing a frame');
       inFlight++;
       call(worker, { type: 'frame', tMs: tMs + clip.startActiveMs, bitmap: bmp }, [bmp]);
       return true;
-    });
+    }), playMs, 'Playing the clip');
     const gateZones = setup.zones.slice(1).map((z) => z.name);
     call(worker, {
       type: 'finish',
@@ -141,8 +167,9 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
       windows,
       rapid: !!settings?.flags?.ballTracking && !!settings.flags.rapidTouches,
     });
-    const { reps, block: b0, ball } = await result;
-    const block = { ...(ball ? { ...b0, ball } : b0), ...(personal.modelVersions.length ? { modelVersions: personal.modelVersions } : {}) };
+    const { reps, block: b0, ball } = await limit(result, 120_000, 'Finishing the analysis');
+    const baseModels = [...(r.poseUsed && pose !== 'off' ? [MODEL_VERSION[pose]] : []), ...(neural ? [MODEL_VERSION.ball] : [])];
+    const block = { ...(ball ? { ...b0, ball } : b0), ...(personal.modelVersions.length ? { modelVersions: personal.modelVersions } : {}), ...(baseModels.length ? { baseModels } : {}) };
     await db.transaction('rw', db.repAnalyses, db.blockAnalyses, async () => {
       await db.repAnalyses.bulkPut(reps.map((r) => ({ id: `${clip.id}:${r.repIndex}`, clipId: clip.id, repIndex: r.repIndex, data: r })));
       await db.blockAnalyses.put({ id: clip.id, clipId: clip.id, date: new Date().toISOString(), data: block });
@@ -222,6 +249,9 @@ export function analyseClip(p: Programme, clip: Clip, _block: RunBlock, setup: C
   // Slalom runs and V-pull windows are analysed from their timed windows; other blocks without cues are replay only.
   const outcome = !!windows?.length && (setup.drillFamily === 'L1' || setup.drillFamily === 'L4');
   if (!reps?.length && !outcome) return Promise.resolve();
-  queue = queue.then(() => analyse(p, clip, setup, reps ?? [], scenarios, windows)).catch((e) => console.warn('analysis failed', e));
+  // A failure is logged for the parent (Parent → History) and never blocks later clips.
+  queue = queue
+    .then(() => analyse(p, clip, setup, reps ?? [], scenarios, windows))
+    .catch((e) => logHistory('app', 'analysis failed', `${clip.blockLabel}: ${e instanceof Error ? e.message : String(e)}`).catch(() => undefined));
   return queue;
 }
