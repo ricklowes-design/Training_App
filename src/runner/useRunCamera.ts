@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Programme } from '../content/types';
 import { currentSetup, familyForBlock } from '../camera/clips';
 import type { FramingResult } from '../camera/frames';
-import { CameraSession } from '../camera/session';
+import { CameraSession, cameraErrorText } from '../camera/session';
 import type { CueInput, Side } from '../cue/engine';
 import type { DefenderInput } from '../defender/block';
 import { db } from '../db/db';
@@ -58,15 +58,16 @@ export function useRunCamera(args: {
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    CameraSession.open(settings.camera.deviceId)
-      .then((cs) => {
-        if (cancelled) cs.close();
-        else {
-          session.current = cs;
-          setLive(true);
-        }
+    // The camera the set-up used: the saved one, else the USB webcam (audit 2026-10-29, task 5).
+    const saved = settings.camera.deviceId ?? setups.find((x) => x.deviceId)?.deviceId;
+    CameraSession.openPreferred(saved)
+      .then(({ session: cs, fellBack }) => {
+        if (cancelled) return cs.close();
+        session.current = cs;
+        setLive(true);
+        if (fellBack) setError('The webcam chosen in Camera set-up was not found, so another camera is being used. Check the USB cable.');
       })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e) => setError(cameraErrorText(e)));
     return () => {
       cancelled = true;
       session.current?.close();

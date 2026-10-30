@@ -265,13 +265,17 @@ export function DemoPanel(props: {
             <span>{framing.message}</span>
           </div>
         ) : null}
+        {/* Both shown when both apply: the camera problem first (audit task 5). */}
+        {cameraError ? (
+          <div className="note-box" data-testid="camera-error">
+            {cameraError}
+          </div>
+        ) : null}
         {roomCheck && roomCheck.status !== 'matched' ? (
           <div className="muted" data-testid="room-check">
             {roomCheck.message}
             {roomCheck.status === 'moved' ? ' This session is camera-unverified: clips are kept, the presence rule is not applied.' : ''}
           </div>
-        ) : cameraError ? (
-          <div className="muted">Camera not available ({cameraError}); this block is not recorded.</div>
         ) : null}
         {drillNotes.map((n) => (
           <div key={n.id} className="note-box">

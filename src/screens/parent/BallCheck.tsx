@@ -3,7 +3,7 @@ import { logHistory, useData } from '../../app/data';
 import { rgbToHsv, type Hsv } from '../../ball/colour';
 import { rankBalls, type BallResult, type BallTry } from '../../ball/compare';
 import { captureAt } from '../../ball/register';
-import { listCameras, openStream, preferredCamera } from '../../camera/session';
+import { listCameras, openStream, preferredCamera, cameraErrorText } from '../../camera/session';
 import { db } from '../../db/db';
 
 // Ball check before the first drills (parent request 2026-10-26): show each ball you have to the
@@ -36,7 +36,7 @@ export function BallCheck({ onRegister, onClose }: { onRegister: (name: string) 
           await video.current.play();
         }
       } catch (e) {
-        setErr(e instanceof Error ? e.message : String(e));
+        setErr(cameraErrorText(e));
       }
     })();
     return () => {

@@ -4,7 +4,7 @@ import { logHistory, useData } from '../../app/data';
 import { rgbToHsv, type Hsv } from '../../ball/colour';
 import { detectBall, sizeModel, type Detection } from '../../ball/detect';
 import { captureAt, sufficiency, type Capture } from '../../ball/register';
-import { listCameras, openStream, preferredCamera } from '../../camera/session';
+import { listCameras, openStream, preferredCamera, cameraErrorText } from '../../camera/session';
 import { db } from '../../db/db';
 import { newWorker, playFrames, wasmBase } from '../../analysis/run';
 import type { FromWorker } from '../../analysis/worker';
@@ -48,7 +48,7 @@ export function Register({ onDone, name0 }: { onDone: () => void; name0: string 
           await video.current.play();
         }
       } catch (e) {
-        setErr(e instanceof Error ? e.message : String(e));
+        setErr(cameraErrorText(e));
       }
     })();
     return () => {
@@ -206,7 +206,7 @@ function TestRecorder({ onClip, disabled }: { onClip: (b: Blob) => void; disable
       }
       setPhase('ready');
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      setErr(cameraErrorText(e));
       setPhase('idle');
     }
   }

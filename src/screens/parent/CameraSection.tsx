@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { logHistory, useData } from '../../app/data';
 import { applyH, calibrationCones, FAMILY_ZONES, homography } from '../../camera/geometry';
-import { captureFrame, listCameras, openStream, preferredCamera } from '../../camera/session';
+import { captureFrame, listCameras, openStream, preferredCamera, cameraErrorText } from '../../camera/session';
 import { db } from '../../db/db';
 import type { CameraSetup, DrillFamily, Pt } from '../../db/types';
 import { fmtDate, Seg, Stepper } from '../../ui/widgets';
@@ -27,7 +27,7 @@ function useStream(deviceId: string | undefined) {
           setStream(st);
         }
       })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e) => setError(cameraErrorText(e)));
     return () => {
       cancelled = true;
       s?.getTracks().forEach((t) => t.stop());
@@ -122,6 +122,9 @@ function Wizard({ family, deviceId, deviceLabel, onDone }: { family: DrillFamily
       for (const o of old) if (!o.retiredAt) await db.cameraSetups.update(o.id!, { retiredAt: now });
       await db.cameraSetups.add(setup);
     });
+    // The run then opens the same camera the set-up used (audit task 5).
+    const st = await db.settings.get('main');
+    if (st && !st.camera.deviceId && deviceId) await db.settings.update('main', { camera: { ...st.camera, deviceId } });
     await logHistory('parent', 'camera set-up', `${family}: ${zoneNames.length} zones, ${h ? 'floor calibrated' : 'no floor calibration'}, ${mirror ? 'mirrored' : 'not mirrored'}`);
     onDone();
   }
@@ -274,7 +277,7 @@ export function CameraSection() {
         s.getTracks().forEach((t) => t.stop());
         setDevices(await listCameras());
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        setError(cameraErrorText(e));
       }
     })();
   }, []);

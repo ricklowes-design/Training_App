@@ -75,3 +75,24 @@ describe('frames', () => {
     expect(framingCheck(scene(), scene(0, 0, 0.2)).message).toMatch(/Too dark/);
   });
 });
+
+describe('camera choice and errors (audit 2026-10-29, task 5)', () => {
+  const dev = (deviceId: string, label: string) => ({ deviceId, label, kind: 'videoinput', groupId: '', toJSON: () => ({}) }) as MediaDeviceInfo;
+
+  it('a missing saved camera falls back to the USB webcam, not the built-in one', async () => {
+    const { preferredCamera } = await import('./session');
+    const list = [dev('a', 'Integrated Camera (04f2:b6dd)'), dev('b', 'USB Video Device')];
+    expect(preferredCamera(list, 'gone')?.deviceId).toBe('b');
+    expect(preferredCamera(list, 'a')?.deviceId).toBe('a');
+  });
+
+  it('turns camera errors into plain words', async () => {
+    const { cameraErrorText } = await import('./session');
+    const err = (name: string) => Object.assign(new Error('x'), { name });
+    expect(cameraErrorText(err('NotAllowedError'))).toMatch(/^Chrome is blocking the camera/);
+    expect(cameraErrorText(err('NotFoundError'))).toMatch(/^No webcam found/);
+    expect(cameraErrorText(err('OverconstrainedError'))).toMatch(/^No webcam found/);
+    expect(cameraErrorText(err('NotReadableError'))).toMatch(/^The webcam is busy/);
+    expect(cameraErrorText(new Error('odd'))).toBe('Camera not available (odd).');
+  });
+});

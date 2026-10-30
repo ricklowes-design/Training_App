@@ -28,6 +28,7 @@ test.use({ launchOptions: { args: [...baseArgs, `--use-file-for-fake-video-captu
     await place(page, 'Dribbling', 1);
     await start(page, 'Dribbling · Stage 1 · Session 1');
     await advance(page, 191_000);
+    await button(page, '✓ Cones are out: show the instructions').click();
     await page.clock.runFor(2_000);
     await expect(page.getByText('Camera set up as before.')).toBeVisible();
     await startBlockNow(page);

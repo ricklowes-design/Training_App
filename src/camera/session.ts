@@ -29,6 +29,15 @@ export function preferredCamera(devices: MediaDeviceInfo[], saved?: string): Med
   return devices.find((d) => d.label && !builtIn.test(d.label)) ?? devices[devices.length - 1];
 }
 
+/** Plain words for the parent, by camera error type (audit 2026-10-29, task 5). */
+export function cameraErrorText(e: unknown): string {
+  const name = e instanceof DOMException || (e instanceof Error && e.name) ? (e as Error).name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') return 'Chrome is blocking the camera. Click the camera icon in the address bar, choose Allow, then reload.';
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'No webcam found. Check the USB cable, then reload.';
+  if (name === 'NotReadableError' || name === 'AbortError') return 'The webcam is busy. Close the Camera app or any other tab using it, then reload.';
+  return `Camera not available (${e instanceof Error && e.message ? e.message : 'unknown error'}).`;
+}
+
 export async function openStream(deviceId?: string): Promise<MediaStream> {
   return navigator.mediaDevices.getUserMedia({
     video: { deviceId: deviceId ? { exact: deviceId } : undefined, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
@@ -122,6 +131,19 @@ export class CameraSession {
     video.srcObject = stream;
     await video.play();
     return new CameraSession(stream, video);
+  }
+
+  /** Opens the saved camera, else the USB webcam, else Chrome's default. `fellBack` is true when the saved one was missing. */
+  static async openPreferred(saved?: string): Promise<{ session: CameraSession; fellBack: boolean }> {
+    const cam = preferredCamera(await listCameras(), saved);
+    try {
+      return { session: await CameraSession.open(cam?.deviceId), fellBack: !!saved && cam?.deviceId !== saved };
+    } catch (e) {
+      if (cam && e instanceof DOMException && (e.name === 'OverconstrainedError' || e.name === 'NotFoundError')) {
+        return { session: await CameraSession.open(undefined), fellBack: true };
+      }
+      throw e;
+    }
   }
 
   close(): void {

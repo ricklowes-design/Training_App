@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { logHistory, useData } from '../../app/data';
 import { saveRoomProfile, useRoomProfile } from '../../app/room';
 import { ROOM_H, ROOM_W } from '../../camera/roomCheck';
-import { captureFrame, grayAt, listCameras, openStream, preferredCamera } from '../../camera/session';
+import { captureFrame, grayAt, listCameras, openStream, preferredCamera, cameraErrorText } from '../../camera/session';
 import { db } from '../../db/db';
 import type { LayoutInstance, Pt, RoomAnchor, RoomProfile, UsableSpaceClass } from '../../db/types';
 import { layoutSummary } from '../../domain/layout';
@@ -243,7 +243,7 @@ function ProfileEditor({ initial, onDone }: { initial: RoomProfile; onDone: () =
           void video.current.play();
         }
       } catch (e) {
-        setCamError(e instanceof Error ? e.message : String(e));
+        setCamError(cameraErrorText(e));
       }
     })();
     return () => {

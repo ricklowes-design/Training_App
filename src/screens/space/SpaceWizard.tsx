@@ -3,7 +3,7 @@ import { useData } from '../../app/data';
 import { newWorker, wasmBase } from '../../analysis/run';
 import type { FromWorker } from '../../analysis/worker';
 import { roomPhotoFields } from '../../camera/roomPhoto';
-import { listCameras, openStream, preferredCamera } from '../../camera/session';
+import { listCameras, openStream, preferredCamera, cameraErrorText } from '../../camera/session';
 import { renderTopDown } from '../../camera/topDown';
 import { db } from '../../db/db';
 import type { ItemPlace, Pt, RoomProfile, Space, SpaceItem } from '../../db/types';
@@ -201,7 +201,7 @@ function PhotoStep({ profile, onChange, onNext, onBack }: { profile: RoomProfile
           setStarted(Date.now());
         }
       } catch (e) {
-        setErr(e instanceof Error ? e.message : String(e));
+        setErr(cameraErrorText(e));
       }
     })();
     return () => {
