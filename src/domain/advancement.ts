@@ -43,11 +43,12 @@ function forRule(rule: AdvancementRule, counted: BenchmarkResult[]): BenchmarkRe
 }
 
 /** Results that can count toward the rule, oldest first: those comparable with the latest under the full
- *  context key (Brief R02: not just the layout). Mixed cue levels only where the rule lists them. */
+ *  context key (Brief R02: not just the layout). A rule may accept several settings (cue levels, pace),
+ *  but the passing days must all be at the same one (owner decision 2026-10-30). */
 export function candidates(rule: AdvancementRule, counted: BenchmarkResult[]): BenchmarkResult[] {
   const list = forRule(rule, counted);
   const last = list[list.length - 1];
-  return last ? list.filter((r) => r === last || comparability(last, r, { cueLevels: rule.cueLevels }).ok) : [];
+  return last ? list.filter((r) => r === last || comparability(last, r).ok) : [];
 }
 
 /** Benchmarks the app scores by itself with a validated method (the quiz's own answer key). Any other
@@ -87,7 +88,7 @@ export function evaluateRule(
   const ruled = forRule(rule, counted);
   const valid = ruled.filter(evidenceOk);
   const ref = valid[valid.length - 1];
-  const list = ref ? valid.filter((r) => r === ref || comparability(ref, r, { cueLevels: rule.cueLevels }).ok) : [];
+  const list = ref ? valid.filter((r) => r === ref || comparability(ref, r).ok) : [];
   const all = candidates(rule, counted);
   const run: BenchmarkResult[] = [];
   for (let i = list.length - 1; i >= 0 && passes(rule, list[i]); i--) run.push(list[i]);
@@ -100,7 +101,7 @@ export function evaluateRule(
     const e = evidenceFor(r);
     if (!e.ok) notCounted.push({ result: r, reason: e.reason, next: e.next });
     else if (ref) {
-      const c = comparability(ref, r, { cueLevels: rule.cueLevels });
+      const c = comparability(ref, r);
       if (!c.ok) notCounted.push({ result: r, reason: c.reason, next: 'Results under the current set-up count; run the test again as set up now.' });
     }
   }

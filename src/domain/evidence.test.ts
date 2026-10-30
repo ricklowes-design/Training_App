@@ -90,3 +90,14 @@ describe('test slot length (owner decision 2026-10-30)', () => {
     expect(slots(plan60).every((m) => m === 2)).toBe(true);
   });
 });
+
+describe('same setting only (owner decision 2026-10-30)', () => {
+  it('a rule that accepts two settings still needs both passing days at one of them', () => {
+    const two: AdvancementRule = { ...rule, cueLevels: ['walk', 'pace'] };
+    const mixed = evaluateRule(p, two, [sb('2026-11-03T10:00:00', 9, { cueLevel: 'walk' }), sb('2026-11-04T10:00:00', 9, { cueLevel: 'pace' })], []);
+    expect(mixed.met).toBe(false);
+    expect(mixed.notCounted[0].reason).toMatch(/different cue level/);
+    const same = evaluateRule(p, two, [sb('2026-11-03T10:00:00', 9, { cueLevel: 'pace' }), sb('2026-11-04T10:00:00', 9, { cueLevel: 'pace' })], []);
+    expect(same.met).toBe(true);
+  });
+});
