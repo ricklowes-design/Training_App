@@ -29,6 +29,8 @@ export function confirmedStage(p: Programme, areaId: string, placement: Placemen
   if (!placement) return null;
   let stage = stageOf(p, placement.startSession);
   for (const a of advancements) {
+    // A newer placement resets earlier stage confirmations (audit 2026-10-29, task 2).
+    if (placement.date && a.date < placement.date) continue;
     if (a.areaId === areaId && a.decision === 'confirmed' && a.to !== 'exit' && stageOrder(p, a.to) > stageOrder(p, stage)) stage = a.to;
   }
   return stage;

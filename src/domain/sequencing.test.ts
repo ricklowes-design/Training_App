@@ -182,3 +182,20 @@ describe('weekly allocation and the availability calendar (task 5.3)', () => {
     expect(dayKind({ gameDays: [], availability: [{ date: '2026-11-07', kind: 'light' }] }, d)).toBe('light');
   });
 });
+
+describe('placement and stage confirmations (audit 2026-10-29, task 2)', () => {
+  const conf = (date: string): Advancement => ({ areaId: 'scanning', from: 'st1', to: 'st2', decision: 'confirmed', date }) as Advancement;
+
+  it('a newer placement resets earlier stage confirmations', () => {
+    const replaced: Placement = { ...placed('scanning', 1), date: '2026-12-01T10:00:00Z' };
+    const pr = areaProgress(p, 'scanning', replaced, [], [conf('2026-11-20T10:00:00Z')]);
+    expect(pr.next).toBe(1);
+    expect(pr.skipped).toEqual([]);
+  });
+
+  it('a confirmation after the placement still raises the stage', () => {
+    const pl: Placement = { ...placed('scanning', 1), date: '2026-11-01T10:00:00Z' };
+    const pr = areaProgress(p, 'scanning', pl, [], [conf('2026-11-20T10:00:00Z')]);
+    expect(pr.next).toBe(5);
+  });
+});

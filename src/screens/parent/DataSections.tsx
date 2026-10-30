@@ -15,6 +15,7 @@ import { DrillAnimation } from '../../ui/DrillAnimation';
 import { scriptFor } from '../../ui/drillScripts';
 import { downloadText, fmtDate, Modal, StatusPill } from '../../ui/widgets';
 import { ruleStatusFor, useAreaProgress } from '../helpers';
+import { countsForUnlock } from '../../domain/records';
 
 export function BackupSection() {
   const { settings, records, problemReports } = useData();
@@ -249,6 +250,13 @@ export function PlacementSection() {
   const [area, setArea] = useState<string | null>(null);
   const [n, setN] = useState(1);
   const [why, setWhy] = useState('');
+  // Once an area has counted sessions, placement can only move back (or stay): moving ahead is Advancement's job.
+  const areaStarted = (id: string) => records.some((r) => r.areaId === id && r.kind === 'programme' && countsForUnlock(r));
+  const placementMax = (id: string) => {
+    const pr = progress.find((x) => x.areaId === id);
+    const total = pr?.totalSessions ?? 16;
+    return areaStarted(id) ? (pr?.next ?? total) : total;
+  };
   return (
     <div className="stack">
       {p.areas.map((a) => {
@@ -288,7 +296,7 @@ export function PlacementSection() {
             <span>Start at session</span>
             <select value={n} onChange={(e) => setN(Number(e.target.value))}>
               {p.sessions
-                .filter((s) => s.areaId === area)
+                .filter((s) => s.areaId === area && s.number <= placementMax(area))
                 .map((s) => (
                   <option key={s.number} value={s.number}>
                     Session {s.number} (Stage {p.stages.find((x) => x.id === s.stageId)?.order})
@@ -296,6 +304,8 @@ export function PlacementSection() {
                 ))}
             </select>
           </label>
+          {areaStarted(area) ? <p className="muted">To move ahead after sessions have been done, use Advancement: it checks the evidence.</p> : null}
+          <p className="muted">Changing placement clears earlier stage confirmations for this area.</p>
           <label className="field">
             <span>Reason (logged)</span>
             <input type="text" value={why} onChange={(e) => setWhy(e.target.value)} />
