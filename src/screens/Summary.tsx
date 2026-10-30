@@ -9,6 +9,7 @@ import { lastComparable } from '../domain/comparability';
 import { isCompletedStatus, practiceMinutes, unconfirmedBlocks } from '../domain/completion';
 import { confirmActivity } from '../domain/records';
 import { notifyFinished } from '../app/notify';
+import { autoLearnScan, harvestOutcomeExamples } from '../learning/harvest';
 import { comparisonSentences } from '../domain/metrics';
 import { recordMilestones } from '../domain/milestoneStore';
 import { areaName } from '../domain/plans';
@@ -150,6 +151,12 @@ export function Summary({ runId }: { runId: string }) {
   const [reported, setReported] = useState(false);
   const [keepError, setKeepError] = useState<string | null>(null);
   const spoken = useRef(false);
+
+  // Head-turn examples from this run's scanning blocks, once the records are final (owner decision 2026-10-30).
+  useEffect(() => {
+    if (recs.length) void harvestOutcomeExamples(d.programme).then(() => autoLearnScan()).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recs.length]);
 
   useEffect(() => {
     if (spoken.current || !recs.length) return;

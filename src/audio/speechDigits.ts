@@ -43,6 +43,18 @@ export function scoreDigits(log: CueLogEntry[], heard: Heard[], limit = 10): { c
   return { correct, heardReps, reps: reps.length };
 }
 
+/** Per rep: the number shown and the first digit heard for it (none when nothing was heard), so a right
+ *  call-out can confirm that rep's look (owner decision 2026-10-30). */
+export function callOutsPerRep(log: CueLogEntry[], heard: Heard[]): { rep: number; shown: number; heard?: number }[] {
+  return log
+    .filter((e) => e.number !== undefined && e.cueMs !== undefined && !e.hidden)
+    .map((e) => {
+      const next = log.find((x) => x.rep === e.rep + 1)?.repStartMs ?? Infinity;
+      const h = heard.find((x) => x.tMs >= e.cueMs! && x.tMs <= Math.min(e.cueMs! + CALL_WINDOW_MS, next));
+      return { rep: e.rep, shown: e.number!, heard: h?.digit };
+    });
+}
+
 type Recognition = {
   continuous: boolean;
   interimResults: boolean;

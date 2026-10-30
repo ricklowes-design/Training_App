@@ -5,6 +5,7 @@ import type { Programme } from '../content/types';
 import type { CueLogEntry } from '../cue/engine';
 import { db } from '../db/db';
 import { logHistory } from '../app/data';
+import { autoLearnScan, harvestOutcomeExamples } from '../learning/harvest';
 import { MODEL_VERSION } from './models';
 import { personalisedThresholds } from '../learning/service';
 import type { CameraSetup, Clip } from '../db/types';
@@ -175,7 +176,14 @@ async function analyse(p: Programme, clip: Clip, setup: CameraSetup, log: CueLog
       await db.blockAnalyses.put({ id: clip.id, clipId: clip.id, date: new Date().toISOString(), data: block });
     });
     if (scenarios?.length) await saveFeintReps(clip, scenarios, reps);
-    if (kind === 'scan') await saveScanReps(clip, log, reps);
+    if (kind === 'scan') {
+      await saveScanReps(clip, log, reps);
+      // Head-turn examples from what the player did, then (when personalisation is on) a new threshold
+      // if it does better on held-out sessions (owner decision 2026-10-30). Never blocks the analysis.
+      await harvestOutcomeExamples(p, [clip.id])
+        .then(() => autoLearnScan())
+        .catch(() => undefined);
+    }
   } finally {
     worker.terminate();
   }

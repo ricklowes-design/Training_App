@@ -1,5 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNav } from '../../app/nav';
+import { calibrationPlan } from '../../domain/plans';
+import { autoLearnScan, harvestOutcomeExamples } from '../../learning/harvest';
 import { logHistory, useData } from '../../app/data';
 import { db } from '../../db/db';
 import type { LearningComponent, LearningSettings } from '../../db/types';
@@ -11,13 +14,23 @@ const COMPONENTS: { id: LearningComponent; label: string; feature?: string; base
   { id: 'feintExecution', label: 'Feint execution (visible fake)', feature: 'fakeShift', base: { feature: 'fakeShift', threshold: 0.12, direction: 1 }, note: 'Labels from flagged-rep reviews (fake 0–2).' },
   { id: 'ballRecognition', label: 'Ball recognition', note: 'Uses the registered ball profile; personalisation waits for part 17 validation data.' },
   { id: 'touchClassification', label: 'Touch classification', note: 'Waits for validated touch labels (part 17 §BR-04).' },
-  { id: 'scanPattern', label: 'Scanning look (head turn)', feature: 'headTurn', base: { feature: 'headTurn', threshold: 0.35, direction: 1 }, note: 'Labels from flagged-rep reviews of scanning reps (looked before the touch: yes/no).' },
+  { id: 'scanPattern', label: 'Scanning look (head turn)', feature: 'headTurn', base: { feature: 'headTurn', threshold: 0.35, direction: 1 }, note: 'Labels from your reviews of scanning reps, from numbers called out correctly in the head-turn calibration, and from right and wrong moves on cues shown behind the player (only from blocks well above guessing). Each is paired with the head turn the camera measured on that rep.' },
   { id: 'defenderTendency', label: 'Adaptive defender', note: "Reads the player's habitual fake side from camera-seen reps; never used by the fixed benchmark opponent." },
 ];
 
 /** Parent → Learning (task 7.7): what is personalised, what it rests on, and how to pause, reset or roll back. */
+const SOURCE_LABEL: Record<string, string> = { flaggedRepReview: 'your reviews', callOut: 'called-out numbers', taskOutcome: 'right/wrong moves', blindCalibration: 'blind calibration', coachVerification: 'coach' };
+
 export function LearningSection() {
-  const { settings } = useData();
+  const { settings, programme: p } = useData();
+  const { go } = useNav();
+  // Collect any head-turn examples not yet gathered (for example from sessions saved before analysis finished).
+  useEffect(() => {
+    void harvestOutcomeExamples(p)
+      .then(() => autoLearnScan())
+      .catch(() => undefined);
+  }, [p]);
+  const calibrate = calibrationPlan(p);
   const examples = useLiveQuery(() => db.learningExamples.toArray(), []) ?? [];
   const versions = useLiveQuery(() => db.modelVersions.toArray(), []) ?? [];
   const sets = useLiveQuery(() => db.validationDatasets.toArray(), []) ?? [];
@@ -28,7 +41,7 @@ export function LearningSection() {
     <div className="stack">
       <div className="card stack">
         <p>
-          Personalisation is {settings.flags.learning ? 'on' : 'off (Settings → Features)'}. Only reviewed, verified examples are used. A new model is used only if it does better on a frozen set of
+          Personalisation is {settings.flags.learning ? 'on' : 'off (Settings → Features)'}. Only examples confirmed by something other than the camera's own judgement are used: your reviews, numbers called out correctly, and right or wrong moves on cues behind the player. A new model is used only if it does better on a frozen set of
           examples it never trained on; earlier models are kept, and scores keep the model version that produced them. Accuracy below is measured on that held-out set; it is not the app's confidence.
         </p>
         <label className="check">
@@ -54,6 +67,28 @@ export function LearningSection() {
               {verified.length} verified examples{cs.resetAt ? ` (counting from ${fmtDate(cs.resetAt)})` : ''} · validation set {set ? `${set.exampleIds.length} frozen ${fmtDate(set.frozenAt)}` : 'not frozen yet'}
               {verified.length < 30 ? ' · not enough data yet' : ''}
             </p>
+            {verified.length ? (
+              <p className="muted" data-testid={`sources-${c.id}`}>
+                From:{' '}
+                {Object.entries(
+                  verified.reduce<Record<string, number>>((acc, e) => {
+                    const k = e.labelSource ?? 'other';
+                    acc[k] = (acc[k] ?? 0) + 1;
+                    return acc;
+                  }, {}),
+                )
+                  .map(([k, n]) => `${SOURCE_LABEL[k] ?? k} ${n}`)
+                  .join(' · ')}
+              </p>
+            ) : null}
+            {c.id === 'scanPattern' && calibrate ? (
+              <div className="row">
+                <button className="btn small" onClick={() => go({ name: 'start', plan: calibrate })}>
+                  Start head-turn calibration ({calibrate.totalMinutes} min)
+                </button>
+                <span className="muted">The player looks over the shoulder and calls out the number. With personalisation on, a new threshold is tried by itself after each analysed scanning block.</span>
+              </div>
+            ) : null}
             {hist.length ? (
               <ul className="clean">
                 {hist.map((v) => (

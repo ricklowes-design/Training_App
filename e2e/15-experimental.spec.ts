@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { advance, boot, button, openFocus, openParent, patchSettings, runToEnd, setup, startBlockNow, table, scoredBy } from './helpers';
+import { advance, boot, button, openFocus, openParent, patchSettings, place, runToEnd, setup, startBlockNow, table, scoredBy } from './helpers';
 
 // Experimental features, each off by default: the digit diagnostic by voice and the ball detector
 // model (network only). Cone detection is in 16-cone-detection.spec.ts.
@@ -130,4 +130,35 @@ test('ball detector speed test from a clip recorded on the spot: open the camera
   await page.waitForTimeout(3000);
   await button(page, /■ Stop/).click();
   await expect(page.locator('.note-box')).toContainText(/fps on the (GPU|CPU) delegate/, { timeout: 200_000 });
+});
+
+test('head-turn learning from what the player did: examples collected from a scanning block; calibration offered (owner decision 2026-10-30)', async ({ page }) => {
+  await boot(page);
+  await setup(page);
+  await patchSettings(page, { flags: { ...FLAGS, learning: true } });
+  await place(page, 'Scanning', 1);
+  // Home offers the calibration while the camera has few head-turn examples.
+  await expect(page.getByTestId('calibration-offer')).toContainText('call out the number you see');
+  // Stand-in for an analysed S2 block: 10 reps, 8 right decisions; right ones with a small head turn.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const r = indexedDB.open('home-training');
+        r.onsuccess = () => {
+          const tx = r.result.transaction(['sessionRecords', 'clips', 'blockAnalyses', 'repAnalyses'], 'readwrite');
+          const cueLog = Array.from({ length: 10 }, (_, i) => ({ rep: i, repStartMs: i * 5000, trigger: 'timed', cueMs: i * 5000 + 1000, value: 'LEFT FREE', plannedDelayMs: 1000 }));
+          tx.objectStore('sessionRecords').put({ id: 'rec-s2', runId: 'run-s2', kind: 'programme', areaId: 'scanning', sessionNumber: 1, date: '2026-11-02T10:00:00Z', status: 'completed', reasons: [], plannedMinutes: 20, pauses: [], trial: false, light: false, partner: false, appVersion: 'x', contentVersion: 'x', layoutVersion: 1, blocks: [{ index: 1, kind: 'work', attempt: 1, plannedS: 360, elapsedS: 360, ranToEnd: true, doneEarly: false, skipped: false, mode: 'reps', drillId: 'S2', cueLog }] });
+          tx.objectStore('clips').put({ id: 'clip-s2', drillId: 'S2', sessionRecordId: 'rec-s2', blockIndex: 1, attempt: 1, date: '2026-11-02T10:06:00Z', blob: new Blob(['x']), mime: 'video/webm', blockLabel: 'S2', durationS: 360, startActiveMs: 0 });
+          tx.objectStore('blockAnalyses').put({ id: 'clip-s2', clipId: 'clip-s2', date: '2026-11-02T10:07:00Z', data: { reps: 10, validReps: 10, accuracy: 0.8, accuracyByCue: {}, flaggedRepIndexes: [], enoughReps: true, poseUsed: true, analysedFps: 15, analysisMs: 10 } });
+          for (let i = 0; i < 10; i++) tx.objectStore('repAnalyses').put({ id: `clip-s2:${i}`, clipId: 'clip-s2', repIndex: i, data: { repIndex: i, zoneEvents: [], confidence: 0.9, flags: [], status: 'ok', decisionCorrect: i < 8, maxHeadTurn: i < 8 ? 0.22 : 0.05 } });
+          tx.oncomplete = () => resolve();
+        };
+      }),
+  );
+  await openParent(page, /^Learning/);
+  await expect(page.getByTestId('sources-scanPattern')).toContainText('right/wrong moves 10');
+  await expect(button(page, /Start head-turn calibration/)).toBeVisible();
+  const ex = await table<{ id: string; label: string; labelSource: string; features: { headTurn: number } }>(page, 'learningExamples');
+  expect(ex.filter((e) => e.label === 'yes').every((e) => e.features.headTurn === 0.22)).toBe(true);
+  expect(ex.filter((e) => e.label === 'no')).toHaveLength(2);
 });

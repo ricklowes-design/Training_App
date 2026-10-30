@@ -7,7 +7,7 @@ import type { RunBlock } from './plans';
 // off right now, and the settings patch that turns them on. Experimental and optional extras
 // (rapid touches, realistic motion, personalisation, detectors) are not "needed" and stay as they are.
 
-export type NeedKey = 'camera' | 'cueEngine' | 'defender3d' | 'liveOnsetDetector' | 'ballTracking' | 'wallMic' | 'speech' | 'tones';
+export type NeedKey = 'camera' | 'cueEngine' | 'defender3d' | 'liveOnsetDetector' | 'ballTracking' | 'wallMic' | 'speech' | 'tones' | 'speechDiagnostic';
 
 export const NEED_LABELS: Record<NeedKey, string> = {
   camera: 'camera recording',
@@ -18,6 +18,7 @@ export const NEED_LABELS: Record<NeedKey, string> = {
   wallMic: 'listening for the wall',
   speech: 'the voice',
   tones: 'the tones',
+  speechDiagnostic: 'hearing the numbers called out',
 };
 
 type NeedSettings = Pick<Settings, 'camera' | 'cueEngine' | 'flags' | 'sound'>;
@@ -33,6 +34,8 @@ export function blockUses(p: Programme, b: RunBlock, wallUsable: boolean | undef
   if (b.kind === 'work' && drill?.defenderDrillId) out.push('defender3d', 'liveOnsetDetector');
   if (drill && (drill.areaId === 'dribbling' || drill.areaId === 'control')) out.push('ballTracking');
   if (usesWall(p, b, wallUsable)) out.push('wallMic');
+  // The number call-out drill (diagnostic / head-turn calibration) listens for the numbers.
+  if (b.kind === 'work' && b.params?.startsWith('diagnostic')) out.push('speechDiagnostic');
   return out;
 }
 
@@ -72,7 +75,7 @@ export function turnOnPatch(keys: NeedKey[], s: NeedSettings): Partial<NeedSetti
     else if (k === 'tones') sound.tones = true;
     else flags[k] = true;
   }
-  if (keys.some((k) => k === 'defender3d' || k === 'liveOnsetDetector' || k === 'ballTracking')) patch.flags = flags;
+  if (keys.some((k) => k === 'defender3d' || k === 'liveOnsetDetector' || k === 'ballTracking' || k === 'speechDiagnostic')) patch.flags = flags;
   if (keys.some((k) => k === 'wallMic' || k === 'speech' || k === 'tones')) patch.sound = sound;
   return patch;
 }

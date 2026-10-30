@@ -7,7 +7,7 @@ import { useData } from '../app/data';
 import { useNav } from '../app/nav';
 import { db } from '../db/db';
 import { useRoomProfile } from '../app/room';
-import { areaName, buildPlan, digitDiagnosticPlan, findSession, noBallPlan, type RunPlan } from '../domain/plans';
+import { areaName, buildPlan, calibrationPlan, digitDiagnosticPlan, findSession, noBallPlan, type RunPlan } from '../domain/plans';
 import { lastCredibleImprovement, todayGoals } from '../domain/focus';
 import { tryFill } from '../domain/templates';
 import { reasonsFor } from '../domain/recommend';
@@ -129,6 +129,9 @@ export function Home() {
   const isLight = light ?? lightDay;
   const guided = useMemo(() => guidedPlan(d, suggestion, others, minutes, isLight), [d, suggestion, others, minutes, isLight]); // eslint-disable-line react-hooks/exhaustive-deps
   const mainPlan = guided.plan;
+  // While personalisation is on and the camera has few head-turn examples, offer the calibration drill.
+  const scanExamples = useLiveQuery(() => db.learningExamples.where('component').equals('scanPattern').count(), []) ?? 0;
+  const calibrate = settings.flags.learning && d.placements.some((x) => x.areaId === 'scanning') && scanExamples < 30 ? calibrationPlan(p) : null;
   // One upcoming stage step, and whether it waits on practice or on a parent's check (Brief R10).
   const rule = suggestion?.areaId ? ruleStatusFor(d, suggestion.areaId) : null;
   const nextStep =
@@ -234,6 +237,14 @@ export function Home() {
             )}
             {goals.length ? <div style={{ fontSize: '1.3rem' }}>{tryFill(p.feedbackTemplates, 'homeToday', { goals: goals.join(' · ') })}</div> : null}
             {nextStep ? <div className="muted" data-testid="next-step">{nextStep}</div> : null}
+            {calibrate ? (
+              <div className="card row spread" data-testid="calibration-offer">
+                <span>{tryFill(p.feedbackTemplates, 'calibrationOffer', { minutes: calibrate.totalMinutes })}</span>
+                <button className="btn" onClick={() => go({ name: 'start', plan: calibrate })}>
+                  Calibrate
+                </button>
+              </div>
+            ) : null}
             <div className="muted">{improvement ?? tryFill(p.feedbackTemplates, 'homeNoImprovement', {})}</div>
             {why.length ? <div className="muted">{tryFill(p.feedbackTemplates, 'recommendWhy', { reasons: why.join('; ') })}</div> : null}
           </>

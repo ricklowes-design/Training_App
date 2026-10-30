@@ -192,6 +192,8 @@ export interface BlockResult {
   /** The player said, after the session, that they did a block the camera could not confirm (owner
    *  decision 2026-10-30). Recorded as the player's word, never as a camera result. */
   activityConfirmedBy?: 'player';
+  /** Number call-outs per rep (speech, opt-in): what was shown and what was heard. */
+  callOuts?: { rep: number; shown: number; heard?: number }[];
   activityConfirmedAt?: string;
   clipId?: string;
   /** Why the block's video was not kept (storage full…); the block itself is saved. */
@@ -786,7 +788,9 @@ export interface LearningExample {
   createdAt: string;
   features: Record<string, number>;
   label?: string;
-  labelSource?: 'flaggedRepReview' | 'blindCalibration' | 'coachVerification';
+  /** callOut: the player called the number shown behind them correctly; taskOutcome: right or wrong
+   *  decision on a cue shown behind, from blocks well above guessing (owner decision 2026-10-30). */
+  labelSource?: 'flaggedRepReview' | 'blindCalibration' | 'coachVerification' | 'callOut' | 'taskOutcome';
   verified: boolean;
   sessionRecordId?: string;
   context: { layoutVersion?: number; roomProfileVersion?: string; lighting?: string };

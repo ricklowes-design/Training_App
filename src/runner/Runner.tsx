@@ -36,7 +36,7 @@ import { DefenderBlock } from '../defender/DefenderBlock';
 import { defenderConfigFor } from '../defender/resolve';
 import type { DefenderBlockConfig } from '../defender/block';
 import { DefenderTally, DiagnosticCard } from './DefenderTally';
-import { DigitListener, scoreDigits, type Heard } from '../audio/speechDigits';
+import { callOutsPerRep, DigitListener, scoreDigits, type Heard } from '../audio/speechDigits';
 import { chancePct, chanceTail } from '../domain/chance';
 import { tryFill } from '../domain/templates';
 import { levelTag, reactionModeLevel } from '../defender/progression';
@@ -224,6 +224,9 @@ export function Runner({ plan, trial }: { plan: RunPlan; trial: boolean }) {
       l.stop();
       listener.current = null;
       setHeardByKey((x) => ({ ...x, [k]: { heard: [...(x[k]?.heard ?? []), ...l.heard], error: l.error } }));
+      // Kept per rep with the block, so a right call-out can confirm that rep's head turn (owner decision 2026-10-30).
+      const log = extras.current.get(k)?.cueLog;
+      if (log?.length && l.heard.length) setExtras(k, { callOuts: callOutsPerRep(log, l.heard) });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.phase, s.blockIdx, s.attempt, s.pausedAtMs]);

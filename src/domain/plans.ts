@@ -212,6 +212,13 @@ export function digitDiagnosticPlan(p: Programme): RunPlan | null {
   return { title: `${d.name}`, parts: [{ kind: 'extra' }], blocks, totalMinutes: planMinutes(blocks), light: true, partner: false };
 }
 
+/** Head-turn calibration (owner decision 2026-10-30): the number call-out drill run as an optional extra
+ *  so right call-outs can confirm looks and teach the camera this player's head turn. */
+export function calibrationPlan(p: Programme): RunPlan | null {
+  const d = digitDiagnosticPlan(p);
+  return d ? { ...d, title: 'Head-turn calibration: call out the number' } : null;
+}
+
 /** Repeat of an already-completed session: recorded as an extra. */
 export function repeatPlan(p: Programme, session: ContentSession): RunPlan {
   const plan = standardPlan(p, session, { kind: 'extra' });
